@@ -1,0 +1,109 @@
+{
+  "layout": {
+    "nav": {
+      "ariaLabel": "Principal",
+      "openMenu": "Abrir menu principal",
+      "menuSrOnly": "Menu",
+      "items": {
+        "profile": "Perfil",
+        "projects": "Proyectos",
+        "home": "Home",
+        "stack": "Stack",
+        "contact": "Contacto"
+      }
+    },
+    "language": {
+      "label": "Idioma",
+      "ariaLabel": "Cambiar idioma",
+      "options": {
+        "es": "ES",
+        "en": "EN"
+      }
+    },
+    "footer": {
+      "copyright": "© {year} {name} · Portafolio"
+    }
+  },
+  "common": {
+    "loading": {
+      "ariaLabel": "Cargando"
+    }
+  },
+  "home": {
+    "hero": {
+      "kicker": "Desarrollo web full stack",
+      "title": "Lorena Salas",
+      "lead": "APIs, Laravel, Vue y productos que migran y escalan. Portafolio en una sola vista tipo panel: desplázate y explora.",
+      "ctaProjects": "Ver proyectos",
+      "ctaContact": "Contacto"
+    },
+    "metrics": {
+      "experience": {
+        "value": "10+",
+        "label": "anos en desarrollo"
+      },
+      "role": {
+        "value": "Full",
+        "label": "stack web"
+      },
+      "core": {
+        "value": "Vue",
+        "label": "/ Laravel"
+      }
+    },
+    "sections": {
+      "projects": {
+        "title": "Proyectos destacados",
+        "subtitle": "Seleccion de trabajos recientes."
+      },
+      "stack": {
+        "title": "Stack y herramientas",
+        "subtitle": "Lo que mas uso en produccion; la lista es orientativa."
+      },
+      "contact": {
+        "title": "Contacto",
+        "subtitle": "Propon fecha y alcance; respondo con propuesta o reunion breve."
+      }
+    },
+    "projects": {
+      "migration": {
+        "title": "Migracion y frontend Vue",
+        "stack": "Vue · Vuetify · Laravel API",
+        "desc": "Producto con varios clientes, permisos y servicios REST; liderazgo en capa frontend.",
+        "cta": "Ver mas",
+        "comingSoon": "Proximamente"
+      },
+      "admin": {
+        "title": "Panel administrativo y APIs",
+        "stack": "Laravel · MySQL/Postgres",
+        "desc": "Servicios modulares consumidos por web y apps; evolucion de legacy.",
+        "cta": "Ver mas",
+        "comingSoon": "Proximamente"
+      },
+      "portfolio": {
+        "title": "Portfolio interactivo",
+        "stack": "Vue 3 · Parallax · SPA",
+        "desc": "Este sitio: una sola pagina con scroll y capas dinamicas.",
+        "cta": "Ver mas",
+        "comingSoon": "Proximamente"
+      }
+    },
+    "stackTags": {
+      "vue": "Vue 3",
+      "javascript": "JavaScript",
+      "laravel": "Laravel",
+      "php": "PHP",
+      "rest": "REST APIs",
+      "mysql": "MySQL",
+      "postgresql": "PostgreSQL",
+      "git": "Git",
+      "htmlCss": "HTML/CSS",
+      "responsive": "Responsive",
+      "scrum": "Scrum"
+    },
+    "contact": {
+      "email": "lorena23031990@gmail.com",
+      "linkedin": "LinkedIn"
+    }
+  }
+}

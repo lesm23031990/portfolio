@@ -1,7 +1,7 @@
 <template>
   <footer class="app-footer" :class="{ 'app-footer--dashboard': dark }">
     <div class="mx-auto w-full max-w-[1200px] px-4">
-      <p>&copy; {{ year }} Lorena Salas · Portfolio</p>
+      <p>{{ $t('layout.footer.copyright', { year, name: 'Lorena Salas' }) }}</p>
     </div>
   </footer>
 </template>

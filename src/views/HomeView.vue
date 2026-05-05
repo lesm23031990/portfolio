@@ -15,29 +15,18 @@
     >
       <div class="dash-section__inner">
         <div class="dash-hero-card" :style="heroCardStyle">
-          <p class="dash-hero-card__kicker">Desarrollo web full stack</p>
-          <h2 class="dash-hero-card__title">Lorena Salas</h2>
-          <p class="dash-hero-card__lead">
-            APIs, Laravel, Vue y productos que migran y escalan. Portafolio en una sola vista tipo
-            panel: desplázate y explora.
-          </p>
+          <p class="dash-hero-card__kicker">{{ $t('home.hero.kicker') }}</p>
+          <h2 class="dash-hero-card__title">{{ $t('home.hero.title') }}</h2>
+          <p class="dash-hero-card__lead">{{ $t('home.hero.lead') }}</p>
           <div class="dash-hero-card__actions">
-            <a class="dash-btn dash-btn--primary" href="#proyectos">Ver proyectos</a>
-            <a class="dash-btn dash-btn--ghost" href="#contacto">Contacto</a>
+            <a class="dash-btn dash-btn--primary" href="#proyectos">{{ $t('home.hero.ctaProjects') }}</a>
+            <a class="dash-btn dash-btn--ghost" href="#contacto">{{ $t('home.hero.ctaContact') }}</a>
           </div>
         </div>
         <div class="dash-metrics" :style="metricsStyle">
-          <div class="dash-metric">
-            <span class="dash-metric__value">10+</span>
-            <span class="dash-metric__label">años en desarrollo</span>
-          </div>
-          <div class="dash-metric">
-            <span class="dash-metric__value">Full</span>
-            <span class="dash-metric__label">stack web</span>
-          </div>
-          <div class="dash-metric">
-            <span class="dash-metric__value">Vue</span>
-            <span class="dash-metric__label">/ Laravel</span>
+          <div v-for="metric in metrics" :key="metric.key" class="dash-metric">
+            <span class="dash-metric__value">{{ metric.value }}</span>
+            <span class="dash-metric__label">{{ metric.label }}</span>
           </div>
         </div>
       </div>
@@ -50,23 +39,23 @@
     >
       <div class="dash-section__inner">
         <header class="dash-panel-head">
-          <h3 class="dash-panel-head__title">Proyectos destacados</h3>
-          <p class="dash-panel-head__sub">Selección de trabajos recientes (actualiza enlaces y copys).</p>
+          <h3 class="dash-panel-head__title">{{ $t('home.sections.projects.title') }}</h3>
+          <p class="dash-panel-head__sub">{{ $t('home.sections.projects.subtitle') }}</p>
         </header>
         <div class="dash-projects">
           <article
-            v-for="(p, i) in projects"
-            :key="p.title"
+            v-for="(project, i) in projectItems"
+            :key="project.key"
             class="dash-project"
             :style="projectCardStyle(i)"
           >
             <div class="dash-project__media" />
             <div class="dash-project__body">
-              <h4 class="dash-project__title">{{ p.title }}</h4>
-              <p class="dash-project__stack">{{ p.stack }}</p>
-              <p class="dash-project__desc">{{ p.desc }}</p>
-              <a v-if="p.href !== '#'" class="dash-link" :href="p.href" target="_blank" rel="noopener noreferrer">Ver más</a>
-              <span v-else class="dash-link dash-link--muted">Próximamente</span>
+              <h4 class="dash-project__title">{{ project.title }}</h4>
+              <p class="dash-project__stack">{{ project.stack }}</p>
+              <p class="dash-project__desc">{{ project.desc }}</p>
+              <a v-if="project.href !== '#'" class="dash-link" :href="project.href" target="_blank" rel="noopener noreferrer">{{ project.cta }}</a>
+              <span v-else class="dash-link dash-link--muted">{{ project.comingSoon }}</span>
             </div>
           </article>
         </div>
@@ -80,8 +69,8 @@
     >
       <div class="dash-section__inner">
         <header class="dash-panel-head">
-          <h3 class="dash-panel-head__title">Stack y herramientas</h3>
-          <p class="dash-panel-head__sub">Lo que más uso en producción; la lista es orientativa.</p>
+          <h3 class="dash-panel-head__title">{{ $t('home.sections.stack.title') }}</h3>
+          <p class="dash-panel-head__sub">{{ $t('home.sections.stack.subtitle') }}</p>
         </header>
         <ul class="dash-tags">
           <li v-for="tag in stackTags" :key="tag" class="dash-tag">{{ tag }}</li>
@@ -96,18 +85,18 @@
     >
       <div class="dash-section__inner">
         <header class="dash-panel-head">
-          <h3 class="dash-panel-head__title">Contacto</h3>
-          <p class="dash-panel-head__sub">Propón fecha y alcance; respondo con propuesta o reunión breve.</p>
+          <h3 class="dash-panel-head__title">{{ $t('home.sections.contact.title') }}</h3>
+          <p class="dash-panel-head__sub">{{ $t('home.sections.contact.subtitle') }}</p>
         </header>
         <div class="dash-contact">
-          <a class="dash-contact__item" href="mailto:lorena23031990@gmail.com">lorena23031990@gmail.com</a>
+          <a class="dash-contact__item" :href="contactEmailHref">{{ contactEmail }}</a>
           <a
             class="dash-contact__item"
             href="https://www.linkedin.com/in/lorenaesalasm/"
             target="_blank"
             rel="noopener noreferrer"
           >
-            LinkedIn
+            {{ $t('home.contact.linkedin') }}
           </a>
         </div>
       </div>
@@ -116,6 +105,8 @@
 </template>
 
 <script>
+import i18n from '@/i18n'
+
 export default {
   name: 'HomeView',
   data() {
@@ -128,44 +119,84 @@ export default {
         stack: false,
         contacto: false
       },
-      projects: [
-        {
-          title: 'Migración y frontend Vue',
-          stack: 'Vue · Vuetify · Laravel API',
-          desc: 'Producto con varios clientes, permisos y servicios REST; liderazgo en capa frontend.',
-          href: '#'
-        },
-        {
-          title: 'Panel administrativo y APIs',
-          stack: 'Laravel · MySQL/Postgres',
-          desc: 'Servicios modulares consumidos por web y apps; evolución de legacy.',
-          href: '#'
-        },
-        {
-          title: 'Portfolio interactivo',
-          stack: 'Vue 3 · Parallax · SPA',
-          desc: 'Este sitio: una sola página con scroll y capas dinámicas.',
-          href: '#inicio'
-        }
-      ],
-      stackTags: [
-        'Vue 3',
-        'JavaScript',
-        'Laravel',
-        'PHP',
-        'REST APIs',
-        'MySQL',
-        'PostgreSQL',
-        'Git',
-        'HTML/CSS',
-        'Responsive',
-        'Scrum'
-      ],
       observers: [],
       prefersReducedMotion: false
     }
   },
   computed: {
+    contactEmail() {
+      const activeLocale = i18n.global.locale.value
+      const rawEmail = i18n.global.messages.value?.[activeLocale]?.home?.contact?.email
+      return typeof rawEmail === 'string' ? rawEmail : ''
+    },
+    contactEmailHref() {
+      return `mailto:${this.contactEmail}`
+    },
+    metrics() {
+      return [
+        {
+          key: 'experience',
+          value: this.$t('home.metrics.experience.value'),
+          label: this.$t('home.metrics.experience.label')
+        },
+        {
+          key: 'role',
+          value: this.$t('home.metrics.role.value'),
+          label: this.$t('home.metrics.role.label')
+        },
+        {
+          key: 'core',
+          value: this.$t('home.metrics.core.value'),
+          label: this.$t('home.metrics.core.label')
+        }
+      ]
+    },
+    projectItems() {
+      return [
+        {
+          key: 'migration',
+          href: '#',
+          title: this.$t('home.projects.migration.title'),
+          stack: this.$t('home.projects.migration.stack'),
+          desc: this.$t('home.projects.migration.desc'),
+          cta: this.$t('home.projects.migration.cta'),
+          comingSoon: this.$t('home.projects.migration.comingSoon')
+        },
+        {
+          key: 'admin',
+          href: '#',
+          title: this.$t('home.projects.admin.title'),
+          stack: this.$t('home.projects.admin.stack'),
+          desc: this.$t('home.projects.admin.desc'),
+          cta: this.$t('home.projects.admin.cta'),
+          comingSoon: this.$t('home.projects.admin.comingSoon')
+        },
+        {
+          key: 'portfolio',
+          href: '#inicio',
+          title: this.$t('home.projects.portfolio.title'),
+          stack: this.$t('home.projects.portfolio.stack'),
+          desc: this.$t('home.projects.portfolio.desc'),
+          cta: this.$t('home.projects.portfolio.cta'),
+          comingSoon: this.$t('home.projects.portfolio.comingSoon')
+        }
+      ]
+    },
+    stackTags() {
+      return [
+        this.$t('home.stackTags.vue'),
+        this.$t('home.stackTags.javascript'),
+        this.$t('home.stackTags.laravel'),
+        this.$t('home.stackTags.php'),
+        this.$t('home.stackTags.rest'),
+        this.$t('home.stackTags.mysql'),
+        this.$t('home.stackTags.postgresql'),
+        this.$t('home.stackTags.git'),
+        this.$t('home.stackTags.htmlCss'),
+        this.$t('home.stackTags.responsive'),
+        this.$t('home.stackTags.scrum')
+      ]
+    },
     heroCardStyle() {
       if (this.prefersReducedMotion) return {}
       const y = this.scrollY
@@ -179,6 +210,14 @@ export default {
       return {
         transform: `translate3d(0, ${y * -0.02}px, 0)`
       }
+    }
+  },
+  watch: {
+    contactEmail: {
+      handler(value) {
+        this.logContactEmailMetadata('contact-email-watch', value)
+      },
+      immediate: true
     }
   },
   mounted() {
@@ -196,6 +235,11 @@ export default {
     this.observers = []
   },
   methods: {
+    logContactEmailMetadata(source, value = this.contactEmail) {
+      // #region agent log
+      fetch('http://127.0.0.1:7592/ingest/f20cbc4f-e99d-4090-95ce-53ddee1a70ec',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'58aca7'},body:JSON.stringify({sessionId:'58aca7',runId:'post-fix',hypothesisId:'H1,H2,H4',location:'src/views/HomeView.vue:168',message:'contact email resolved without translation compilation',data:{source,locale:i18n.global.locale.value,messageMeta:{exists:typeof value==='string',length:typeof value==='string'?value.length:null,containsAt:typeof value==='string'?value.includes('@'):false,containsColon:typeof value==='string'?value.includes(':'):false}},timestamp:Date.now()})}).catch(()=>{})
+      // #endregion
+    },
     onScroll() {
       if (this.rafId) return
       this.rafId = requestAnimationFrame(() => {

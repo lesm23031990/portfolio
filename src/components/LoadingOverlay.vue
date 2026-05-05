@@ -3,7 +3,7 @@
     <div
       class="loading-overlay"
       role="status"
-      aria-label="Cargando"
+      :aria-label="$t('common.loading.ariaLabel')"
       :aria-valuenow="progress"
       aria-valuemin="0"
       aria-valuemax="100"

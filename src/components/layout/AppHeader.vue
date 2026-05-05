@@ -4,7 +4,7 @@
       <nav
         ref="navRef"
         class="flex min-h-[4.5rem] w-full items-center justify-end text-center md:grid md:min-h-[5.5rem] md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-4"
-        aria-label="Principal"
+        :aria-label="t('layout.nav.ariaLabel')"
       >
         <div class="hidden md:block" aria-hidden="true"></div>
 
@@ -15,7 +15,7 @@
           >
             <a
               v-for="item in navItems"
-              :key="item.label"
+              :key="item.key"
               :href="item.href"
               class="group relative flex h-full items-center justify-center border-b-[3px] border-transparent px-3 py-2 text-[0.84rem] font-light uppercase tracking-[0.22em] transition duration-300 after:absolute after:left-1/2 after:top-full after:h-[3px] after:w-0 after:-translate-x-1/2 after:bg-gradient-to-r after:from-rose-400 after:via-fuchsia-500 after:to-pink-500 after:transition-all after:duration-300 hover:-translate-y-0.5 hover:text-rose-500 hover:after:w-full active:translate-y-0 active:scale-95 md:py-5 md:text-[0.96rem] lg:text-[1.03rem]"
               :class="navItemClasses(item)"
@@ -28,12 +28,12 @@
 
         <div class="flex h-full items-center justify-end gap-3 self-center md:justify-self-end">
           <div class="hidden md:flex md:items-center md:gap-3">
-            <label for="header-language" class="text-[0.72rem] font-light uppercase tracking-[0.24em] text-rose-300/80"></label>
+            <label for="header-language" class="sr-only"></label>
             <select
               id="header-language"
               v-model="selectedLanguage"
               class="rounded-full border border-fuchsia-400/30 bg-white/70 px-4 py-2 text-[0.82rem] font-light uppercase tracking-[0.22em] text-rose-900/85 outline-none transition hover:border-fuchsia-300/60 focus:border-fuchsia-200"
-              aria-label="Cambiar idioma"
+              :aria-label="t('layout.language.ariaLabel')"
             >
               <option
                 v-for="option in languageOptions"
@@ -51,10 +51,10 @@
             class="mr-3 inline-flex h-12 w-12 self-center items-center justify-center rounded-full border border-fuchsia-400/35 bg-white/70 text-rose-900/85 transition hover:border-fuchsia-300/60 hover:bg-white/80 md:hidden"
             :aria-expanded="isMobileMenuOpen ? 'true' : 'false'"
             :aria-controls="mobileMenuId"
-            aria-label="Abrir menu principal"
+            :aria-label="t('layout.nav.openMenu')"
             @click="toggleMobileMenu"
           >
-            <span class="sr-only">Menu</span>
+            <span class="sr-only">{{ t('layout.nav.menuSrOnly') }}</span>
             <span class="relative flex h-5 w-5 flex-col items-center justify-center">
               <span
                 class="absolute h-[1.5px] w-5 rounded-full bg-current transition duration-300"
@@ -90,7 +90,7 @@
             <div class="flex flex-col gap-2">
               <a
                 v-for="item in navItems"
-                :key="`${item.label}-mobile`"
+                :key="`${item.key}-mobile`"
                 :href="item.href"
                 class="rounded-2xl border px-4 py-3 text-left text-[0.92rem] font-light uppercase tracking-[0.2em] transition"
                 :class="mobileNavItemClasses(item)"
@@ -102,12 +102,12 @@
             </div>
 
             <div class="mt-4 border-t border-fuchsia-400/20 pt-4">
-              <label for="mobile-language" class="mb-2 block text-left text-[0.7rem] font-light uppercase tracking-[0.24em] text-rose-300/80"></label>
+              <label for="mobile-language" class="mb-2 block text-left text-[0.7rem] font-light uppercase tracking-[0.24em] text-rose-300/80">{{ t('layout.language.label') }}</label>
               <select
                 id="mobile-language"
                 v-model="selectedLanguage"
                 class="w-full rounded-2xl border border-fuchsia-400/25 bg-white/10 px-4 py-3 text-[0.9rem] font-light uppercase tracking-[0.2em] text-rose-50 outline-none transition focus:border-fuchsia-200"
-                aria-label="Cambiar idioma"
+                :aria-label="t('layout.language.ariaLabel')"
               >
                 <option
                   v-for="option in languageOptions"
@@ -129,28 +129,36 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+
+import { setLocale } from '@/i18n'
 
 const route = useRoute()
+const { locale, t } = useI18n()
 const activeSection = ref('inicio')
 const navRef = ref(null)
 const navInnerRef = ref(null)
-const selectedLanguage = ref('es')
 const isMobileMenuOpen = ref(false)
 
 const mobileMenuId = 'primary-mobile-nav'
 
-const navItems = [
-  { label: 'Perfil', href: '#inicio', sectionId: null },
-  { label: 'Proyectos', href: '#proyectos', sectionId: 'proyectos' },
-  { label: 'Home', href: '#inicio', sectionId: 'inicio', home: true },
-  { label: 'Stack', href: '#stack', sectionId: 'stack' },
-  { label: 'Contacto', href: '#contacto', sectionId: 'contacto' }
-]
+const selectedLanguage = computed({
+  get: () => locale.value,
+  set: (value) => setLocale(value)
+})
 
-const languageOptions = [
-  { value: 'es', label: 'ES' },
-  { value: 'en', label: 'EN' }
-]
+const navItems = computed(() => [
+  { key: 'profile', label: t('layout.nav.items.profile'), href: '#inicio', sectionId: null },
+  { key: 'projects', label: t('layout.nav.items.projects'), href: '#proyectos', sectionId: 'proyectos' },
+  { key: 'home', label: t('layout.nav.items.home'), href: '#inicio', sectionId: 'inicio', home: true },
+  { key: 'stack', label: t('layout.nav.items.stack'), href: '#stack', sectionId: 'stack' },
+  { key: 'contact', label: t('layout.nav.items.contact'), href: '#contacto', sectionId: 'contacto' }
+])
+
+const languageOptions = computed(() => [
+  { value: 'es', label: t('layout.language.options.es') },
+  { value: 'en', label: t('layout.language.options.en') }
+])
 
 const isHomeRoute = computed(() => route.name === 'home')
 
