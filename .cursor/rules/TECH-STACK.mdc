@@ -1,0 +1,9 @@
+---
+alwaysApply: true
+---
+
+# TECH STACK:
+- Estilo: Tailwind CSS para el diseño.
+# REGLAS DE ARQUITECTURA 
+- Sigue principios SOLID y Clean Code. 
+- No inventes librerías nuevas; revisa primero el `@package.json` para usar lo que ya está instalado.

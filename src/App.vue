@@ -1,26 +1,35 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <LoadingOverlay v-if="loading" @finished="hideLoading" />
+  <DefaultLayout />
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import DefaultLayout from "@/layouts/DefaultLayout.vue";
+import LoadingOverlay from "@/components/LoadingOverlay.vue";
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    DefaultLayout,
+    LoadingOverlay
+  },
+  data() {
+    return {}
+  },
+  computed: {
+    loading() {
+      return this.$store.state.loading;
+    }
+  },
+  methods: {
+    hideLoading() {
+      this.$store.dispatch('hideLoading');
+    }
+  },
+  beforeCreate() {
+    this.$store.dispatch('showLoading');
   }
 }
 </script>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-</style>
+<style></style>
