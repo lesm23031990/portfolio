@@ -10,13 +10,13 @@
 *   **Ecosistema:** Vuex, Vue Router, Vue-i18n (Multilingüe ES/EN)
 
 ### Backend & Database (Full Stack Core)
-*   **Entornos:** Node.js / [Menciona aquí si usas Python, PHP, o Express]
+*   **Entornos:** Node.js / Php / Express
 *   **API Design:** Desarrollo de APIs RESTful
-*   **Bases de Datos:** [Menciona aquí si usas PostgreSQL, MongoDB, MySQL, etc.]
+*   **Bases de Datos:** PostgreSQL, MongoDB, MySQL, etc.
 
 ### IA Engineering (En formación)
-*   **LLMs:** Integración de APIs de Inteligencia Artificial (OpenAI, Anthropic).
-*   **Data:** Procesamiento de datos y flujos de trabajo inteligentes (Agentic workflows).
+*   **LLMs:** Integración de APIs de Inteligencia Artificial.
+*   **Data:** Procesamiento de datos y flujos de trabajo inteligentes.
 
 ## ✨ Estándares de Desarrollo
 - **Clean Architecture:** Código modular, mantenible y orientado a componentes.
