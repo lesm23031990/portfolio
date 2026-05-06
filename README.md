@@ -2,21 +2,18 @@
 
 ¡Hola! Soy Lorena Salas, desarrolladora **Full Stack** con experiencia en la creación de aplicaciones web escalables y eficientes. Mi enfoque actual combina el desarrollo de arquitecturas completas (End-to-End) con la integración de soluciones de **Inteligencia Artificial**.
 
+Este es mi portfolio profesional desarrollado como una Single Page Application (SPA). El objetivo de este proyecto es demostrar el dominio de frameworks frontend, diseño responsivo y la implementación de sistemas multilingües.
+
 ## 🛠️ Stack Tecnológico
-
-### Frontend
 *   **Framework:** Vue.js 2 (Options API)
-*   **Estilos:** Tailwind CSS & Responsive Design
-*   **Ecosistema:** Vuex, Vue Router, Vue-i18n (Multilingüe ES/EN)
+*   **Estilos:** Tailwind CSS
+*   **Internacionalización:** Vue-i18n (Soporte multilingüe ES/EN)
+*   **Arquitectura:** Gestión de contenido mediante JSON dinámico.
 
-### Backend & Database (Full Stack Core)
-*   **Entornos:** Node.js / Php / Express
-*   **API Design:** Desarrollo de APIs RESTful
-*   **Bases de Datos:** PostgreSQL, MongoDB, MySQL, etc.
-
-### IA Engineering (En formación)
-*   **LLMs:** Integración de APIs de Inteligencia Artificial.
-*   **Data:** Procesamiento de datos y flujos de trabajo inteligentes.
+## ✨ Características Técnicas
+- **i18n Dinámico:** Cambio de idioma en tiempo real sin recarga.
+- **Lead Generation Bot (En desarrollo):** Chatbot integrado para canalización de clientes potenciales hacia WhatsApp/Email.
+- **Responsive UI:** Diseño optimizado para máxima fidelidad en cualquier dispositivo
 
 ## ✨ Estándares de Desarrollo
 - **Clean Architecture:** Código modular, mantenible y orientado a componentes.
