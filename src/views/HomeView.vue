@@ -13,6 +13,10 @@
       class="dash-section dash-section--hero"
       :class="{ 'dash-section--visible': visible.inicio }"
     >
+      <p class="dash-hero-profile" :aria-label="profileText" aria-live="polite">
+        <span>{{ typedProfileText }}</span>
+        <span v-if="!prefersReducedMotion" class="dash-hero-profile__cursor" aria-hidden="true"></span>
+      </p>
       <div class="dash-section__inner">
         <div class="dash-hero-card" :style="heroCardStyle">
           <p class="dash-hero-card__kicker">{{ $t('home.hero.kicker') }}</p>
@@ -120,10 +124,21 @@ export default {
         contacto: false
       },
       observers: [],
-      prefersReducedMotion: false
+      prefersReducedMotion: false,
+      typedProfileText: '',
+      typewriterIndex: 0,
+      typewriterTimer: null,
+      typewriterFrameId: null,
+      typewriterReady: false,
+      hasTypedProfile: false,
+      audioContext: null,
+      canPlayTypingSound: false
     }
   },
   computed: {
+    profileText() {
+      return this.$t('home.hero.profile')
+    },
     contactEmail() {
       const activeLocale = i18n.global.locale.value
       const rawEmail = i18n.global.messages.value?.[activeLocale]?.home?.contact?.email
@@ -218,23 +233,121 @@ export default {
         this.logContactEmailMetadata('contact-email-watch', value)
       },
       immediate: true
+    },
+    profileText() {
+      if (!this.typewriterReady) {
+        this.typedProfileText = ''
+        this.typewriterIndex = 0
+        this.hasTypedProfile = false
+        return
+      }
+      this.queueTypewriterStart(true)
+    },
+    'visible.inicio'(isVisible) {
+      if (isVisible) this.queueTypewriterStart()
     }
   },
   mounted() {
     if (typeof window !== 'undefined' && window.matchMedia) {
       this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     }
+    window.addEventListener('portfolio:overlay-finished', this.handleOverlayFinished)
+    window.addEventListener('pointerdown', this.enableTypingSound, { once: true, passive: true })
+    window.addEventListener('keydown', this.enableTypingSound, { once: true })
     this.onScroll()
     window.addEventListener('scroll', this.onScroll, { passive: true })
+    if (!document.querySelector('.loading-overlay')) {
+      this.typewriterReady = true
+      this.queueTypewriterStart(true)
+    }
     this.$nextTick(() => this.observeSections())
   },
   beforeUnmount() {
+    window.removeEventListener('portfolio:overlay-finished', this.handleOverlayFinished)
     window.removeEventListener('scroll', this.onScroll)
+    window.removeEventListener('pointerdown', this.enableTypingSound)
+    window.removeEventListener('keydown', this.enableTypingSound)
     if (this.rafId) cancelAnimationFrame(this.rafId)
+    if (this.typewriterTimer) clearTimeout(this.typewriterTimer)
+    if (this.typewriterFrameId) cancelAnimationFrame(this.typewriterFrameId)
+    if (this.audioContext) this.audioContext.close()
     this.observers.forEach((o) => o.disconnect())
     this.observers = []
   },
   methods: {
+    handleOverlayFinished() {
+      this.typewriterReady = true
+      this.queueTypewriterStart(true)
+    },
+    enableTypingSound() {
+      const AudioContext = window.AudioContext || window.webkitAudioContext
+      if (!AudioContext || this.prefersReducedMotion) return
+      this.audioContext = this.audioContext || new AudioContext()
+      this.canPlayTypingSound = true
+    },
+    queueTypewriterStart(forceRestart = false) {
+      if (this.typewriterFrameId) cancelAnimationFrame(this.typewriterFrameId)
+      if (!this.visible.inicio || !this.typewriterReady) return
+
+      if (this.prefersReducedMotion) {
+        if (forceRestart || !this.hasTypedProfile) this.restartTypewriter()
+        return
+      }
+
+      if (!forceRestart && (this.typewriterTimer || this.hasTypedProfile)) return
+
+      this.typewriterFrameId = requestAnimationFrame(() => {
+        this.typewriterFrameId = requestAnimationFrame(() => {
+          this.restartTypewriter()
+          this.typewriterFrameId = null
+        })
+      })
+    },
+    restartTypewriter() {
+      if (this.typewriterTimer) clearTimeout(this.typewriterTimer)
+      this.typewriterTimer = null
+      this.typewriterIndex = 0
+      this.hasTypedProfile = false
+      this.typedProfileText = this.prefersReducedMotion ? this.profileText : ''
+
+      if (this.prefersReducedMotion) {
+        this.hasTypedProfile = true
+        return
+      }
+
+      if (this.visible.inicio && this.typewriterReady) {
+        this.typewriterTimer = setTimeout(() => this.tickTypewriter(), 120)
+      }
+    },
+    tickTypewriter() {
+      if (this.typewriterIndex >= this.profileText.length) {
+        this.typedProfileText = this.profileText
+        this.hasTypedProfile = true
+        this.typewriterTimer = null
+        return
+      }
+
+      this.typewriterIndex += 1
+      this.typedProfileText = this.profileText.slice(0, this.typewriterIndex)
+      this.playTypingClick()
+      const nextDelay = this.profileText[this.typewriterIndex] === ' ' ? 22 : 42
+      this.typewriterTimer = setTimeout(() => this.tickTypewriter(), nextDelay)
+    },
+    playTypingClick() {
+      if (!this.canPlayTypingSound || !this.audioContext) return
+
+      const now = this.audioContext.currentTime
+      const oscillator = this.audioContext.createOscillator()
+      const gain = this.audioContext.createGain()
+      oscillator.type = 'square'
+      oscillator.frequency.setValueAtTime(760 + Math.random() * 120, now)
+      gain.gain.setValueAtTime(0.018, now)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035)
+      oscillator.connect(gain)
+      gain.connect(this.audioContext.destination)
+      oscillator.start(now)
+      oscillator.stop(now + 0.035)
+    },
     logContactEmailMetadata(source, value = this.contactEmail) {
       // #region agent log
       fetch('http://127.0.0.1:7592/ingest/f20cbc4f-e99d-4090-95ce-53ddee1a70ec',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'58aca7'},body:JSON.stringify({sessionId:'58aca7',runId:'post-fix',hypothesisId:'H1,H2,H4',location:'src/views/HomeView.vue:168',message:'contact email resolved without translation compilation',data:{source,locale:i18n.global.locale.value,messageMeta:{exists:typeof value==='string',length:typeof value==='string'?value.length:null,containsAt:typeof value==='string'?value.includes('@'):false,containsColon:typeof value==='string'?value.includes(':'):false}},timestamp:Date.now()})}).catch(()=>{})
@@ -383,6 +496,65 @@ export default {
   padding-top: 8rem;
   opacity: 1;
   transform: none;
+  overflow: hidden;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.dash-section--hero::before {
+  content: '';
+  position: absolute;
+  inset: 1.5rem 0 0;
+  z-index: 0;
+  background: #f7edf4 url('../assets/hero-pcb-bg.svg') center / cover no-repeat;
+  pointer-events: none;
+  transform: translate3d(0, 0, 0);
+}
+
+.dash-section--hero::after {
+  content: '';
+  position: absolute;
+  inset: 1.5rem 0 0;
+  z-index: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 248, 252, 0.78), rgba(255, 235, 244, 0.58) 36%, rgba(255, 248, 252, 0.8));
+  pointer-events: none;
+  transform: translate3d(0, 0, 0);
+}
+
+.dash-hero-profile {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 1120px);
+  max-width: min(92vw, 52rem);
+  min-height: 4.8em;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+  font-size: clamp(1.65rem, 5vw, 4rem);
+  font-weight: 300;
+  line-height: 1.12;
+  letter-spacing: 0.02em;
+  text-align: center;
+  text-wrap: balance;
+  white-space: normal;
+  word-break: keep-all;
+  background: linear-gradient(90deg, #e11d8f, #d946ef 42%, #f472b6 68%, #fb7185);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 14px 28px rgba(217, 70, 239, 0.28));
+}
+
+.dash-hero-profile__cursor {
+  display: inline-block;
+  width: 0.08em;
+  height: 0.9em;
+  margin-left: 0.08em;
+  vertical-align: -0.08em;
+  background: #d946ef;
+  box-shadow: 0 0 18px rgba(217, 70, 239, 0.72);
+  animation: profile-cursor 0.78s steps(2, start) infinite;
 }
 
 .dash-section__inner {
@@ -392,9 +564,17 @@ export default {
 }
 
 .dash-section--hero .dash-section__inner {
+  position: relative;
+  z-index: 1;
   display: grid;
   gap: 2.5rem;
   align-items: end;
+}
+
+@keyframes profile-cursor {
+  50% {
+    opacity: 0;
+  }
 }
 
 @media (min-width: 900px) {

@@ -33,6 +33,7 @@
     "hero": {
       "kicker": "Full stack web development",
       "title": "Lorena Salas",
+      "profile": "Full Stack Developer | AI Engineer in Training",
       "lead": "APIs, Laravel, Vue, and products that migrate and scale. A single-view portfolio with a dashboard feel: scroll and explore.",
       "ctaProjects": "View projects",
       "ctaContact": "Contact"

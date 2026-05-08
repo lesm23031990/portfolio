@@ -86,6 +86,9 @@ export default {
           this.$emit('update:progress', 100)
           // Dar tiempo a la animación de desvanecido antes de emitir finished
           setTimeout(() => {
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('portfolio:overlay-finished'))
+            }
             this.$emit('finished')
           }, 800)
         }
@@ -122,7 +125,7 @@ export default {
 .loading-overlay__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.12);
+  background: linear-gradient(145deg, rgba(255, 250, 254, 0.82), rgba(255, 241, 247, 0.88));
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
@@ -148,6 +151,11 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 26px 60px rgba(214, 123, 165, 0.26),
+    inset 0 0 34px rgba(255, 255, 255, 0.32);
 }
 
 .loader-progress__svg {
@@ -158,11 +166,12 @@ export default {
 }
 
 .loader-progress__track {
-  stroke: rgba(255, 255, 255, 0.2);
+  stroke: rgba(190, 79, 135, 0.16);
 }
 
 .loader-progress__fill {
-  stroke: rgba(255, 255, 255, 0.9);
+  stroke: #d46b9e;
+  filter: drop-shadow(0 0 10px rgba(217, 70, 239, 0.56));
   transition: stroke-dashoffset 0.15s linear;
 }
 
@@ -173,8 +182,9 @@ export default {
   height: 120px;
   border-radius: 50%;
   border: 3px solid transparent;
-  border-top-color: rgba(255, 255, 255, 0.85);
-  border-right-color: rgba(255, 255, 255, 0.4);
+  border-top-color: rgba(217, 70, 239, 0.9);
+  border-right-color: rgba(244, 114, 182, 0.56);
+  box-shadow: 0 0 24px rgba(217, 70, 239, 0.24);
   animation: spin 0.9s linear infinite;
 }
 
@@ -189,15 +199,15 @@ export default {
 .loader-percent__value {
   font-size: 2.25rem;
   font-weight: 300;
-  color: #fff;
+  color: #be4f87;
   letter-spacing: -0.02em;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 10px 24px rgba(214, 123, 165, 0.34);
 }
 
 .loader-percent__unit {
   font-size: 1.25rem;
   font-weight: 300;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(212, 107, 158, 0.86);
 }
 
 @keyframes spin {
