@@ -1,6 +1,6 @@
 <template>
-  <header class="relative sticky top-0 z-[100] h-auto px-0 pt-0 lg:px-6 after:pointer-events-none after:absolute after:bottom-0 after:left-0 after:h-[3px] after:w-full after:bg-gradient-to-r after:from-rose-300/25 after:via-fuchsia-500/80 after:to-pink-300/25">
-    <div class="h-full w-full px-0 pt-0 pb-0 backdrop-blur-xl lg:px-4">
+  <header class="relative sticky top-0 z-[100] h-auto pt-0 lg:px-6 after:pointer-events-none after:absolute after:bottom-0 after:left-0 after:h-[3px] after:w-full after:bg-gradient-to-r after:from-rose-300/25 after:via-fuchsia-500/80 after:to-pink-300/25 px-0 pcx-0">
+    <div class="h-full w-full pt-0 pb-0 backdrop-blur-xl lg:px-4 px-0">
       <nav
         ref="navRef"
         class="flex min-h-[4.5rem] w-full items-center justify-end text-center md:grid md:min-h-[5.5rem] md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-4"
@@ -305,4 +305,11 @@ onBeforeUnmount(() => {
   }
 })
 </script>
+
+<style scoped>
+.pcx-0 {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+</style>
 

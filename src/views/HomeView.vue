@@ -3,6 +3,9 @@
     <!-- Capas parallax fijas (velocidades distintas al scroll) -->
     <div class="dashboard__parallax" aria-hidden="true">
       <div class="dashboard__grid" :style="layerStyle(0.04)" />
+
+      <CircuitBackground :style="layerStyle(0.4)" />
+
       <div class="dashboard__orb dashboard__orb--a" :style="layerStyle(0.18, 0.015)" />
       <div class="dashboard__orb dashboard__orb--b" :style="layerStyle(-0.1, -0.01)" />
       <div class="dashboard__orb dashboard__orb--c" :style="layerStyle(0.06)" />
@@ -13,12 +16,36 @@
       class="dash-section dash-section--hero"
       :class="{ 'dash-section--visible': visible.inicio }"
     >
-      <p class="dash-hero-profile" :aria-label="profileText" aria-live="polite">
-        <span>{{ typedProfileText }}</span>
-        <span v-if="!prefersReducedMotion" class="dash-hero-profile__cursor" aria-hidden="true"></span>
-      </p>
       <div class="dash-section__inner">
-        <div class="dash-hero-card" :style="heroCardStyle">
+        <!-- NUEVO: Contenedor tipo Terminal/IDE -->
+        <div class="dash-terminal">
+          <div class="dash-terminal__header">
+            <div class="dash-terminal__dots">
+              <span class="dot dot--red"></span>
+              <span class="dot dot--yellow"></span>
+              <span class="dot dot--green"></span>
+            </div>
+            <div class="dash-terminal__title">profile.js — vsc</div>
+          </div>
+          
+          <div class="dash-terminal__body">
+            <p class="dash-hero-profile" :aria-label="profileText" aria-live="polite">
+              <span class="dash-code-prefix">>>> </span>
+              <span v-html="typedProfileText"></span>
+              <span v-if="!prefersReducedMotion" class="dash-hero-profile__cursor" aria-hidden="true"></span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-section__inner">
+        <div
+          class="dash-hero-card"
+          :class="{ 'dash-depth--ready': introReady }"
+          :style="heroCardStyle"
+          @pointermove="handleTilt('hero', $event)"
+          @pointerleave="resetTilt('hero')"
+        >
           <p class="dash-hero-card__kicker">{{ $t('home.hero.kicker') }}</p>
           <h2 class="dash-hero-card__title">{{ $t('home.hero.title') }}</h2>
           <p class="dash-hero-card__lead">{{ $t('home.hero.lead') }}</p>
@@ -27,7 +54,13 @@
             <a class="dash-btn dash-btn--ghost" href="#contacto">{{ $t('home.hero.ctaContact') }}</a>
           </div>
         </div>
-        <div class="dash-metrics" :style="metricsStyle">
+        <div
+          class="dash-metrics"
+          :class="{ 'dash-depth--ready': introReady }"
+          :style="metricsStyle"
+          @pointermove="handleTilt('metrics', $event)"
+          @pointerleave="resetTilt('metrics')"
+        >
           <div v-for="metric in metrics" :key="metric.key" class="dash-metric">
             <span class="dash-metric__value">{{ metric.value }}</span>
             <span class="dash-metric__label">{{ metric.label }}</span>
@@ -110,9 +143,13 @@
 
 <script>
 import i18n from '@/i18n'
+import CircuitBackground from '@/components/ui/CircuitBackground.vue'
 
 export default {
   name: 'HomeView',
+  components: {
+    CircuitBackground
+  },
   data() {
     return {
       scrollY: 0,
@@ -130,9 +167,14 @@ export default {
       typewriterTimer: null,
       typewriterFrameId: null,
       typewriterReady: false,
+      introReady: false,
       hasTypedProfile: false,
       audioContext: null,
-      canPlayTypingSound: false
+      canPlayTypingSound: false,
+      tilt: {
+        hero: { x: 0, y: 0 },
+        metrics: { x: 0, y: 0 }
+      }
     }
   },
   computed: {
@@ -215,15 +257,33 @@ export default {
     heroCardStyle() {
       if (this.prefersReducedMotion) return {}
       const y = this.scrollY
+      const tilt = this.tilt.hero
+      const scrollDrift = Math.sin(y * 0.006) * 8
+      const hasTilt = Math.abs(tilt.x) > 0.01 || Math.abs(tilt.y) > 0.01
       return {
-        transform: `translate3d(0, ${y * -0.035}px, 0)`
+        '--float-shadow-x': `${tilt.x * -22}px`,
+        '--float-shadow-counter-x': `${tilt.x * 10}px`,
+        '--float-shadow-y': `${28 + tilt.y * 18 + scrollDrift}px`,
+        '--float-shadow-blur': `${72 + Math.abs(tilt.x) * 18}px`,
+        transform: hasTilt
+          ? `translateY(${y * -0.045}px) rotateX(${tilt.y * -8}deg) rotateY(${tilt.x * 10}deg)`
+          : `translateY(${y * -0.045}px)`
       }
     },
     metricsStyle() {
       if (this.prefersReducedMotion) return {}
       const y = this.scrollY
+      const tilt = this.tilt.metrics
+      const scrollDrift = Math.cos(y * 0.006) * 7
+      const hasTilt = Math.abs(tilt.x) > 0.01 || Math.abs(tilt.y) > 0.01
       return {
-        transform: `translate3d(0, ${y * -0.02}px, 0)`
+        '--float-shadow-x': `${tilt.x * -18}px`,
+        '--float-shadow-counter-x': `${tilt.x * 8}px`,
+        '--float-shadow-y': `${22 + tilt.y * 14 + scrollDrift}px`,
+        '--float-shadow-blur': `${52 + Math.abs(tilt.x) * 14}px`,
+        transform: hasTilt
+          ? `translateY(${y * -0.03}px) rotateX(${tilt.y * -6}deg) rotateY(${tilt.x * 8}deg)`
+          : `translateY(${y * -0.03}px)`
       }
     }
   },
@@ -258,6 +318,7 @@ export default {
     window.addEventListener('scroll', this.onScroll, { passive: true })
     if (!document.querySelector('.loading-overlay')) {
       this.typewriterReady = true
+      this.queueIntroAnimation()
       this.queueTypewriterStart(true)
     }
     this.$nextTick(() => this.observeSections())
@@ -277,7 +338,20 @@ export default {
   methods: {
     handleOverlayFinished() {
       this.typewriterReady = true
+      this.queueIntroAnimation()
       this.queueTypewriterStart(true)
+    },
+    queueIntroAnimation() {
+      if (this.prefersReducedMotion) {
+        this.introReady = true
+        return
+      }
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          this.introReady = true
+        })
+      })
     },
     enableTypingSound() {
       const AudioContext = window.AudioContext || window.webkitAudioContext
@@ -347,6 +421,20 @@ export default {
       gain.connect(this.audioContext.destination)
       oscillator.start(now)
       oscillator.stop(now + 0.035)
+    },
+    handleTilt(target, event) {
+      if (this.prefersReducedMotion || !this.tilt[target]) return
+      const rect = event.currentTarget.getBoundingClientRect()
+      const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2
+      const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2
+      this.tilt[target] = {
+        x: Math.max(-1, Math.min(1, x)),
+        y: Math.max(-1, Math.min(1, y))
+      }
+    },
+    resetTilt(target) {
+      if (!this.tilt[target]) return
+      this.tilt[target] = { x: 0, y: 0 }
     },
     logContactEmailMetadata(source, value = this.contactEmail) {
       // #region agent log
@@ -502,7 +590,7 @@ export default {
   gap: 2rem;
 }
 
-.dash-section--hero::before {
+/*.dash-section--hero::before {
   content: '';
   position: absolute;
   inset: 1.5rem 0 0;
@@ -521,17 +609,17 @@ export default {
     linear-gradient(180deg, rgba(255, 248, 252, 0.78), rgba(255, 235, 244, 0.58) 36%, rgba(255, 248, 252, 0.8));
   pointer-events: none;
   transform: translate3d(0, 0, 0);
-}
+}*/
 
 .dash-hero-profile {
   position: relative;
   z-index: 1;
   width: min(100%, 1120px);
-  max-width: min(92vw, 52rem);
+  max-width: min(92vw, 59rem);
   min-height: 4.8em;
   margin: 0 auto;
   padding: 0 1.25rem;
-  font-size: clamp(1.65rem, 5vw, 4rem);
+  font-size: clamp(1.65rem, 5vw, 3rem);
   font-weight: 300;
   line-height: 1.12;
   letter-spacing: 0.02em;
@@ -569,11 +657,24 @@ export default {
   display: grid;
   gap: 2.5rem;
   align-items: end;
+  perspective: 900px;
 }
 
 @keyframes profile-cursor {
   50% {
     opacity: 0;
+  }
+}
+
+@keyframes card-depth-in {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 34px, -80px) rotateX(7deg) scale(0.96);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotateX(0) scale(1);
   }
 }
 
@@ -585,15 +686,37 @@ export default {
 }
 
 .dash-hero-card {
+  opacity: 0;
+  position: relative;
   padding: 2rem 2rem 2.25rem;
   border-radius: 28px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 245, 250, 0.84));
+  background: transparent;
   border: 1px solid var(--rose-border);
   box-shadow:
-    0 24px 56px var(--rose-shadow),
+    var(--float-shadow-x, 0) var(--float-shadow-y, 30px) var(--float-shadow-blur, 74px) rgba(214, 123, 165, 0.32),
+    var(--float-shadow-counter-x, 0) 14px 34px rgba(111, 47, 84, 0.12),
+    0 4px 14px rgba(255, 255, 255, 0.9),
     inset 0 1px 0 rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(12px);
-  will-change: transform;
+  transition:
+    box-shadow 0.22s ease,
+    transform 0.18s ease;
+}
+
+.dash-hero-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 245, 250, 0.86));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.dash-hero-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .dash-hero-card__kicker {
@@ -663,9 +786,19 @@ export default {
 }
 
 .dash-metrics {
+  opacity: 0;
   display: grid;
   gap: 1rem;
-  will-change: transform;
+  transition: transform 0.18s ease;
+}
+
+.dash-depth--ready {
+  opacity: 1;
+  animation: card-depth-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.dash-metrics.dash-depth--ready {
+  animation-delay: 0.14s;
 }
 
 @media (min-width: 900px) {
@@ -675,14 +808,39 @@ export default {
 }
 
 .dash-metric {
+  position: relative;
   padding: 1.1rem 1.25rem;
   border-radius: 22px;
-  background: var(--rose-surface);
+  background: transparent;
   border: 1px solid var(--rose-border);
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  box-shadow: 0 18px 32px rgba(227, 182, 206, 0.18);
+  box-shadow:
+    var(--float-shadow-x, 0) var(--float-shadow-y, 24px) var(--float-shadow-blur, 54px) rgba(227, 182, 206, 0.3),
+    var(--float-shadow-counter-x, 0) 10px 26px rgba(111, 47, 84, 0.1),
+    0 2px 10px rgba(255, 255, 255, 0.82),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  transition:
+    box-shadow 0.22s ease,
+    transform 0.22s ease;
+}
+
+.dash-metric::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.dash-metric > * {
+  position: relative;
+  z-index: 1;
 }
 
 .dash-metric__value {
@@ -834,4 +992,82 @@ export default {
 .dash-contact__item:hover {
   text-decoration: underline;
 }
+
+/* Contenedor Principal del Terminal */
+.dash-terminal {
+  width: min(95vw, 800px);
+  margin: 0 auto 2rem;
+  background: rgba(15, 10, 18, 0.85); /* Fondo oscuro profundo */
+  border: 1px solid rgba(255, 0, 162, 0.2); /* Borde neón sutil */
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
+              0 0 20px rgba(255, 0, 162, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+/* Barra superior de la ventana */
+.dash-terminal__header {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dash-terminal__dots {
+  display: flex;
+  gap: 8px;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+.dot--red { background: #ff5f56; }
+.dot--yellow { background: #ffbd2e; }
+.dot--green { background: #27c93f; }
+
+.dash-terminal__title {
+  flex: 1;
+  text-align: center;
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 1px;
+}
+
+/* Cuerpo del Terminal */
+.dash-terminal__body {
+  padding: 25px;
+  font-family: 'Fira Code', 'Courier New', monospace;
+}
+
+.dash-code-prefix {
+  color: #ff00a2; /* Rosa neón */
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.dash-hero-profile {
+  margin: 0;
+  padding: 0;
+  text-align: left; /* Alineado a la izquierda como código */
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  color: #fff;
+  min-height: 2em;
+  background: none; /* Quitamos el gradiente anterior para que parezca código real */
+  -webkit-background-clip: initial;
+  background-clip: initial;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-hero-card,
+  .dash-metrics {
+    animation: none;
+    transition: none;
+  }
+}
+
 </style>
