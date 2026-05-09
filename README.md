@@ -5,7 +5,8 @@
 Este es mi portfolio profesional desarrollado como una Single Page Application (SPA). El objetivo de este proyecto es demostrar el dominio de frameworks frontend, diseño responsivo y la implementación de sistemas multilingües.
 
 ## 🛠️ Stack Tecnológico
-*   **Framework:** Vue.js 2 (Options API)
+*   **Framework:** Vue 3 (Composition API + `<script setup>`)
+*   **Herramienta de Construcción:** Vite
 *   **Estilos:** Tailwind CSS
 *   **Internacionalización:** Vue-i18n (Soporte multilingüe ES/EN)
 *   **Arquitectura:** Gestión de contenido mediante JSON dinámico.

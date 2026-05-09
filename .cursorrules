@@ -1,0 +1,11 @@
+# Reglas del Proyecto - Portafolio (Actualizado a Vue 3)
+
+## 1. Estándares Técnicos (Vue 3 Moderno)
+- **Framework**: Uso estricto de **Vue 3** con **Composition API** y el patrón `<script setup>`.
+- **Estilos**: Uso prioritario de **Tailwind CSS**. 
+- **i18n**: Uso de `vue-i18n` versión para Vue 3. Todo texto debe estar en archivos JSON de traducción.
+
+## 2. Calidad de Código y BugBot
+- **Idioma**: Comentarios y nombres técnicos estrictamente en **INGLÉS**. BugBot debe marcar comentarios en español como error.
+- **Arquitectura**: Código modular y limpio (Clean Code). 
+- **Limpieza**: Prohibido dejar `console.log` o código comentado en los Pull Requests.
