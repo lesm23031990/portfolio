@@ -33,7 +33,7 @@
     "hero": {
       "kicker": "Desarrollo web full stack",
       "title": "Lorena Salas",
-      "profile": "DESARROLLADOR WEB FULL STACK - <br /> INGENIERA DE IA EN FORMACION",
+      "profile": "DESARROLLADOR WEB FULL STACK - <br /> INGENIERO DE IA EN FORMACIÓN",
       "lead": "APIs, Laravel, Vue y productos que migran y escalan. Portafolio en una sola vista tipo panel: desplázate y explora.",
       "ctaProjects": "Ver proyectos",
       "ctaContact": "Contacto"
@@ -48,8 +48,8 @@
         "label": "stack web"
       },
       "core": {
-        "value": "Vue",
-        "label": "/ Laravel"
+        "value": "VueJs - ReactJs...",
+        "label": "/ Laravel - NodeJs - Python - Php..."
       }
     },
     "sections": {
