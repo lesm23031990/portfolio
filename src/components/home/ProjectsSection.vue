@@ -1,31 +1,31 @@
 <template>
   <section id="proyectos" ref="sectionRef" class="projects-stage">
     <div ref="sectionInnerRef" class="projects-stage__inner">
+      <div ref="terminalSlotRef" class="projects-stage__terminal-slot">
+        <header ref="terminalRef" class="dash-terminal">
+          <div class="dash-terminal__header">
+            <div class="dash-terminal__dots">
+              <span class="dot dot--red"></span>
+              <span class="dot dot--yellow"></span>
+              <span class="dot dot--green"></span>
+            </div>
+            <div class="dash-terminal__title">projects.sh - bash</div>
+          </div>
+          <div class="dash-terminal__body">
+            <div class="dash-panel-head">
+              <h3 class="dash-panel-head__title">
+                <span class="dash-code-prefix">~ </span>
+                <span>{{ typedProjectsTitle }}</span>
+                <span v-if="!prefersReducedMotion" class="dash-panel-head__cursor" aria-hidden="true"></span>
+              </h3>
+              <p class="dash-panel-head__sub">{{ t('home.sections.projects.subtitle') }}</p>
+            </div>
+          </div>
+        </header>
+      </div>
+
       <div ref="viewportWrapperRef" class="projects-stage__viewport-wrapper">
         <div ref="viewportRef" class="projects-stage__viewport">
-          <div ref="terminalSlotRef" class="projects-stage__terminal-slot">
-            <header ref="terminalRef" class="dash-terminal">
-              <div class="dash-terminal__header">
-                <div class="dash-terminal__dots">
-                  <span class="dot dot--red"></span>
-                  <span class="dot dot--yellow"></span>
-                  <span class="dot dot--green"></span>
-                </div>
-                <div class="dash-terminal__title">projects.sh - bash</div>
-              </div>
-              <div class="dash-terminal__body">
-                <div class="dash-panel-head">
-                  <h3 class="dash-panel-head__title">
-                    <span class="dash-code-prefix">~ </span>
-                    <span>{{ typedProjectsTitle }}</span>
-                    <span v-if="!prefersReducedMotion" class="dash-panel-head__cursor" aria-hidden="true"></span>
-                  </h3>
-                  <p class="dash-panel-head__sub">{{ t('home.sections.projects.subtitle') }}</p>
-                </div>
-              </div>
-            </header>
-          </div>
-
           <div ref="frameRef" class="projects-stage__frame" aria-hidden="true"></div>
           <div ref="trackRef" class="projects-stage__track">
             <div ref="projectsPaneRef" class="projects-stage__pane projects-stage__pane--projects">
@@ -342,7 +342,7 @@ onMounted(async () => {
   )
 
   gsap.set(sectionInner, { autoAlpha: 0.12, y: 132 })
-  gsap.set(terminalSlot, { autoAlpha: 1 })
+  gsap.set(terminalSlot, { height: terminalSlot.offsetHeight, autoAlpha: 1 })
   gsap.set(viewport, { width: '92%', height: getViewportHeight(0.5), borderRadius: '34px' })
   gsap.set(frame, { '--frame-progress': 0, opacity: 1 })
   gsap.set(track, { x: 0 })
@@ -373,7 +373,7 @@ onMounted(async () => {
       .to(grid, { scale: () => getCardFitScale(0.78, 0.84, 0.76), yPercent: -4, duration: 1.18 }, 0.02)
       .to(frame, { '--frame-progress': 1, duration: 0.8, ease: 'none' }, 1.06)
       .to(terminal, { autoAlpha: 0, y: -26, duration: 0.3 }, 1.3)
-      .to(terminalSlot, { autoAlpha: 0, duration: 0.48 }, 1.26)
+      .to(terminalSlot, { height: 0, autoAlpha: 0, duration: 0.48 }, 1.26)
       .to(viewport, { width: '100%', height: '100%', borderRadius: 0, duration: 1.02 }, 1.84)
       .to(section, { 
         '--projects-bg-opacity': 0.18, 
@@ -480,20 +480,18 @@ onBeforeUnmount(() => {
   width: 100%;
   min-height: 100%;
   height: 100%;
-  display: flex;
-  padding: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 1rem;
+  padding: var(--projects-inner-top-padding) var(--projects-inner-side-padding, 1.5rem) var(--projects-inner-side-padding, 1.5rem);
   box-sizing: border-box;
 }
 
 .projects-stage__terminal-slot {
-  position: absolute;
-  top: 5%;
-  left: 0;
-  width: 100%;
   display: flex;
   justify-content: center;
-  z-index: 20;
-  pointer-events: none;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .dash-terminal {
