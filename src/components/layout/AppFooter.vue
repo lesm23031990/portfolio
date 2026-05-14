@@ -30,9 +30,9 @@ export default {
 }
 
 .app-footer--dashboard {
-  background: rgba(255, 247, 251, 0.94);
-  color: #9d6a86;
-  border-top: 1px solid rgba(222, 164, 192, 0.35);
+  background: rgba(6, 8, 12, 0.98);
+  color: rgba(228, 235, 250, 0.72);
+  border-top: 1px solid rgba(122, 214, 255, 0.14);
 }
 
 .app-footer p {

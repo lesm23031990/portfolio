@@ -55,38 +55,94 @@
     "sections": {
       "projects": {
         "title": "Featured projects",
-        "subtitle": "Selection of recent work."
+        "subtitle": "Explore an interactive scene: hover to reveal the preview and click to open the repository."
       },
       "stack": {
         "title": "Stack and tools",
         "subtitle": "What I use most in production; this list is indicative."
+      },
+      "certifications": {
+        "title": "Certifications"
       },
       "contact": {
         "title": "Contact",
         "subtitle": "Send a proposed timeline and scope; I reply with a proposal or a short meeting."
       }
     },
-    "projects": {
-      "migration": {
-        "title": "Migration and Vue frontend",
-        "stack": "Vue · Vuetify · Laravel API",
-        "desc": "Product with multiple clients, permissions, and REST services; frontend layer leadership.",
-        "cta": "View more",
-        "comingSoon": "Coming soon"
-      },
-      "admin": {
-        "title": "Admin panel and APIs",
-        "stack": "Laravel · MySQL/Postgres",
-        "desc": "Modular services consumed by web and apps; legacy evolution.",
-        "cta": "View more",
-        "comingSoon": "Coming soon"
-      },
-      "portfolio": {
-        "title": "Interactive portfolio",
-        "stack": "Vue 3 · Parallax · SPA",
-        "desc": "This site: a single page with scroll and dynamic layers.",
-        "cta": "View more",
-        "comingSoon": "Coming soon"
+    "projectShowcase": {
+      "items": {
+        "migration": {
+          "title": "B2B product migration",
+          "stack": "Vue · Laravel · APIs",
+          "summary": "Visual and technical migration with dashboards, permissions, and modular layers for clients.",
+          "previewTag": "Hover to reveal",
+          "repo": "https://github.com/lesm23031990",
+          "cta": "Open migration project repository"
+        },
+        "admin": {
+          "title": "Admin panel and services",
+          "stack": "Laravel · MySQL · REST",
+          "summary": "Backoffice with reusable endpoints focused on data order and day to day operations.",
+          "previewTag": "Hover to reveal",
+          "repo": "https://github.com/lesm23031990",
+          "cta": "Open admin panel repository"
+        },
+        "portfolio": {
+          "title": "Cinematic portfolio",
+          "stack": "Vue 3 · GSAP · UI Motion",
+          "summary": "This single page experience with narrative scroll, dark layers, and scene-based transitions.",
+          "previewTag": "Hover to reveal",
+          "repo": "https://github.com/lesm23031990/portfolio",
+          "cta": "Open portfolio repository"
+        },
+        "automation": {
+          "title": "Flows and automation",
+          "stack": "Node · Python · Integrations",
+          "summary": "Automation work focused on productivity, service handoff, and internal support flows.",
+          "previewTag": "Hover to reveal",
+          "repo": "https://github.com/lesm23031990",
+          "cta": "Open automation repository"
+        }
+      }
+    },
+    "stackScene": {
+      "title": "Neon stack map",
+      "subtitle": "Each layer reacts on hover or click and moves like a technical panel inside the scene.",
+      "groups": {
+        "frontend": {
+          "label": "Frontend",
+          "description": "SPA interfaces, responsive views, and UI motion."
+        },
+        "backend": {
+          "label": "Backend",
+          "description": "Business architecture, security, and modularity."
+        },
+        "apis": {
+          "label": "Integrations",
+          "description": "REST, data flows, and handoff between services."
+        },
+        "data": {
+          "label": "Data",
+          "description": "Persistence, queries, and useful structures."
+        },
+        "ux": {
+          "label": "UI / UX",
+          "description": "Layout, states, visual detail, and contrast."
+        },
+        "workflow": {
+          "label": "Workflow",
+          "description": "Scrum, Git, and continuous delivery routines."
+        }
+      }
+    },
+    "certifications": {
+      "headline": "Active block for relevant training without losing the neon panel rhythm.",
+      "items": {
+        "primary": {
+          "title": "Certification in progress: AI applied to development",
+          "issuer": "Learning track",
+          "meta": "A compact space for relevant learning without taking focus away from the main experience."
+        }
       }
     },
     "stackTags": {
@@ -102,9 +158,55 @@
       "responsive": "Responsive",
       "scrum": "Scrum"
     },
+    "contactPanel": {
+      "title": "Let us build a web experience that looks polished and performs even better.",
+      "subtitle": "If you have an idea, redesign, or migration in mind, let us talk about scope, timing, and the best way to land it.",
+      "primaryCta": "Email me",
+      "secondaryCta": "View LinkedIn",
+      "cards": {
+        "email": {
+          "label": "Email",
+          "meta": "Direct channel for proposals, scope, and follow-up."
+        },
+        "linkedin": {
+          "label": "Professional profile",
+          "meta": "Experience, professional context, and networking."
+        },
+        "github": {
+          "label": "Code",
+          "value": "GitHub",
+          "meta": "Repositories and the base to keep expanding this portfolio."
+        }
+      }
+    },
     "contact": {
       "email": "lorena23031990@gmail.com",
-      "linkedin": "LinkedIn"
+      "linkedin": "LinkedIn",
+      "linkedinUrl": "https://www.linkedin.com/in/lorenaesalasm/",
+      "githubUrl": "https://github.com/lesm23031990"
+    }
+  },
+  "chat": {
+    "launcherLabel": "Open portfolio chat",
+    "launcherShort": "Chat",
+    "windowEyebrow": "Portfolio assistant",
+    "windowTitle": "Demo chat ready to grow",
+    "closeLabel": "Close chat",
+    "inputLabel": "Type your message",
+    "inputPlaceholder": "Ask about projects, stack, or contact...",
+    "send": "Send",
+    "note": "Visual phase 1: this widget is already ready to connect later to a real AI backend.",
+    "firstMessage": "Hi. I am the portfolio visual assistant. I can guide you through projects, stack, and contact.",
+    "suggestions": {
+      "projects": "Which projects can I review?",
+      "stack": "What stack does Lorena use?",
+      "contact": "How can I contact her?"
+    },
+    "replies": {
+      "projects": "You can open each project card to visit the repository. The projects section is designed as both showcase and fast access to code.",
+      "stack": "The stack is distributed by layers: frontend, backend, APIs, data, UI/UX, and workflow. Each orbit highlights a real part of the work.",
+      "contact": "You can reach out by email or through LinkedIn from the contact section. The portfolio ending is prepared to move the conversation to a real channel.",
+      "default": "This is the visual phase of the chat. The next learning step is connecting this panel to a backend endpoint that calls a real model."
     }
   }
 }
