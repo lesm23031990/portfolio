@@ -44,6 +44,7 @@ const i18n = createI18n({
   globalInjection: true,
   locale,
   fallbackLocale: 'es',
+  warnHtmlMessage: false,
   messages: {
     es,
     en

@@ -32,7 +32,7 @@ import ProjectsSection from '@/components/home/ProjectsSection.vue'
   background: linear-gradient(160deg, #fffafe 0%, #fff3f9 46%, #fefcff 100%);
   color: var(--rose-text);
   overflow-x: hidden;
-  overflow-y: hidden;
+  overflow-y: visible;
   width: 100%;
   max-width: 100%;
 }

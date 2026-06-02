@@ -2,7 +2,7 @@
   <div class="layout" :style="mouseVars">
     <AppHeader />
 
-    <main class="main" :class="{ 'main--dashboard': isDashboard }">
+    <main class="main pt-[4.5rem] md:pt-[5.5rem]" :class="{ 'main--dashboard': isDashboard }">
       <RouterView />
     </main>
 

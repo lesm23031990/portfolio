@@ -1,13 +1,6 @@
 <template>
     <svg class="dashboard__circuit" :viewBox="`0 0 ${width} ${height}`" preserveAspectRatio="none">
-      <defs>
-        <filter id="neon-glow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-        </filter>
-      </defs>
-  
-      <g stroke="#ff00a2" fill="none" stroke-width="2.5" filter="url(#neon-glow)" opacity="0.8">
+      <g stroke="#ff00a2" fill="none" stroke-width="2.5" opacity="0.8">
 
         <path class="line-anim" :d="paths.L1" />
         <circle :cx="points.L1.x" :cy="points.L1.y" r="4" fill="#f472b6" />
@@ -31,13 +24,21 @@
   const width = ref(typeof window !== 'undefined' ? window.innerWidth : 1920);
   const height = ref(typeof window !== 'undefined' ? window.innerHeight : 1080);
   
+  let resizeTimer = null;
   const updateDimensions = () => {
-    width.value = window.innerWidth;
-    height.value = window.innerHeight;
+    if (resizeTimer) return;
+    resizeTimer = window.requestAnimationFrame(() => {
+      width.value = window.innerWidth;
+      height.value = window.innerHeight;
+      resizeTimer = null;
+    });
   };
   
-  onMounted(() => window.addEventListener('resize', updateDimensions));
-  onUnmounted(() => window.removeEventListener('resize', updateDimensions));
+  onMounted(() => window.addEventListener('resize', updateDimensions, { passive: true }));
+  onUnmounted(() => {
+    window.removeEventListener('resize', updateDimensions);
+    if (resizeTimer) window.cancelAnimationFrame(resizeTimer);
+  });
   
   const points = computed(() => {
     const isMobile = width.value < 768;
@@ -78,6 +79,8 @@
     z-index: 1;
     mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 100%);
     -webkit-mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 100%);
+    filter: drop-shadow(0 0 4px rgba(255, 0, 162, 0.5));
+    will-change: filter;
   }
   
   .line-anim {

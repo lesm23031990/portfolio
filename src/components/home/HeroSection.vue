@@ -1,12 +1,21 @@
 <template>
-  <section
-    id="inicio"
-    ref="sectionRef"
-    class="dash-section dash-section--hero"
-    :class="{ 'dash-section--visible': isVisible }"
-  >
+  <section id="inicio" ref="sectionRef" class="dash-section dash-section--hero">
+    <div
+      v-if="!prefersReducedMotion"
+      ref="trailRef"
+      class="dash-neon-trail"
+      aria-hidden="true"
+    >
+      <span
+        v-for="i in trailCount"
+        :key="i"
+        :ref="(el) => { if (el) trailDots[i] = el }"
+        class="dash-neon-trail__dot"
+      ></span>
+    </div>
+
     <div class="dash-section__inner dash-section__inner--terminal">
-      <div class="dash-terminal">
+      <div ref="terminalRef" class="dash-terminal">
         <div class="dash-terminal__header">
           <div class="dash-terminal__dots">
             <span class="dot dot--red"></span>
@@ -30,18 +39,18 @@
       </div>
     </div>
 
-    <div class="dash-section__inner dash-section__inner--content">
+    <div ref="contentRef" class="dash-section__inner dash-section__inner--content">
       <div
-        class="dash-hero-card"
+        ref="heroCardRef"
+        class="dash-hero-card dash-hero-card--3d"
         :class="{ 'dash-depth--ready': introReady }"
-        :style="heroCardStyle"
-        @pointermove="handleTilt('hero', $event)"
-        @pointerleave="resetTilt('hero')"
+        @pointermove="handleTilt($event)"
+        @pointerleave="resetTilt"
       >
+        <div class="dash-hero-card__glow"></div>
         <p class="dash-hero-card__kicker">{{ t('home.hero.kicker') }}</p>
         <h2 class="dash-hero-card__title">{{ t('home.hero.title') }}</h2>
         <p class="dash-hero-card__lead">{{ t('home.hero.lead') }}</p>
-
         <div class="dash-hero-card__actions">
           <a class="dash-btn dash-btn--primary" href="#proyectos">{{ t('home.hero.ctaProjects') }}</a>
           <a class="dash-btn dash-btn--ghost" href="#contacto">{{ t('home.hero.ctaContact') }}</a>
@@ -49,13 +58,13 @@
       </div>
 
       <div
+        ref="metricsRef"
         class="dash-metrics"
         :class="{ 'dash-depth--ready': introReady }"
-        :style="metricsStyle"
-        @pointermove="handleTilt('metrics', $event)"
-        @pointerleave="resetTilt('metrics')"
+        @pointermove="handleMetricsTilt($event)"
+        @pointerleave="resetMetricsTilt"
       >
-        <div v-for="metric in metrics" :key="metric.key" class="dash-metric">
+        <div v-for="metric in metrics" :key="metric.key" class="dash-metric dash-metric--3d">
           <span class="dash-metric__value">{{ metric.value }}</span>
           <span class="dash-metric__label">{{ metric.label }}</span>
         </div>
@@ -65,94 +74,50 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
-gsap.registerPlugin(ScrollTrigger)
 
 const { t } = useI18n({ useScope: 'global' })
 
 const sectionRef = ref(null)
-const sectionObserver = ref(null)
-const scrollY = ref(0)
-const scrollRafId = ref(null)
+const heroCardRef = ref(null)
+const metricsRef = ref(null)
+const terminalRef = ref(null)
+const trailRef = ref(null)
+const contentRef = ref(null)
+
 const prefersReducedMotion = ref(false)
 const typedProfileText = ref('')
-const typewriterIndex = ref(0)
-const typewriterTimer = ref(null)
-const typewriterFrameId = ref(null)
-const typewriterReady = ref(false)
 const introReady = ref(false)
 const hasTypedProfile = ref(false)
+const isVisible = ref(true)
+const scrollY = shallowRef(0)
+
+const trailCount = 8
+const trailDots = {}
+
 const audioContext = ref(null)
 const canPlayTypingSound = ref(false)
-const isVisible = ref(true)
-const tilt = reactive({
-  hero: { x: 0, y: 0 },
-  metrics: { x: 0, y: 0 }
-})
 
 const profileText = computed(() => t('home.hero.profile'))
 const profileTextPlain = computed(() => profileText.value.replace(/<br\s*\/?>/gi, ' '))
 const profileTokens = computed(() => tokenizeProfile(profileText.value))
 
 const metrics = computed(() => [
-  {
-    key: 'experience',
-    value: t('home.metrics.experience.value'),
-    label: t('home.metrics.experience.label')
-  },
-  {
-    key: 'role',
-    value: t('home.metrics.role.value'),
-    label: t('home.metrics.role.label')
-  },
-  {
-    key: 'core',
-    value: t('home.metrics.core.value'),
-    label: t('home.metrics.core.label')
-  }
+  { key: 'experience', value: t('home.metrics.experience.value'), label: t('home.metrics.experience.label') },
+  { key: 'role', value: t('home.metrics.role.value'), label: t('home.metrics.role.label') },
+  { key: 'core', value: t('home.metrics.core.value'), label: t('home.metrics.core.label') }
 ])
 
-const heroCardStyle = computed(() => {
-  if (prefersReducedMotion.value) return {}
-
-  const heroTilt = tilt.hero
-  const y = scrollY.value
-  const scrollDrift = Math.sin(y * 0.006) * 8
-  const hasTilt = Math.abs(heroTilt.x) > 0.01 || Math.abs(heroTilt.y) > 0.01
-
-  return {
-    '--float-shadow-x': `${heroTilt.x * -22}px`,
-    '--float-shadow-counter-x': `${heroTilt.x * 10}px`,
-    '--float-shadow-y': `${28 + heroTilt.y * 18 + scrollDrift}px`,
-    '--float-shadow-blur': `${72 + Math.abs(heroTilt.x) * 18}px`,
-    transform: hasTilt
-      ? `translateY(${y * -0.045}px) rotateX(${heroTilt.y * -8}deg) rotateY(${heroTilt.x * 10}deg)`
-      : `translateY(${y * -0.045}px)`
-  }
-})
-
-const metricsStyle = computed(() => {
-  if (prefersReducedMotion.value) return {}
-
-  const metricsTilt = tilt.metrics
-  const y = scrollY.value
-  const scrollDrift = Math.cos(y * 0.006) * 7
-  const hasTilt = Math.abs(metricsTilt.x) > 0.01 || Math.abs(metricsTilt.y) > 0.01
-
-  return {
-    '--float-shadow-x': `${metricsTilt.x * -18}px`,
-    '--float-shadow-counter-x': `${metricsTilt.x * 8}px`,
-    '--float-shadow-y': `${22 + metricsTilt.y * 14 + scrollDrift}px`,
-    '--float-shadow-blur': `${52 + Math.abs(metricsTilt.x) * 14}px`,
-    transform: hasTilt
-      ? `translateY(${y * -0.03}px) rotateX(${metricsTilt.y * -6}deg) rotateY(${metricsTilt.x * 8}deg)`
-      : `translateY(${y * -0.03}px)`
-  }
-})
+let ctx = null
+let typewriterTween = null
+let tiltTween = null
+let metricsTiltTween = null
+let parallaxCard = null
+let parallaxMetrics = null
+let trailQuickTos = []
+let sectionObserver = null
 
 function tokenizeProfile(html) {
   return html
@@ -161,222 +126,312 @@ function tokenizeProfile(html) {
     .flatMap((token) => (/^<br\s*\/?>$/i.test(token) ? [token] : token.split('')))
 }
 
-function queueIntroAnimation() {
-  if (prefersReducedMotion.value) {
-    introReady.value = true
-    return
-  }
-
-  window.requestAnimationFrame(() => {
-    window.requestAnimationFrame(() => {
-      introReady.value = true
-    })
-  })
-}
-
 function enableTypingSound() {
   const AudioContextClass = window.AudioContext || window.webkitAudioContext
   if (!AudioContextClass || prefersReducedMotion.value) return
-
-  audioContext.value = audioContext.value || new AudioContextClass()
+  if (!audioContext.value) {
+    try {
+      audioContext.value = new AudioContextClass()
+    } catch {
+      return
+    }
+  }
   canPlayTypingSound.value = true
 }
 
 function playTypingClick() {
   if (!canPlayTypingSound.value || !audioContext.value) return
-
-  const now = audioContext.value.currentTime
-  const oscillator = audioContext.value.createOscillator()
-  const gain = audioContext.value.createGain()
-
-  oscillator.type = 'square'
-  oscillator.frequency.setValueAtTime(760 + Math.random() * 120, now)
-  gain.gain.setValueAtTime(0.018, now)
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035)
-  oscillator.connect(gain)
-  gain.connect(audioContext.value.destination)
-  oscillator.start(now)
-  oscillator.stop(now + 0.035)
+  try {
+    const now = audioContext.value.currentTime
+    const oscillator = audioContext.value.createOscillator()
+    const gain = audioContext.value.createGain()
+    oscillator.type = 'square'
+    oscillator.frequency.setValueAtTime(760 + Math.random() * 120, now)
+    gain.gain.setValueAtTime(0.018, now)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035)
+    oscillator.connect(gain)
+    gain.connect(audioContext.value.destination)
+    oscillator.start(now)
+    oscillator.stop(now + 0.035)
+  } catch {
+    // AudioContext may be closed during cleanup
+  }
 }
 
-function tickTypewriter() {
-  if (typewriterIndex.value >= profileTokens.value.length) {
+function startTypewriter() {
+  if (typewriterTween) typewriterTween.kill()
+
+  if (prefersReducedMotion.value) {
     typedProfileText.value = profileTokens.value.join('')
     hasTypedProfile.value = true
-    typewriterTimer.value = null
     return
   }
 
-  typewriterIndex.value += 1
-  typedProfileText.value = profileTokens.value.slice(0, typewriterIndex.value).join('')
-  playTypingClick()
+  typedProfileText.value = ''
+  hasTypedProfile.value = false
 
-  const nextToken = profileTokens.value[typewriterIndex.value]
-  const nextDelay = nextToken === ' ' ? 22 : 42
-  typewriterTimer.value = window.setTimeout(tickTypewriter, nextDelay)
+  const chars = profileTokens.value
+  let lastIndex = 0
+
+  if (!canPlayTypingSound.value) enableTypingSound()
+
+  typewriterTween = gsap.to({}, {
+    duration: Math.max(chars.length * 0.035, 0.5),
+    ease: 'none',
+    onUpdate: function () {
+      const index = Math.min(Math.floor(this.progress() * chars.length), chars.length)
+      if (index !== lastIndex) {
+        lastIndex = index
+        typedProfileText.value = chars.slice(0, index).join('')
+        if (chars[index - 1] && chars[index - 1] !== ' ' && chars[index - 1] !== '<') {
+          playTypingClick()
+        }
+      }
+    },
+    onComplete: () => {
+      typedProfileText.value = chars.join('')
+      hasTypedProfile.value = true
+    }
+  })
+}
+
+function queueIntroAnimation() {
+  if (prefersReducedMotion.value) {
+    introReady.value = true
+    return
+  }
+  gsap.delayedCall(0.05, () => {
+    introReady.value = true
+    gsap.fromTo(
+      heroCardRef.value,
+      { y: 40, opacity: 0, scale: 0.96 },
+      { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: 'power3.out', overwrite: 'auto' }
+    )
+    gsap.fromTo(
+      metricsRef.value,
+      { y: 40, opacity: 0, scale: 0.96 },
+      { y: 0, opacity: 1, scale: 1, duration: 0.8, delay: 0.14, ease: 'power3.out', overwrite: 'auto' }
+    )
+  })
 }
 
 function restartTypewriter() {
-  if (typewriterTimer.value) {
-    window.clearTimeout(typewriterTimer.value)
-  }
-
-  typewriterTimer.value = null
-  typewriterIndex.value = 0
-  hasTypedProfile.value = false
-  typedProfileText.value = prefersReducedMotion.value ? profileTokens.value.join('') : ''
-
+  if (typewriterTween) typewriterTween.kill()
   if (prefersReducedMotion.value) {
+    typedProfileText.value = profileTokens.value.join('')
     hasTypedProfile.value = true
     return
   }
-
-  if (isVisible.value && typewriterReady.value) {
-    typewriterTimer.value = window.setTimeout(tickTypewriter, 120)
-  }
-}
-
-function queueTypewriterStart(forceRestart = false) {
-  if (typewriterFrameId.value) {
-    window.cancelAnimationFrame(typewriterFrameId.value)
-  }
-
-  if (!isVisible.value || !typewriterReady.value) return
-
-  if (prefersReducedMotion.value) {
-    if (forceRestart || !hasTypedProfile.value) {
-      restartTypewriter()
-    }
-    return
-  }
-
-  if (!forceRestart && (typewriterTimer.value || hasTypedProfile.value)) return
-
-  typewriterFrameId.value = window.requestAnimationFrame(() => {
-    typewriterFrameId.value = window.requestAnimationFrame(() => {
-      restartTypewriter()
-      typewriterFrameId.value = null
-    })
-  })
+  if (isVisible.value) startTypewriter()
 }
 
 function handleOverlayFinished() {
-  typewriterReady.value = true
   queueIntroAnimation()
-  queueTypewriterStart(true)
+  restartTypewriter()
 }
 
-function handleTilt(target, event) {
-  if (prefersReducedMotion.value || !tilt[target]) return
-
-  const rect = event.currentTarget.getBoundingClientRect()
+function handleTilt(event) {
+  if (prefersReducedMotion.value || !heroCardRef.value) return
+  const rect = heroCardRef.value.getBoundingClientRect()
   const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2
   const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2
+  const cx = gsap.utils.clamp(-1, 1, x)
+  const cy = gsap.utils.clamp(-1, 1, y)
 
-  tilt[target] = {
-    x: Math.max(-1, Math.min(1, x)),
-    y: Math.max(-1, Math.min(1, y))
-  }
-}
-
-function resetTilt(target) {
-  if (!tilt[target]) return
-  tilt[target] = { x: 0, y: 0 }
-}
-
-function onScroll() {
-  if (scrollRafId.value) return
-
-  scrollRafId.value = window.requestAnimationFrame(() => {
-    scrollY.value = window.scrollY || document.documentElement.scrollTop
-    scrollRafId.value = null
+  if (tiltTween) tiltTween.kill()
+  tiltTween = gsap.to(heroCardRef.value, {
+    rotateX: cy * -8,
+    rotateY: cx * 10,
+    transformPerspective: 900,
+    duration: 0.45,
+    ease: 'power2.out',
+    overwrite: 'auto'
   })
 }
 
-watch(profileText, () => {
-  if (!typewriterReady.value) {
-    typedProfileText.value = ''
-    typewriterIndex.value = 0
-    hasTypedProfile.value = false
-    return
+function resetTilt() {
+  if (tiltTween) tiltTween.kill()
+  tiltTween = gsap.to(heroCardRef.value, {
+    rotateX: 0,
+    rotateY: 0,
+    duration: 0.65,
+    ease: 'power3.out',
+    overwrite: 'auto'
+  })
+}
+
+function handleMetricsTilt(event) {
+  if (prefersReducedMotion.value || !metricsRef.value) return
+  const rect = metricsRef.value.getBoundingClientRect()
+  const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2
+  const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2
+  const cx = gsap.utils.clamp(-1, 1, x)
+  const cy = gsap.utils.clamp(-1, 1, y)
+
+  if (metricsTiltTween) metricsTiltTween.kill()
+  metricsTiltTween = gsap.to(metricsRef.value, {
+    rotateX: cy * -6,
+    rotateY: cx * 8,
+    transformPerspective: 900,
+    duration: 0.45,
+    ease: 'power2.out',
+    overwrite: 'auto'
+  })
+}
+
+function resetMetricsTilt() {
+  if (metricsTiltTween) metricsTiltTween.kill()
+  metricsTiltTween = gsap.to(metricsRef.value, {
+    rotateX: 0,
+    rotateY: 0,
+    duration: 0.65,
+    ease: 'power3.out',
+    overwrite: 'auto'
+  })
+}
+
+function initNeonTrail() {
+  if (prefersReducedMotion.value || !trailRef.value) return
+
+  const dots = Array.from({ length: trailCount }, (_, i) => trailDots[i + 1]).filter(Boolean)
+  if (!dots.length) return
+
+  gsap.set(dots, { x: -100, y: -100, opacity: 0, scale: 0 })
+
+  trailQuickTos = dots.map((dot) => ({
+    x: gsap.quickTo(dot, 'x', { duration: 0.5, ease: 'power2.out' }),
+    y: gsap.quickTo(dot, 'y', { duration: 0.5, ease: 'power2.out' })
+  }))
+
+  const staggeredTimeline = gsap.timeline({ repeat: -1, yoyo: true })
+  staggeredTimeline.to(dots, {
+    opacity: 0.6,
+    scale: 1,
+    duration: 0.6,
+    stagger: 0.05,
+    ease: 'power2.out'
+  })
+
+  const mouse = { x: -100, y: -100 }
+  let rafId = null
+
+  function onMove(e) {
+    mouse.x = e.clientX
+    mouse.y = e.clientY
+    if (!rafId) {
+      rafId = window.requestAnimationFrame(() => {
+        trailQuickTos.forEach((qt, i) => {
+          const inertia = 1 + i * 0.12
+          qt.x(mouse.x + (i % 2 === 0 ? -10 : 10) * inertia)
+          qt.y(mouse.y + (i % 2 === 0 ? -8 : 8) * inertia + i * 4)
+        })
+        rafId = null
+      })
+    }
   }
 
-  queueTypewriterStart(true)
-})
+  window.addEventListener('pointermove', onMove, { passive: true })
 
-watch(isVisible, (visibleNow) => {
-  if (visibleNow) {
-    queueTypewriterStart()
+  ctx.add(() => {
+    window.removeEventListener('pointermove', onMove)
+    if (rafId) window.cancelAnimationFrame(rafId)
+  })
+}
+
+function initParallax() {
+  if (prefersReducedMotion.value) return
+
+  parallaxCard = gsap.quickTo(heroCardRef.value, 'y', {
+    duration: 0.3,
+    ease: 'power1.out'
+  })
+
+  parallaxMetrics = gsap.quickTo(metricsRef.value, 'y', {
+    duration: 0.3,
+    ease: 'power1.out'
+  })
+
+  function onScroll() {
+    const y = window.scrollY || document.documentElement.scrollTop
+    scrollY.value = y
+    parallaxCard(y * -0.045)
+    parallaxMetrics(y * -0.03)
   }
-})
+
+  window.addEventListener('scroll', onScroll, { passive: true })
+  ctx.add(() => window.removeEventListener('scroll', onScroll))
+}
+
+function initTiltOnHover() {
+  if (prefersReducedMotion.value || !heroCardRef.value) return
+
+  const card = heroCardRef.value
+
+  card.addEventListener('pointerenter', () => {
+    gsap.to(card, {
+      '--glow-opacity': 1,
+      '--glow-scale': 1,
+      duration: 0.4,
+      ease: 'power2.out'
+    })
+  })
+
+  card.addEventListener('pointerleave', () => {
+    gsap.to(card, {
+      '--glow-opacity': 0,
+      '--glow-scale': 0.8,
+      duration: 0.6,
+      ease: 'power3.out'
+    })
+  })
+}
 
 onMounted(() => {
   if (window.matchMedia) {
     prefersReducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   }
 
-  sectionObserver.value = new IntersectionObserver(
+  ctx = gsap.context(() => {
+    initNeonTrail()
+    initParallax()
+    initTiltOnHover()
+  }, sectionRef)
+
+  sectionObserver = new IntersectionObserver(
     ([entry]) => {
       isVisible.value = entry.isIntersecting
+      if (entry.isIntersecting && !hasTypedProfile.value && !typewriterTween) {
+        restartTypewriter()
+      }
     },
     { threshold: 0.2 }
   )
 
   if (sectionRef.value) {
-    sectionObserver.value.observe(sectionRef.value)
-
-    gsap.to(sectionRef.value.querySelectorAll('.dash-section__inner'), {
-      y: 100,
-      opacity: 0,
-      stagger: 0.1,
-      scrollTrigger: {
-        trigger: sectionRef.value,
-        start: 'top top',
-        end: 'bottom top',
-        scrub: true
-      }
-    })
+    sectionObserver.observe(sectionRef.value)
   }
 
   window.addEventListener('portfolio:overlay-finished', handleOverlayFinished)
   window.addEventListener('pointerdown', enableTypingSound, { once: true, passive: true })
   window.addEventListener('keydown', enableTypingSound, { once: true })
-  window.addEventListener('scroll', onScroll, { passive: true })
-
-  onScroll()
 
   if (!document.querySelector('.loading-overlay')) {
-    typewriterReady.value = true
     queueIntroAnimation()
-    queueTypewriterStart(true)
+    gsap.delayedCall(0.3, restartTypewriter)
   }
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('portfolio:overlay-finished', handleOverlayFinished)
-  window.removeEventListener('scroll', onScroll)
   window.removeEventListener('pointerdown', enableTypingSound)
   window.removeEventListener('keydown', enableTypingSound)
 
-  if (scrollRafId.value) {
-    window.cancelAnimationFrame(scrollRafId.value)
-  }
-
-  if (typewriterTimer.value) {
-    window.clearTimeout(typewriterTimer.value)
-  }
-
-  if (typewriterFrameId.value) {
-    window.cancelAnimationFrame(typewriterFrameId.value)
-  }
-
-  if (audioContext.value) {
-    audioContext.value.close()
-  }
-
-  if (sectionObserver.value) {
-    sectionObserver.value.disconnect()
-  }
+  if (typewriterTween) typewriterTween.kill()
+  if (tiltTween) tiltTween.kill()
+  if (metricsTiltTween) metricsTiltTween.kill()
+  if (audioContext.value) audioContext.value.close()
+  if (sectionObserver) sectionObserver.disconnect()
+  if (ctx) ctx.revert()
 })
 </script>
 
@@ -444,13 +499,17 @@ onBeforeUnmount(() => {
 
 .dash-hero-profile__cursor {
   display: inline-block;
-  width: 0.08em;
-  height: 0.9em;
-  margin-left: 0.08em;
-  vertical-align: -0.08em;
-  background: #d946ef;
-  box-shadow: 0 0 18px rgba(217, 70, 239, 0.72);
-  animation: profile-cursor 0.78s steps(2, start) infinite;
+  width: 0.12em;
+  height: 1em;
+  margin-left: 0.06em;
+  vertical-align: -0.1em;
+  background: #ff14a2;
+  box-shadow:
+    0 0 6px #ff14a2,
+    0 0 14px rgba(255, 20, 162, 0.7),
+    0 0 28px rgba(255, 20, 162, 0.4);
+  animation: profile-cursor 0.7s steps(2, start) infinite;
+  border-radius: 1px;
 }
 
 @keyframes profile-cursor {
@@ -459,33 +518,20 @@ onBeforeUnmount(() => {
   }
 }
 
-@keyframes card-depth-in {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 34px, -80px) rotateX(7deg) scale(0.96);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) rotateX(0) scale(1);
-  }
-}
-
 .dash-hero-card {
-  opacity: 0;
   position: relative;
   padding: 2rem 2rem 2.25rem;
   border-radius: 28px;
   background: transparent;
   border: 1px solid var(--rose-border);
   box-shadow:
-    var(--float-shadow-x, 0) var(--float-shadow-y, 30px) var(--float-shadow-blur, 74px) rgba(214, 123, 165, 0.32),
-    var(--float-shadow-counter-x, 0) 14px 34px rgba(111, 47, 84, 0.12),
+    var(--float-shadow-x, 0px) var(--float-shadow-y, 30px) var(--float-shadow-blur, 74px) rgba(214, 123, 165, 0.32),
+    var(--float-shadow-counter-x, 0px) 14px 34px rgba(111, 47, 84, 0.12),
     0 4px 14px rgba(255, 255, 255, 0.9),
     inset 0 1px 0 rgba(255, 255, 255, 0.72);
-  transition:
-    box-shadow 0.22s ease,
-    transform 0.18s ease;
+  will-change: transform, box-shadow;
+  transform-style: preserve-3d;
+  overflow: hidden;
 }
 
 .dash-hero-card::before {
@@ -493,14 +539,30 @@ onBeforeUnmount(() => {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 245, 250, 0.86));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 245, 250, 0.88));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   z-index: 0;
   pointer-events: none;
 }
 
-.dash-hero-card > * {
+.dash-hero-card__glow {
+  position: absolute;
+  inset: -50%;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 0%,
+    rgba(255, 20, 162, 0.12),
+    transparent 60%
+  );
+  opacity: var(--glow-opacity, 0);
+  scale: var(--glow-scale, 0.8);
+  transition: opacity 0.5s ease, scale 0.5s ease;
+  border-radius: inherit;
+}
+
+.dash-hero-card > *:not(.dash-hero-card__glow):not(::before) {
   position: relative;
   z-index: 1;
 }
@@ -544,9 +606,13 @@ onBeforeUnmount(() => {
   font-size: 0.95rem;
   text-decoration: none;
   transition:
-    transform 0.2s ease,
-    background 0.2s ease,
-    border-color 0.2s ease;
+    transform 0.25s ease,
+    background 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+  position: relative;
+  z-index: 1;
+  transform-style: preserve-3d;
 }
 
 .dash-btn--primary {
@@ -557,7 +623,10 @@ onBeforeUnmount(() => {
 }
 
 .dash-btn--primary:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px) translateZ(4px);
+  box-shadow:
+    0 22px 40px rgba(212, 107, 158, 0.35),
+    0 0 20px rgba(255, 20, 162, 0.15);
 }
 
 .dash-btn--ghost {
@@ -569,22 +638,19 @@ onBeforeUnmount(() => {
 .dash-btn--ghost:hover {
   border-color: var(--rose-accent);
   color: var(--rose-accent-strong);
+  transform: translateY(-2px) translateZ(4px);
+  box-shadow: 0 8px 20px rgba(212, 107, 158, 0.15);
 }
 
 .dash-metrics {
-  opacity: 0;
   display: grid;
   gap: 1rem;
-  transition: transform 0.18s ease;
+  will-change: transform;
+  transform-style: preserve-3d;
 }
 
 .dash-depth--ready {
   opacity: 1;
-  animation: card-depth-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-}
-
-.dash-metrics.dash-depth--ready {
-  animation-delay: 0.14s;
 }
 
 @media (min-width: 900px) {
@@ -603,13 +669,16 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 0.25rem;
   box-shadow:
-    var(--float-shadow-x, 0) var(--float-shadow-y, 24px) var(--float-shadow-blur, 54px) rgba(227, 182, 206, 0.3),
-    var(--float-shadow-counter-x, 0) 10px 26px rgba(111, 47, 84, 0.1),
+    var(--float-shadow-x, 0px) var(--float-shadow-y, 24px) var(--float-shadow-blur, 54px) rgba(227, 182, 206, 0.3),
+    var(--float-shadow-counter-x, 0px) 10px 26px rgba(111, 47, 84, 0.1),
     0 2px 10px rgba(255, 255, 255, 0.82),
     inset 0 1px 0 rgba(255, 255, 255, 0.72);
   transition:
-    box-shadow 0.22s ease,
-    transform 0.22s ease;
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
+  will-change: transform, box-shadow;
+  transform-style: preserve-3d;
+  overflow: hidden;
 }
 
 .dash-metric::before {
@@ -622,6 +691,15 @@ onBeforeUnmount(() => {
   -webkit-backdrop-filter: blur(14px);
   z-index: 0;
   pointer-events: none;
+}
+
+.dash-metric:hover {
+  transform: translateY(-3px) translateZ(6px);
+  box-shadow:
+    var(--float-shadow-x, 0px) var(--float-shadow-y, 30px) var(--float-shadow-blur, 60px) rgba(227, 182, 206, 0.4),
+    var(--float-shadow-counter-x, 0px) 12px 30px rgba(111, 47, 84, 0.15),
+    0 2px 10px rgba(255, 255, 255, 0.82),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 
 .dash-metric > * {
@@ -642,11 +720,38 @@ onBeforeUnmount(() => {
   letter-spacing: 0.06em;
 }
 
+.dash-neon-trail {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.dash-neon-trail__dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff14a2;
+  box-shadow:
+    0 0 8px #ff14a2,
+    0 0 18px rgba(255, 20, 162, 0.6),
+    0 0 30px rgba(255, 20, 162, 0.3);
+  will-change: transform, opacity;
+  margin-top: -3px;
+  margin-left: -3px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dash-hero-card,
   .dash-metrics {
     animation: none;
     transition: none;
+  }
+
+  .dash-neon-trail {
+    display: none;
   }
 }
 </style>

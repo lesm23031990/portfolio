@@ -9,11 +9,11 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
 
 import CircuitBackground from '@/components/ui/CircuitBackground.vue'
 
-const scrollY = ref(0)
+const scrollY = shallowRef(0)
 const rafId = ref(null)
 const prefersReducedMotion = ref(false)
 
@@ -21,7 +21,10 @@ function onScroll() {
   if (rafId.value) return
 
   rafId.value = window.requestAnimationFrame(() => {
-    scrollY.value = window.scrollY || document.documentElement.scrollTop
+    const newY = window.scrollY || document.documentElement.scrollTop
+    if (Math.abs(newY - scrollY.value) > 2) {
+      scrollY.value = newY
+    }
     rafId.value = null
   })
 }
