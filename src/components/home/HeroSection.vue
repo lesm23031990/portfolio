@@ -57,6 +57,8 @@
         ref="heroCardRef"
         class="dash-hero-card dash-hero-card--3d"
         :class="{ 'dash-depth--ready': introReady }"
+        @pointermove="handleHeroCardTilt"
+        @pointerleave="resetHeroCardTilt"
       >
         <div class="dash-hero-card__glow"></div>
         <p class="dash-hero-card__kicker">{{ t('home.hero.kicker') }}</p>
@@ -72,8 +74,6 @@
         ref="metricsRef"
         class="dash-metrics"
         :class="{ 'dash-depth--ready': introReady }"
-        @pointermove="handleMetricsTilt($event)"
-        @pointerleave="resetMetricsTilt"
       >
         <div v-for="metric in metrics" :key="metric.key" class="dash-metric dash-metric--3d">
           <span class="dash-metric__value">{{ metric.value }}</span>
@@ -124,12 +124,15 @@ const metrics = computed(() => [
 ])
 
 let ctx = null
-let metricsTiltTween = null
-let parallaxCard = null
 let parallaxMetrics = null
 let trailQuickTos = []
+let tiltTarget = { x: 0, y: 0 }
+let tiltCurrent = { x: 0, y: 0 }
+let tiltRaf = null
+let parallaxY = 0
 let sectionObserver = null
 let typewriterGen = 0
+
 
 function tokenizeProfile(html) {
   return html
@@ -265,33 +268,45 @@ watch(profileText, () => {
 })
 
 function handleMetricsTilt(event) {
-  if (prefersReducedMotion.value || !metricsRef.value) return
+  if (!metricsRef.value) return
   const rect = metricsRef.value.getBoundingClientRect()
-  const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2
-  const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2
-  const cx = gsap.utils.clamp(-1, 1, x)
-  const cy = gsap.utils.clamp(-1, 1, y)
-
-  if (metricsTiltTween) metricsTiltTween.kill()
-  metricsTiltTween = gsap.to(metricsRef.value, {
-    rotateX: cy * -6,
-    rotateY: cx * 8,
-    transformPerspective: 900,
-    duration: 0.45,
-    ease: 'power2.out',
-    overwrite: 'auto'
-  })
+  const cx = gsap.utils.clamp(-1, 1, ((event.clientX - rect.left) / rect.width - 0.5) * 2)
+  const cy = gsap.utils.clamp(-1, 1, ((event.clientY - rect.top) / rect.height - 0.5) * 2)
+  metricsRef.value.style.transform = `perspective(900px) rotateX(${cy * 8}deg) rotateY(${cx * 8}deg)`
 }
 
 function resetMetricsTilt() {
-  if (metricsTiltTween) metricsTiltTween.kill()
-  metricsTiltTween = gsap.to(metricsRef.value, {
-    rotateX: 0,
-    rotateY: 0,
-    duration: 0.65,
-    ease: 'power3.out',
-    overwrite: 'auto'
-  })
+  if (!metricsRef.value) return
+  metricsRef.value.style.transform = ''
+}
+
+function tiltLoop() {
+  tiltCurrent.x += (tiltTarget.x - tiltCurrent.x) * 0.12
+  tiltCurrent.y += (tiltTarget.y - tiltCurrent.y) * 0.12
+  if (heroCardRef.value) {
+    heroCardRef.value.style.transform = `translateY(${parallaxY}px) perspective(600px) rotateX(${tiltCurrent.y}deg) rotateY(${tiltCurrent.x}deg)`
+  }
+  if (Math.abs(tiltCurrent.x - tiltTarget.x) > 0.01 || Math.abs(tiltCurrent.y - tiltTarget.y) > 0.01) {
+    tiltRaf = requestAnimationFrame(tiltLoop)
+  } else {
+    tiltRaf = null
+  }
+}
+
+function handleHeroCardTilt(event) {
+  if (!heroCardRef.value) return
+  const rect = heroCardRef.value.getBoundingClientRect()
+  const cx = gsap.utils.clamp(-1, 1, ((event.clientX - rect.left) / rect.width - 0.5) * 2)
+  const cy = gsap.utils.clamp(-1, 1, ((event.clientY - rect.top) / rect.height - 0.5) * 2)
+  tiltTarget.x = cx * 16
+  tiltTarget.y = cy * 16
+  if (!tiltRaf) tiltRaf = requestAnimationFrame(tiltLoop)
+}
+
+function resetHeroCardTilt() {
+  tiltTarget.x = 0
+  tiltTarget.y = 0
+  if (!tiltRaf) tiltRaf = requestAnimationFrame(tiltLoop)
 }
 
 function handleTerminalClick() {
@@ -352,11 +367,6 @@ function initNeonTrail() {
 function initParallax() {
   if (prefersReducedMotion.value) return
 
-  parallaxCard = gsap.quickTo(heroCardRef.value, 'y', {
-    duration: 0.3,
-    ease: 'power1.out'
-  })
-
   parallaxMetrics = gsap.quickTo(metricsRef.value, 'y', {
     duration: 0.3,
     ease: 'power1.out'
@@ -365,7 +375,7 @@ function initParallax() {
   function onScroll() {
     const y = window.scrollY || document.documentElement.scrollTop
     scrollY.value = y
-    parallaxCard(y * -0.045)
+    parallaxY = y * -0.045
     parallaxMetrics(y * -0.03)
   }
 
@@ -397,6 +407,11 @@ onMounted(() => {
     sectionObserver.observe(sectionRef.value)
   }
 
+  if (metricsRef.value) {
+    metricsRef.value.addEventListener('pointermove', handleMetricsTilt)
+    metricsRef.value.addEventListener('pointerleave', resetMetricsTilt)
+  }
+
   window.addEventListener('portfolio:overlay-finished', handleOverlayFinished)
   window.addEventListener('pointerdown', enableTypingSound, { once: true, passive: true })
   window.addEventListener('keydown', enableTypingSound, { once: true })
@@ -419,7 +434,11 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', enableTypingSound)
 
   cancelTypewriter()
-  if (metricsTiltTween) metricsTiltTween.kill()
+  if (tiltRaf) cancelAnimationFrame(tiltRaf)
+  if (metricsRef.value) {
+    metricsRef.value.removeEventListener('pointermove', handleMetricsTilt)
+    metricsRef.value.removeEventListener('pointerleave', resetMetricsTilt)
+  }
   if (audioContext.value) audioContext.value.close()
   if (sectionObserver) sectionObserver.disconnect()
   if (ctx) ctx.revert()
@@ -560,7 +579,18 @@ onBeforeUnmount(() => {
     inset 0 1px 0 rgba(255, 255, 255, 0.72);
   will-change: transform, box-shadow;
   transform-style: preserve-3d;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
+}
+
+.dash-hero-card__kicker,
+.dash-hero-card__title,
+.dash-hero-card__lead,
+.dash-hero-card__actions {
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 .dash-hero-card__glow {
@@ -662,8 +692,7 @@ onBeforeUnmount(() => {
 .dash-metrics {
   display: grid;
   gap: 1rem;
-  will-change: transform;
-  transform-style: preserve-3d;
+  transition: transform 0.2s ease-out;
 }
 
 .dash-depth--ready {
