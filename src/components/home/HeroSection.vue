@@ -15,7 +15,17 @@
     </div>
 
     <div class="dash-section__inner dash-section__inner--terminal">
-      <div ref="terminalRef" class="dash-terminal">
+      <div
+        ref="terminalRef"
+        class="dash-terminal"
+        :class="{
+          'dash-terminal--hovered': isTerminalHovered,
+          'dash-terminal--typing': isCurrentlyTyping
+        }"
+        @pointerenter="isTerminalHovered = true"
+        @pointerleave="isTerminalHovered = false"
+        @click="handleTerminalClick"
+      >
         <div class="dash-terminal__header">
           <div class="dash-terminal__dots">
             <span class="dot dot--red"></span>
@@ -30,11 +40,14 @@
             <span class="dash-code-prefix">&gt;&gt;&gt; </span>
             <span v-html="typedProfileText"></span>
             <span
-              v-if="!prefersReducedMotion"
               class="dash-hero-profile__cursor"
               aria-hidden="true"
             ></span>
           </p>
+          <span
+            v-if="!isCurrentlyTyping && isTerminalHovered && hasTypedProfile"
+            class="dash-terminal__replay-hint"
+          >▸ click to replay</span>
         </div>
       </div>
     </div>
@@ -74,7 +87,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import gsap from 'gsap'
 
@@ -92,6 +105,8 @@ const typedProfileText = ref('')
 const introReady = ref(false)
 const hasTypedProfile = ref(false)
 const isVisible = ref(true)
+const isTerminalHovered = ref(false)
+const isCurrentlyTyping = ref(false)
 const scrollY = shallowRef(0)
 
 const trailCount = 8
@@ -111,13 +126,13 @@ const metrics = computed(() => [
 ])
 
 let ctx = null
-let typewriterTween = null
 let tiltTween = null
 let metricsTiltTween = null
 let parallaxCard = null
 let parallaxMetrics = null
 let trailQuickTos = []
 let sectionObserver = null
+let typewriterGen = 0
 
 function tokenizeProfile(html) {
   return html
@@ -135,6 +150,9 @@ function enableTypingSound() {
     } catch {
       return
     }
+  }
+  if (audioContext.value.state === 'suspended') {
+    audioContext.value.resume()
   }
   canPlayTypingSound.value = true
 }
@@ -158,41 +176,65 @@ function playTypingClick() {
   }
 }
 
-function startTypewriter() {
-  if (typewriterTween) typewriterTween.kill()
+function getCharDelay(char) {
+  if (/[aeiouáéíóú]/i.test(char)) return 40 + Math.random() * 30
+  if (/[.,!?;:]/.test(char)) return 100 + Math.random() * 60
+  if (/[A-ZÑ]/.test(char)) return 70 + Math.random() * 40
+  if (/[\d]/.test(char)) return 50 + Math.random() * 40
+  if (/[-\s]/.test(char)) return 30 + Math.random() * 20
+  return 60 + Math.random() * 40
+}
 
-  if (prefersReducedMotion.value) {
-    typedProfileText.value = profileTokens.value.join('')
-    hasTypedProfile.value = true
-    return
-  }
+function startTypewriter() {
+  const gen = ++typewriterGen
 
   typedProfileText.value = ''
   hasTypedProfile.value = false
-
-  const chars = profileTokens.value
-  let lastIndex = 0
+  isCurrentlyTyping.value = true
 
   if (!canPlayTypingSound.value) enableTypingSound()
 
-  typewriterTween = gsap.to({}, {
-    duration: Math.max(chars.length * 0.035, 0.5),
-    ease: 'none',
-    onUpdate: function () {
-      const index = Math.min(Math.floor(this.progress() * chars.length), chars.length)
-      if (index !== lastIndex) {
-        lastIndex = index
-        typedProfileText.value = chars.slice(0, index).join('')
-        if (chars[index - 1] && chars[index - 1] !== ' ' && chars[index - 1] !== '<') {
-          playTypingClick()
-        }
-      }
-    },
-    onComplete: () => {
-      typedProfileText.value = chars.join('')
-      hasTypedProfile.value = true
+  const tokens = profileTokens.value
+  let i = 0
+
+  function typeNext() {
+    if (gen !== typewriterGen) {
+      isCurrentlyTyping.value = false
+      return
     }
-  })
+
+    typedProfileText.value = tokens.slice(0, i).join('')
+
+    if (i < tokens.length) {
+      const token = tokens[i]
+      i++
+      const isBreak = /^<br\s*\/?>$/i.test(token)
+
+      if (isBreak) {
+        setTimeout(typeNext, 300 + Math.random() * 200)
+      } else if (token !== ' ') {
+        playTypingClick()
+        setTimeout(typeNext, getCharDelay(token))
+      } else {
+        setTimeout(typeNext, 30 + Math.random() * 20)
+      }
+    } else {
+      hasTypedProfile.value = true
+      isCurrentlyTyping.value = false
+    }
+  }
+
+  setTimeout(typeNext, 600 + Math.random() * 400)
+}
+
+function cancelTypewriter() {
+  typewriterGen++
+  isCurrentlyTyping.value = false
+}
+
+function restartTypewriter() {
+  cancelTypewriter()
+  if (isVisible.value) startTypewriter()
 }
 
 function queueIntroAnimation() {
@@ -215,20 +257,15 @@ function queueIntroAnimation() {
   })
 }
 
-function restartTypewriter() {
-  if (typewriterTween) typewriterTween.kill()
-  if (prefersReducedMotion.value) {
-    typedProfileText.value = profileTokens.value.join('')
-    hasTypedProfile.value = true
-    return
-  }
-  if (isVisible.value) startTypewriter()
-}
-
 function handleOverlayFinished() {
   queueIntroAnimation()
   restartTypewriter()
 }
+
+watch(profileText, () => {
+  hasTypedProfile.value = false
+  restartTypewriter()
+})
 
 function handleTilt(event) {
   if (prefersReducedMotion.value || !heroCardRef.value) return
@@ -288,6 +325,13 @@ function resetMetricsTilt() {
     ease: 'power3.out',
     overwrite: 'auto'
   })
+}
+
+function handleTerminalClick() {
+  if (isCurrentlyTyping.value) return
+  typedProfileText.value = ''
+  hasTypedProfile.value = false
+  startTypewriter()
 }
 
 function initNeonTrail() {
@@ -400,7 +444,7 @@ onMounted(() => {
   sectionObserver = new IntersectionObserver(
     ([entry]) => {
       isVisible.value = entry.isIntersecting
-      if (entry.isIntersecting && !hasTypedProfile.value && !typewriterTween) {
+      if (entry.isIntersecting && !hasTypedProfile.value && !isCurrentlyTyping.value) {
         restartTypewriter()
       }
     },
@@ -419,6 +463,12 @@ onMounted(() => {
     queueIntroAnimation()
     gsap.delayedCall(0.3, restartTypewriter)
   }
+
+  setTimeout(() => {
+    if (!hasTypedProfile.value && !isCurrentlyTyping.value) {
+      restartTypewriter()
+    }
+  }, 2000)
 })
 
 onBeforeUnmount(() => {
@@ -426,7 +476,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('pointerdown', enableTypingSound)
   window.removeEventListener('keydown', enableTypingSound)
 
-  if (typewriterTween) typewriterTween.kill()
+  cancelTypewriter()
   if (tiltTween) tiltTween.kill()
   if (metricsTiltTween) metricsTiltTween.kill()
   if (audioContext.value) audioContext.value.close()
@@ -508,14 +558,51 @@ onBeforeUnmount(() => {
     0 0 6px #ff14a2,
     0 0 14px rgba(255, 20, 162, 0.7),
     0 0 28px rgba(255, 20, 162, 0.4);
-  animation: profile-cursor 0.7s steps(2, start) infinite;
+  animation: profile-cursor-blink 1s ease-in-out infinite;
   border-radius: 1px;
 }
 
-@keyframes profile-cursor {
-  50% {
-    opacity: 0;
-  }
+.dash-terminal--typing .dash-hero-profile__cursor {
+  animation-duration: 0.4s;
+  animation-timing-function: steps(2, start);
+}
+
+.dash-terminal--hovered .dash-hero-profile__cursor {
+  animation-duration: 0.5s;
+  box-shadow:
+    0 0 8px #ff14a2,
+    0 0 22px rgba(255, 20, 162, 0.9),
+    0 0 44px rgba(255, 20, 162, 0.5);
+}
+
+.dash-terminal--hovered {
+  border-color: rgba(255, 0, 162, 0.4);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(255, 0, 162, 0.2),
+    0 0 60px rgba(255, 0, 162, 0.1);
+  cursor: text;
+}
+
+.dash-terminal__replay-hint {
+  display: inline-block;
+  margin-top: 0.75rem;
+  font-size: 0.72rem;
+  font-family: 'Fira Code', 'Courier New', monospace;
+  color: rgba(255, 255, 255, 0.25);
+  letter-spacing: 0.05em;
+  animation: hint-pulse 2s ease-in-out infinite;
+  user-select: none;
+}
+
+@keyframes profile-cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.15; }
+}
+
+@keyframes hint-pulse {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.6; }
 }
 
 .dash-hero-card {
