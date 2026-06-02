@@ -1,6 +1,7 @@
 <template>
   <div class="dashboard__parallax" aria-hidden="true">
-    <div class="dashboard__grid" :style="layerStyle(0.04)" />
+    <div class="dashboard__grid dashboard__grid--far" :style="layerGridStyle(0.02)" />
+    <div class="dashboard__grid dashboard__grid--near" :style="layerGridStyle(0.06)" />
     <CircuitBackground :style="layerStyle(0.4)" />
     <div class="dashboard__orb dashboard__orb--a" :style="layerStyle(0.18, 0.015)" />
     <div class="dashboard__orb dashboard__orb--b" :style="layerStyle(-0.1, -0.01)" />
@@ -40,6 +41,14 @@ function layerStyle(speedY, rotate = 0) {
   }
 }
 
+function layerGridStyle(speedY) {
+  if (prefersReducedMotion.value) return {}
+
+  return {
+    '--grid-scroll-y': `${scrollY.value * speedY}px`
+  }
+}
+
 onMounted(() => {
   if (window.matchMedia) {
     prefersReducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -69,13 +78,30 @@ onBeforeUnmount(() => {
 
 .dashboard__grid {
   position: absolute;
-  inset: -20%;
+  top: -40%;
+  left: -25%;
+  right: -25%;
+  bottom: -5%;
   background-image:
-    linear-gradient(rgba(212, 107, 158, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(212, 107, 158, 0.07) 1px, transparent 1px);
-  background-size: 48px 48px;
-  opacity: 0.32;
+    linear-gradient(rgba(60, 30, 45, 0.25) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(60, 30, 45, 0.25) 1px, transparent 1px);
+  background-size: 80px 80px;
+  opacity: 0.5;
+  transform-origin: 50% 100%;
+  transform: perspective(500px) rotateX(22deg) translateY(var(--grid-scroll-y, 0px));
   will-change: transform;
+}
+
+.dashboard__grid--far {
+  background-size: 120px 120px;
+  opacity: 0.2;
+  transform: perspective(500px) rotateX(26deg) translateY(calc(3% + var(--grid-scroll-y, 0px)));
+}
+
+.dashboard__grid--near {
+  background-size: 48px 48px;
+  opacity: 0.15;
+  transform: perspective(500px) rotateX(18deg) translateY(calc(-2% + var(--grid-scroll-y, 0px)));
 }
 
 .dashboard__orb {

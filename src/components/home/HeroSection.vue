@@ -57,8 +57,6 @@
         ref="heroCardRef"
         class="dash-hero-card dash-hero-card--3d"
         :class="{ 'dash-depth--ready': introReady }"
-        @pointermove="handleTilt($event)"
-        @pointerleave="resetTilt"
       >
         <div class="dash-hero-card__glow"></div>
         <p class="dash-hero-card__kicker">{{ t('home.hero.kicker') }}</p>
@@ -126,7 +124,6 @@ const metrics = computed(() => [
 ])
 
 let ctx = null
-let tiltTween = null
 let metricsTiltTween = null
 let parallaxCard = null
 let parallaxMetrics = null
@@ -267,36 +264,6 @@ watch(profileText, () => {
   restartTypewriter()
 })
 
-function handleTilt(event) {
-  if (prefersReducedMotion.value || !heroCardRef.value) return
-  const rect = heroCardRef.value.getBoundingClientRect()
-  const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2
-  const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2
-  const cx = gsap.utils.clamp(-1, 1, x)
-  const cy = gsap.utils.clamp(-1, 1, y)
-
-  if (tiltTween) tiltTween.kill()
-  tiltTween = gsap.to(heroCardRef.value, {
-    rotateX: cy * -8,
-    rotateY: cx * 10,
-    transformPerspective: 900,
-    duration: 0.45,
-    ease: 'power2.out',
-    overwrite: 'auto'
-  })
-}
-
-function resetTilt() {
-  if (tiltTween) tiltTween.kill()
-  tiltTween = gsap.to(heroCardRef.value, {
-    rotateX: 0,
-    rotateY: 0,
-    duration: 0.65,
-    ease: 'power3.out',
-    overwrite: 'auto'
-  })
-}
-
 function handleMetricsTilt(event) {
   if (prefersReducedMotion.value || !metricsRef.value) return
   const rect = metricsRef.value.getBoundingClientRect()
@@ -406,30 +373,6 @@ function initParallax() {
   ctx.add(() => window.removeEventListener('scroll', onScroll))
 }
 
-function initTiltOnHover() {
-  if (prefersReducedMotion.value || !heroCardRef.value) return
-
-  const card = heroCardRef.value
-
-  card.addEventListener('pointerenter', () => {
-    gsap.to(card, {
-      '--glow-opacity': 1,
-      '--glow-scale': 1,
-      duration: 0.4,
-      ease: 'power2.out'
-    })
-  })
-
-  card.addEventListener('pointerleave', () => {
-    gsap.to(card, {
-      '--glow-opacity': 0,
-      '--glow-scale': 0.8,
-      duration: 0.6,
-      ease: 'power3.out'
-    })
-  })
-}
-
 onMounted(() => {
   if (window.matchMedia) {
     prefersReducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -438,7 +381,6 @@ onMounted(() => {
   ctx = gsap.context(() => {
     initNeonTrail()
     initParallax()
-    initTiltOnHover()
   }, sectionRef)
 
   sectionObserver = new IntersectionObserver(
@@ -477,7 +419,6 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', enableTypingSound)
 
   cancelTypewriter()
-  if (tiltTween) tiltTween.kill()
   if (metricsTiltTween) metricsTiltTween.kill()
   if (audioContext.value) audioContext.value.close()
   if (sectionObserver) sectionObserver.disconnect()
@@ -509,6 +450,7 @@ onBeforeUnmount(() => {
   z-index: 1;
   min-height: 100vh;
   padding-top: max(4.5rem, calc(var(--header-height, 88px) + 1rem));
+  margin-bottom: clamp(6rem, 12vh, 10rem);
   background: transparent;
 }
 
@@ -609,7 +551,7 @@ onBeforeUnmount(() => {
   position: relative;
   padding: 2rem 2rem 2.25rem;
   border-radius: 28px;
-  background: transparent;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 250, 252, 0.90));
   border: 1px solid var(--rose-border);
   box-shadow:
     var(--float-shadow-x, 0px) var(--float-shadow-y, 30px) var(--float-shadow-blur, 74px) rgba(214, 123, 165, 0.32),
@@ -619,18 +561,6 @@ onBeforeUnmount(() => {
   will-change: transform, box-shadow;
   transform-style: preserve-3d;
   overflow: hidden;
-}
-
-.dash-hero-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 245, 250, 0.88));
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  z-index: 0;
-  pointer-events: none;
 }
 
 .dash-hero-card__glow {
@@ -649,7 +579,7 @@ onBeforeUnmount(() => {
   border-radius: inherit;
 }
 
-.dash-hero-card > *:not(.dash-hero-card__glow):not(::before) {
+.dash-hero-card > *:not(.dash-hero-card__glow) {
   position: relative;
   z-index: 1;
 }
@@ -672,7 +602,7 @@ onBeforeUnmount(() => {
 .dash-hero-card__lead {
   font-size: 1.05rem;
   line-height: 1.65;
-  color: var(--rose-text-soft);
+  color: #7a405c;
   max-width: 36rem;
   margin-bottom: 1.75rem;
 }
@@ -773,9 +703,7 @@ onBeforeUnmount(() => {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 250, 252, 0.90));
   z-index: 0;
   pointer-events: none;
 }
@@ -802,7 +730,7 @@ onBeforeUnmount(() => {
 
 .dash-metric__label {
   font-size: 0.8rem;
-  color: var(--rose-text-soft);
+  color: #7a405c;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
