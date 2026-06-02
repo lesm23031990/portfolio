@@ -544,7 +544,7 @@ onBeforeUnmount(() => {
   text-align: left;
   font-size: clamp(1.2rem, 3vw, 1.8rem);
   color: #fff;
-  min-height: 2em;
+  min-height: 4em;
 }
 
 .dash-hero-profile__cursor {

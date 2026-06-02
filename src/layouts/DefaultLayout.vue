@@ -42,6 +42,7 @@ const mouseY = ref(0)
 
 const isDarkMode = ref(false)
 const trails = ref([])
+const SCROLL_SPEED = 0.35
 
 const updateMouse = (e) => {
   mouseX.value = e.clientX
@@ -52,7 +53,16 @@ const handleSectionChange = (e) => {
   isDarkMode.value = e.detail.isDark;
 };
 
-const MAX_TRAILS = 50
+const handleWheel = (e) => {
+  if (!isDashboard.value) return
+  e.preventDefault()
+  window.scrollBy({
+    top: e.deltaY * SCROLL_SPEED,
+    behavior: 'smooth'
+  })
+}
+
+const MAX_TRAILS = 150
 let lastTrailTime = 0
 
 const handleMouseMove = (e) => {
@@ -72,7 +82,7 @@ const handleMouseMove = (e) => {
   setTimeout(() => {
     const index = trails.value.findIndex(t => t.id === id)
     if (index !== -1) trails.value.splice(index, 1)
-  }, 200)
+  }, 1400)
 }
 
 
@@ -80,12 +90,14 @@ onMounted(() => {
   window.addEventListener('mousemove', updateMouse)
   window.addEventListener('section-change', handleSectionChange)
   window.addEventListener('mousemove', handleMouseMove)
+  window.addEventListener('wheel', handleWheel, { passive: false })
 })
 
 onUnmounted(() => {
   window.removeEventListener('mousemove', updateMouse)
   window.removeEventListener('section-change', handleSectionChange)
   window.removeEventListener('mousemove', handleMouseMove)
+  window.removeEventListener('wheel', handleWheel)
 })
 
 const mouseVars = computed(() => {
@@ -104,7 +116,7 @@ watch(isDarkMode, (val) => {
 <style scoped>
 .layout {
   width: 100%;
-  overflow-x: clip;
+  overflow-x: hidden;
 }
 
 .mouse-light {
@@ -155,21 +167,21 @@ watch(isDarkMode, (val) => {
     0 0 14px rgba(255, 0, 150, 0.95),
     0 0 34px rgba(255, 79, 216, 0.55);
   mix-blend-mode: screen;
-  animation: trailLife 0.65s ease-out forwards;
+  animation: trailLife 1.2s ease-out forwards;
 }
 
 @keyframes trailLife {
   0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.8);
   }
-  10% {
-    opacity: 1; /* Aparece rápido */
+  15% {
+    opacity: 1;
     transform: translate(-50%, -50%) scale(1.2);
   }
   100% {
-    opacity: 0; /* Desaparece lento */
-    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.2);
   }
 }
 
