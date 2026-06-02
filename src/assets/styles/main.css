@@ -1,0 +1,43 @@
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app,
+button,
+input,
+textarea,
+select {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.main {
+  min-height: calc(100vh - 120px);
+  padding: 2rem 0;
+}
+
+.main--dashboard {
+  padding: 0;
+  min-height: auto;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+  

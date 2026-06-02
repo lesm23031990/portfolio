@@ -1,0 +1,29 @@
+---
+description: Estándares de Vue 3, calidad de código y control estricto de idioma (Inglés)
+globs: *
+alwaysApply: true
+---
+# 🛠️ Tech Stack & Project Context
+
+## Core Technologies
+- **Framework**: Vue.js 3 (v3.2.13) usando estrictamente **Composition API** con el patrón `<script setup>`.
+- **State Management**: Vuex (v4.1.0).
+- **Routing**: Vue Router (v4.6.4).
+- **Internationalization (i18n)**: Vue-i18n (v11.4.0) - Todo texto debe estar en archivos JSON de traducción.
+- **Styling & UI**: Tailwind CSS (v4.2.4) con PostCSS 8 y Autoprefixer.
+- **Animations**: GSAP (GreenSock Animation Platform v3.15.0).
+- **Build Tooling**: Vue CLI Service (v5.0.0) basado en Webpack / Babel.
+
+## ⚙️ Development Standards & AI Instructions
+
+### Coding Rules & Quality (BugBot)
+- **Syntax**: Vue 3 SFC (Single File Components). Priorizar legibilidad y modularidad (Clean Code).
+- **Styles**: Usar utilidades nativas de Tailwind CSS v4. Evitar CSS puro innecesario.
+- **Animations**: Todo movimiento interactivo o transiciones complejas deben orquestarse con GSAP.
+- **Idioma**: Comentarios y nombres técnicos estrictamente en **INGLÉS**. Los comentarios en español se consideran un error.
+- **Limpieza**: Prohibido dejar `console.log` o código comentado en el código entregado.
+
+### Token Optimization
+- No saludes, no generes texto de relleno ni explicaciones teóricas de Vue.
+- Entrega únicamente los bloques de código modificados dentro de las etiquetas `<template>`, `<script>` o `<style>`. Usa marcadores `// ... existing code ...` cuando omitas líneas intermedias.
+- Usa comentarios descriptivos cortos en inglés dentro del código solo si la animación de GSAP o la lógica de Vuex es altamente compleja.
