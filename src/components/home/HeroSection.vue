@@ -708,14 +708,7 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
-.dash-metric:hover {
-  transform: translateY(-3px) translateZ(6px);
-  box-shadow:
-    var(--float-shadow-x, 0px) var(--float-shadow-y, 30px) var(--float-shadow-blur, 60px) rgba(227, 182, 206, 0.4),
-    var(--float-shadow-counter-x, 0px) 12px 30px rgba(111, 47, 84, 0.15),
-    0 2px 10px rgba(255, 255, 255, 0.82),
-    inset 0 1px 0 rgba(255, 255, 255, 0.72);
-}
+
 
 .dash-metric > * {
   position: relative;
