@@ -376,10 +376,14 @@ onMounted(() => {
     prefersReducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   }
 
-  ctx = gsap.context(() => {
-    initNeonTrail()
-    initParallax()
-  }, sectionRef)
+  ctx = gsap.context(() => {}, sectionRef.value)
+
+  if (!prefersReducedMotion.value) {
+    ctx.add(() => {
+      initNeonTrail()
+      initParallax()
+    })
+  }
 
   sectionObserver = new IntersectionObserver(
     ([entry]) => {
