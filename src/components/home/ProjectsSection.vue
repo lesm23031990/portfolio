@@ -51,7 +51,7 @@
                   rel="noopener noreferrer"
                   :aria-label="project.cta"
                 >
-                  <article :class="['project-card', index % 2 === 0 ? 'project-card--up' : 'project-card--down']">
+                  <article class="project-card">
                     <span class="project-card__id">{{ project.id }}</span>
                     <div class="project-card__visual" :style="project.previewStyle">
                       <div class="project-card__screen">
@@ -128,6 +128,24 @@ const gsapContext = ref(null)
 const resizeFrameId = ref(null)
 let hasTriggeredEntry = false
 let typewriterGen = 0
+const cardFloatAnimations = []
+
+function startCardFloat(cardElements) {
+  if (prefersReducedMotion.value) return
+  if (cardFloatAnimations.length > 0) return
+  cardElements.forEach((card, index) => {
+    const floatUp = index % 2 === 0
+    const offset = 16
+    const anim = gsap.to(card, {
+      y: floatUp ? -offset : offset,
+      duration: 2.6 + index * 0.3,
+      repeat: -1,
+      yoyo: true,
+      ease: 'back.inOut(3)'
+    })
+    cardFloatAnimations.push(anim)
+  })
+}
 
 const projectThemes = {
   migration: { accent: '#ff33d4', accentSoft: '#7ad6ff', start: '#33105f', end: '#0b122a' },
@@ -480,12 +498,13 @@ onMounted(async () => {
       .to(grid, { scale: () => getCardFitScale(1, 0.8, 0.72), yPercent: -6, duration: 1.02 }, 1.84)
       .to(frame, { opacity: 0, duration: 0.34 }, 2.04)
       .to(grid, { scale: () => getCardFitScale(1, 0.88, 0.72), gap: `${getExpandedGridGapPx()}px`, duration: 0.48, ease: 'expo.out' }, 2.18)
-      .to(track, { x: () => getTrackShift(), duration: 1.8, ease: 'none' }, 2.64)
-      .to(portal.querySelector('.portal-grid'), { opacity: 0.6, y: -100, duration: 0.9, ease: 'power2.inOut' }, 2.64)
-      .to(portal.querySelector('.portal-light'), { opacity: 1, scaleY: 1.5, duration: 0.9, ease: 'power2.inOut' }, 2.64)
-      .to(portal.querySelector('.portal-grid'), { opacity: 0, y: -200, duration: 0.9, ease: 'power2.inOut' }, 3.54)
-      .to(portal.querySelector('.portal-light'), { opacity: 0, scaleY: 0, duration: 0.9, ease: 'power2.inOut' }, 3.54)
-      .to(stackPane, { autoAlpha: 1, xPercent: 0, scale: 1, duration: 0.94, ease: 'expo.out' }, 3.5)
+      .call(startCardFloat, [cards], 2.4)
+      .to(track, { x: () => getTrackShift(), duration: 3.6, ease: 'none' }, 2.64)
+      .to(portal.querySelector('.portal-grid'), { opacity: 0.6, y: -100, duration: 1.8, ease: 'power2.inOut' }, 2.64)
+      .to(portal.querySelector('.portal-light'), { opacity: 1, scaleY: 1.5, duration: 1.8, ease: 'power2.inOut' }, 2.64)
+      .to(portal.querySelector('.portal-grid'), { opacity: 0, y: -200, duration: 1.8, ease: 'power2.inOut' }, 4.44)
+      .to(portal.querySelector('.portal-light'), { opacity: 0, scaleY: 0, duration: 1.8, ease: 'power2.inOut' }, 4.44)
+      .to(stackPane, { autoAlpha: 1, xPercent: 0, scale: 1, duration: 1.88, ease: 'expo.out' }, 4.36)
   }, section)
 
   // ScrollTrigger: animate elements in and start typewriter when section enters viewport
@@ -526,8 +545,8 @@ onMounted(async () => {
         )
         .fromTo(
           cards,
-          { autoAlpha: 0, y: 20 },
-          { autoAlpha: 1, y: 0, duration: 0.4, stagger: 0.07 },
+          { autoAlpha: 0 },
+          { autoAlpha: 1, duration: 0.4, stagger: 0.07 },
           0.2
         )
     },
@@ -543,6 +562,8 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   cancelTypewriter()
   clearTitleTimers()
+  cardFloatAnimations.forEach(anim => anim.kill())
+  cardFloatAnimations.length = 0
   if (gsapContext.value) gsapContext.value.revert()
   if (resizeFrameId.value) window.cancelAnimationFrame(resizeFrameId.value)
   if (sectionRef.value) {
@@ -866,7 +887,7 @@ onBeforeUnmount(() => {
     0 30px 70px rgba(0, 0, 0, 0.36),
     0 0 28px rgba(255, 51, 212, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+  transition: border-color 0.35s ease, box-shadow 0.35s ease;
 }
 
 .project-card::before {
@@ -1012,21 +1033,6 @@ onBeforeUnmount(() => {
   width: 82%;
 }
 
-.project-card--up { animation: project-float-up 4.8s ease-in-out infinite; }
-.project-card--down { animation: project-float-down 5.4s ease-in-out infinite; animation-delay: -1.2s; }
-
-@keyframes project-float-up {
-  0%, 100% { transform: translateY(10px); }
-  50% { transform: translateY(-10px); }
-}
-
-@keyframes project-float-down {
-  0%, 100% { transform: translateY(-8px); }
-  50% { transform: translateY(12px); }
-}
-
-
-
 @media (max-width: 1100px) {
   .projects-stage__pane--stack { padding: 1rem; }
   .projects-grid { grid-template-columns: repeat(4, minmax(14rem, 42vw)); }
@@ -1043,8 +1049,4 @@ onBeforeUnmount(() => {
   .project-card { width: min(58vw, 240px); min-width: 12rem; height: min(46vh, 360px); border-radius: 22px; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .project-card--up,
-  .project-card--down { animation: none; }
-}
 </style>
