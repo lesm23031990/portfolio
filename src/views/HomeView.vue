@@ -43,10 +43,11 @@ import ProjectsSection from '@/components/home/ProjectsSection.vue'
   margin-top: -1px;
   background: linear-gradient(
     to bottom,
-    #fffafe 0%,
-    rgba(255, 243, 249, 0.08) 12%,
-    rgba(20, 10, 24, 0.25) 40%,
-    rgba(6, 6, 11, 0.75) 72%,
+    transparent 0%,
+    rgba(255, 243, 249, 0.04) 15%,
+    rgba(20, 10, 24, 0.15) 30%,
+    rgba(6, 6, 11, 0.5) 55%,
+    rgba(6, 6, 11, 0.85) 78%,
     #06060b 100%
   );
   pointer-events: none;

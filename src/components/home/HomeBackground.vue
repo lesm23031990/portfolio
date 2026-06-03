@@ -2,8 +2,8 @@
   <div class="dashboard__parallax" aria-hidden="true">
     <div class="dashboard__grid dashboard__grid--far" :style="layerGridStyle(0.02)" />
     <div class="dashboard__grid dashboard__grid--near" :style="layerGridStyle(0.06)" />
-    <CircuitBackground v-if="isDesktop" :style="layerStyle(0.4)" />
-    <CircuitBackgroundMobile v-if="!isDesktop" :style="layerStyle(0.4)" />
+    <CircuitBackground v-if="isDesktop" />
+    <CircuitBackgroundMobile v-if="!isDesktop" />
     <div class="dashboard__orb dashboard__orb--a" :style="layerStyle(0.18, 0.015)" />
     <div class="dashboard__orb dashboard__orb--b" :style="layerStyle(-0.1, -0.01)" />
     <div class="dashboard__orb dashboard__orb--c" :style="layerStyle(0.06)" />
