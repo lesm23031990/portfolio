@@ -464,7 +464,7 @@ onMounted(async () => {
       }
     })
       .to(sectionInner, { autoAlpha: 1, y: 0, duration: 0.72, ease: 'expo.out' })
-      .fromTo(viewport, { yPercent: 34 }, { yPercent: 0, height: () => getViewportHeight(0.78), duration: 1.18 }, 0.02)
+      .to(viewport, { height: () => getViewportHeight(0.78), duration: 1.18 }, 0.02)
       .to(grid, { scale: () => getCardFitScale(0.78, 0.84, 0.76), yPercent: -4, duration: 1.18 }, 0.02)
       .to(frame, { '--frame-progress': 1, duration: 0.8, ease: 'none' }, 1.06)
       .to(terminal, { autoAlpha: 0, y: -26, duration: 0.3 }, 1.3)
@@ -475,6 +475,8 @@ onMounted(async () => {
         '--projects-inner-side-padding': '0px',
         duration: 1.02 
       }, 1.84)
+      .to(sectionInner, { gap: 0, duration: 1.02 }, 1.84)
+      .to(projectsPane, { padding: '0px', duration: 1.02 }, 1.84)
       .to(grid, { scale: () => getCardFitScale(1, 0.8, 0.72), yPercent: -6, duration: 1.02 }, 1.84)
       .to(frame, { opacity: 0, duration: 0.34 }, 2.04)
       .to(grid, { scale: () => getCardFitScale(1, 0.88, 0.72), gap: `${getExpandedGridGapPx()}px`, duration: 0.48, ease: 'expo.out' }, 2.18)
@@ -619,8 +621,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   overflow: hidden;
   min-height: 0;
-  padding-top: calc(var(--projects-header-offset, 88px) + 1.5rem);
-  padding-bottom: 1rem;
+  padding-top: var(--projects-header-offset, 88px);
 }
 
 .dash-panel-head {
