@@ -39,14 +39,15 @@ import ProjectsSection from '@/components/home/ProjectsSection.vue'
 .dashboard__bridge {
   display: block;
   width: 100%;
-  height: 100vh;
+  height: calc(100vh + 1px);
+  margin-top: -1px;
   background: linear-gradient(
     to bottom,
-    rgba(255, 249, 252, 0) 0%,
-    rgba(255, 243, 249, 0.04) 30%,
-    rgba(20, 10, 24, 0.2) 50%,
-    rgba(6, 6, 11, 0.7) 75%,
-    rgba(6, 6, 11, 1) 100%
+    #fffafe 0%,
+    rgba(255, 243, 249, 0.08) 12%,
+    rgba(20, 10, 24, 0.25) 40%,
+    rgba(6, 6, 11, 0.75) 72%,
+    #06060b 100%
   );
   pointer-events: none;
   position: relative;

@@ -2,7 +2,11 @@
   <section id="proyectos" ref="sectionRef" class="projects-stage">
     <div ref="sectionInnerRef" class="projects-stage__inner">
       <div ref="terminalSlotRef" class="projects-stage__terminal-slot">
-        <header ref="terminalRef" class="dash-terminal">
+        <header
+          ref="terminalRef"
+          class="dash-terminal"
+          :class="{ 'dash-terminal--typing': isCurrentlyTyping }"
+        >
           <div class="dash-terminal__header">
             <div class="dash-terminal__dots">
               <span class="dot dot--red"></span>
@@ -11,14 +15,21 @@
             </div>
             <div class="dash-terminal__title">projects.sh - bash</div>
           </div>
-          <div class="dash-terminal__body">
+          <div class="dash-terminal__body" @click="handleTerminalClick">
             <div class="dash-panel-head">
               <h3 class="dash-panel-head__title">
                 <span class="dash-code-prefix">~ </span>
                 <span>{{ typedProjectsTitle }}</span>
-                <span v-if="!prefersReducedMotion" class="dash-panel-head__cursor" aria-hidden="true"></span>
+                <span v-if="!prefersReducedMotion && isCurrentlyTyping && !hasTypedTitle" class="dash-panel-head__cursor" aria-hidden="true"></span>
               </h3>
-              <p class="dash-panel-head__sub">{{ t('home.sections.projects.subtitle') }}</p>
+              <p class="dash-panel-head__sub">
+                <span>{{ typedProjectsSubtitle }}</span>
+                <span v-if="!prefersReducedMotion && isCurrentlyTyping && hasTypedTitle" class="dash-panel-head__cursor" aria-hidden="true"></span>
+              </p>
+              <span
+                v-if="!isCurrentlyTyping && hasTypedTitle && typedProjectsSubtitle.length === projectsSubtitle.length"
+                class="dash-terminal__replay-hint"
+              >▸ click to replay</span>
             </div>
           </div>
         </header>
@@ -40,7 +51,7 @@
                   rel="noopener noreferrer"
                   :aria-label="project.cta"
                 >
-                  <article :class="['project-card', index % 2 === 0 ? 'project-card--up' : 'project-card--down']">
+                  <article class="project-card">
                     <span class="project-card__id">{{ project.id }}</span>
                     <div class="project-card__visual" :style="project.previewStyle">
                       <div class="project-card__screen">
@@ -105,13 +116,36 @@ const portalRef = ref(null)
 const gridRef = ref(null)
 const cardRefs = ref([])
 const typedProjectsTitle = ref('')
+const typedProjectsSubtitle = ref('')
 const prefersReducedMotion = ref(false)
 const isVisible = ref(false)
 const hasTypedTitle = ref(false)
+const isCurrentlyTyping = ref(false)
 const titleDelayId = ref(null)
-const titleIntervalId = ref(null)
+const audioContext = ref(null)
+const canPlayTypingSound = ref(false)
 const gsapContext = ref(null)
 const resizeFrameId = ref(null)
+let hasTriggeredEntry = false
+let typewriterGen = 0
+const cardFloatAnimations = []
+
+function startCardFloat(cardElements) {
+  if (prefersReducedMotion.value) return
+  if (cardFloatAnimations.length > 0) return
+  cardElements.forEach((card, index) => {
+    const floatUp = index % 2 === 0
+    const offset = 16
+    const anim = gsap.to(card, {
+      y: floatUp ? -offset : offset,
+      duration: 2.6 + index * 0.3,
+      repeat: -1,
+      yoyo: true,
+      ease: 'back.inOut(3)'
+    })
+    cardFloatAnimations.push(anim)
+  })
+}
 
 const projectThemes = {
   migration: { accent: '#ff33d4', accentSoft: '#7ad6ff', start: '#33105f', end: '#0b122a' },
@@ -121,6 +155,7 @@ const projectThemes = {
 }
 
 const projectsTitle = computed(() => t('home.sections.projects.title'))
+const projectsSubtitle = computed(() => t('home.sections.projects.subtitle'))
 const projectItems = computed(() => {
   const localizedItems = messages.value?.[locale.value]?.home?.projectShowcase?.items || {}
   return Object.entries(projectThemes).map(([key, theme], index) => {
@@ -151,37 +186,124 @@ function emitDarkState(value) {
 
 function clearTitleTimers() {
   if (titleDelayId.value) window.clearTimeout(titleDelayId.value)
-  if (titleIntervalId.value) window.clearInterval(titleIntervalId.value)
   titleDelayId.value = null
-  titleIntervalId.value = null
 }
 
-function typeTitle(forceRestart = false) {
-  if (!isVisible.value) return
+function enableTypingSound() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext
+  if (!AudioContextClass || prefersReducedMotion.value) return
+  if (!audioContext.value) {
+    try {
+      audioContext.value = new AudioContextClass()
+    } catch {
+      return
+    }
+  }
+  if (audioContext.value.state === 'suspended') {
+    audioContext.value.resume()
+  }
+  canPlayTypingSound.value = true
+}
+
+function playTypingClick() {
+  if (!canPlayTypingSound.value || !audioContext.value) return
+  try {
+    const now = audioContext.value.currentTime
+    const oscillator = audioContext.value.createOscillator()
+    const gain = audioContext.value.createGain()
+    oscillator.type = 'square'
+    oscillator.frequency.setValueAtTime(760 + Math.random() * 120, now)
+    gain.gain.setValueAtTime(0.018, now)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035)
+    oscillator.connect(gain)
+    gain.connect(audioContext.value.destination)
+    oscillator.start(now)
+    oscillator.stop(now + 0.035)
+  } catch {
+    // AudioContext may be closed during cleanup
+  }
+}
+
+function getCharDelay(char) {
+  if (/[aeiouáéíóú]/i.test(char)) return 40 + Math.random() * 30
+  if (/[.,!?;:]/.test(char)) return 100 + Math.random() * 60
+  if (/[A-ZÑ]/.test(char)) return 70 + Math.random() * 40
+  if (/[\d]/.test(char)) return 50 + Math.random() * 40
+  if (/[-\s]/.test(char)) return 30 + Math.random() * 20
+  return 60 + Math.random() * 40
+}
+
+function typeTitle(forceRestart = false, bypassVisibility = false) {
+  if (!bypassVisibility && !isVisible.value) return
   if (!forceRestart && hasTypedTitle.value) return
 
   clearTitleTimers()
-  typedProjectsTitle.value = ''
+  const gen = ++typewriterGen
 
-  if (prefersReducedMotion.value) {
-    typedProjectsTitle.value = projectsTitle.value
-    hasTypedTitle.value = true
-    return
+  typedProjectsTitle.value = ''
+  typedProjectsSubtitle.value = ''
+  hasTypedTitle.value = false
+  isCurrentlyTyping.value = true
+
+  if (!canPlayTypingSound.value && !prefersReducedMotion.value) enableTypingSound()
+
+  const texts = [projectsTitle.value, projectsSubtitle.value]
+  let textIndex = 0
+  let charIndex = 0
+
+  function typeNext() {
+    if (gen !== typewriterGen) {
+      isCurrentlyTyping.value = false
+      return
+    }
+
+    if (textIndex === 0) {
+      typedProjectsTitle.value = texts[0].slice(0, charIndex)
+    } else {
+      typedProjectsTitle.value = texts[0]
+      typedProjectsSubtitle.value = texts[1].slice(0, charIndex)
+    }
+
+    if (textIndex < texts.length) {
+      if (charIndex < texts[textIndex].length) {
+        const char = texts[textIndex][charIndex]
+        charIndex++
+        if (char !== ' ') {
+          playTypingClick()
+          setTimeout(typeNext, getCharDelay(char))
+        } else {
+          setTimeout(typeNext, 30 + Math.random() * 20)
+        }
+      } else {
+        textIndex++
+        charIndex = 0
+        if (textIndex < texts.length) {
+          setTimeout(typeNext, 400 + Math.random() * 200)
+        } else {
+          hasTypedTitle.value = true
+          isCurrentlyTyping.value = false
+        }
+      }
+    } else {
+      hasTypedTitle.value = true
+      isCurrentlyTyping.value = false
+    }
   }
 
-  hasTypedTitle.value = false
-  let index = 0
+  titleDelayId.value = window.setTimeout(typeNext, 600 + Math.random() * 400)
+}
 
-  titleDelayId.value = window.setTimeout(() => {
-    titleIntervalId.value = window.setInterval(() => {
-      typedProjectsTitle.value += projectsTitle.value[index]
-      index += 1
-      if (index >= projectsTitle.value.length) {
-        clearTitleTimers()
-        hasTypedTitle.value = true
-      }
-    }, 60)
-  }, 900)
+function cancelTypewriter() {
+  typewriterGen++
+  isCurrentlyTyping.value = false
+}
+
+function handleTerminalClick() {
+  if (isCurrentlyTyping.value) return
+  typedProjectsTitle.value = ''
+  typedProjectsSubtitle.value = ''
+  hasTypedTitle.value = false
+  typeTitle(true)
 }
 
 function setCardRef(element, index) {
@@ -250,16 +372,23 @@ function scheduleRefresh() {
 
 watch(isVisible, (visibleNow) => {
   emitDarkState(visibleNow)
-  if (visibleNow) typeTitle()
+  if (visibleNow) {
+    typeTitle(true)
+  } else {
+    cancelTypewriter()
+    hasTypedTitle.value = false
+  }
 })
 
 watch(projectsTitle, () => {
+  cancelTypewriter()
   hasTypedTitle.value = false
   if (isVisible.value) {
     typeTitle(true)
     return
   }
   typedProjectsTitle.value = ''
+  typedProjectsSubtitle.value = ''
 })
 
 onMounted(async () => {
@@ -324,24 +453,8 @@ onMounted(async () => {
 
   updateLayoutMetrics()
   
-  // Entry reveal animation (overlap hero)
-  gsap.fromTo(section, 
-    { 
-      y: 100
-    },
-    {
-      y: 0,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: section,
-        start: 'top bottom',
-        end: 'top top',
-        scrub: true
-      }
-    }
-  )
-
-  gsap.set(sectionInner, { autoAlpha: 0.12, y: 132 })
+  // Entry reveal animation
+  gsap.set(sectionInner, { autoAlpha: 0.1, y: 132 })
   gsap.set(terminalSlot, { height: terminalSlot.offsetHeight, autoAlpha: 1 })
   gsap.set(viewport, { width: '92%', height: getViewportHeight(0.5), borderRadius: '34px' })
   gsap.set(frame, { '--frame-progress': 0, opacity: 1 })
@@ -369,28 +482,76 @@ onMounted(async () => {
       }
     })
       .to(sectionInner, { autoAlpha: 1, y: 0, duration: 0.72, ease: 'expo.out' })
-      .fromTo(viewport, { yPercent: 34 }, { yPercent: 0, width: '100%', height: () => getViewportHeight(0.78), duration: 1.18 }, 0.02)
+      .to(viewport, { height: () => getViewportHeight(0.78), duration: 1.18 }, 0.02)
       .to(grid, { scale: () => getCardFitScale(0.78, 0.84, 0.76), yPercent: -4, duration: 1.18 }, 0.02)
       .to(frame, { '--frame-progress': 1, duration: 0.8, ease: 'none' }, 1.06)
       .to(terminal, { autoAlpha: 0, y: -26, duration: 0.3 }, 1.3)
-      .to(terminalSlot, { height: 0, autoAlpha: 0, duration: 0.48 }, 1.26)
+      .to(terminalSlot, { height: 0, padding: 0, autoAlpha: 0, duration: 0.48 }, 1.26)
       .to(viewport, { width: '100%', height: '100%', borderRadius: 0, duration: 1.02 }, 1.84)
       .to(section, { 
-        '--projects-bg-opacity': 0.18, 
         '--projects-inner-top-padding': '0px',
         '--projects-inner-side-padding': '0px',
         duration: 1.02 
       }, 1.84)
+      .to(sectionInner, { gap: 0, duration: 1.02 }, 1.84)
+      .to(projectsPane, { padding: '0px', duration: 1.02 }, 1.84)
       .to(grid, { scale: () => getCardFitScale(1, 0.8, 0.72), yPercent: -6, duration: 1.02 }, 1.84)
       .to(frame, { opacity: 0, duration: 0.34 }, 2.04)
       .to(grid, { scale: () => getCardFitScale(1, 0.88, 0.72), gap: `${getExpandedGridGapPx()}px`, duration: 0.48, ease: 'expo.out' }, 2.18)
-      .to(track, { x: () => getTrackShift(), duration: 1.8, ease: 'none' }, 2.64)
-      .to(portal.querySelector('.portal-grid'), { opacity: 0.6, y: -100, duration: 0.9, ease: 'power2.inOut' }, 2.64)
-      .to(portal.querySelector('.portal-light'), { opacity: 1, scaleY: 1.5, duration: 0.9, ease: 'power2.inOut' }, 2.64)
-      .to(portal.querySelector('.portal-grid'), { opacity: 0, y: -200, duration: 0.9, ease: 'power2.inOut' }, 3.54)
-      .to(portal.querySelector('.portal-light'), { opacity: 0, scaleY: 0, duration: 0.9, ease: 'power2.inOut' }, 3.54)
-      .to(stackPane, { autoAlpha: 1, xPercent: 0, scale: 1, duration: 0.94, ease: 'expo.out' }, 3.5)
+      .call(startCardFloat, [cards], 2.4)
+      .to(track, { x: () => getTrackShift(), duration: 3.6, ease: 'none' }, 2.64)
+      .to(portal.querySelector('.portal-grid'), { opacity: 0.6, y: -100, duration: 1.8, ease: 'power2.inOut' }, 2.64)
+      .to(portal.querySelector('.portal-light'), { opacity: 1, scaleY: 1.5, duration: 1.8, ease: 'power2.inOut' }, 2.64)
+      .to(portal.querySelector('.portal-grid'), { opacity: 0, y: -200, duration: 1.8, ease: 'power2.inOut' }, 4.44)
+      .to(portal.querySelector('.portal-light'), { opacity: 0, scaleY: 0, duration: 1.8, ease: 'power2.inOut' }, 4.44)
+      .to(stackPane, { autoAlpha: 1, xPercent: 0, scale: 1, duration: 1.88, ease: 'expo.out' }, 4.36)
   }, section)
+
+  // ScrollTrigger: animate elements in and start typewriter when section enters viewport
+  ScrollTrigger.create({
+    trigger: section,
+    start: 'top bottom-=80',
+    onEnter: () => {
+      if (hasTriggeredEntry) return
+      hasTriggeredEntry = true
+
+      if (prefersReducedMotion.value) {
+        gsap.set([
+          section.querySelector('.dash-terminal__header'),
+          section.querySelector('.dash-terminal__body'),
+          viewportWrapper,
+          ...cards
+        ], { autoAlpha: 1, x: 0, y: 0, scale: 1 })
+        return
+      }
+
+      gsap.timeline({ defaults: { ease: 'power2.out' } })
+        .fromTo(
+          section.querySelector('.dash-terminal__header'),
+          { autoAlpha: 0, x: -18 },
+          { autoAlpha: 1, x: 0, duration: 0.4 }
+        )
+        .fromTo(
+          section.querySelector('.dash-terminal__body'),
+          { autoAlpha: 0, x: 18 },
+          { autoAlpha: 1, x: 0, duration: 0.4 },
+          0.08
+        )
+        .fromTo(
+          viewportWrapper,
+          { autoAlpha: 0, scale: 0.92 },
+          { autoAlpha: 1, scale: 1, duration: 0.55 },
+          0.16
+        )
+        .fromTo(
+          cards,
+          { autoAlpha: 0 },
+          { autoAlpha: 1, duration: 0.4, stagger: 0.07 },
+          0.2
+        )
+    },
+    once: true
+  })
 
   section.addEventListener('pointermove', handleDepthPointerMove)
   section.addEventListener('pointerleave', resetDepthPointer)
@@ -399,7 +560,10 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+  cancelTypewriter()
   clearTitleTimers()
+  cardFloatAnimations.forEach(anim => anim.kill())
+  cardFloatAnimations.length = 0
   if (gsapContext.value) gsapContext.value.revert()
   if (resizeFrameId.value) window.cancelAnimationFrame(resizeFrameId.value)
   if (sectionRef.value) {
@@ -407,6 +571,7 @@ onBeforeUnmount(() => {
     sectionRef.value.removeEventListener('pointerleave', resetDepthPointer)
   }
   window.removeEventListener('resize', scheduleRefresh)
+  if (audioContext.value) audioContext.value.close()
   resetDepthPointer()
   emitDarkState(false)
 })
@@ -418,7 +583,6 @@ onBeforeUnmount(() => {
 .projects-stage {
   --projects-header-offset: 88px;
   --projects-pane-gap: clamp(7.5rem, 14vw, 16rem);
-  --projects-bg-opacity: 1;
   --projects-inner-top-padding: clamp(2.5rem, 5vh, 4rem);
   --projects-parallax-x: 0px;
   --projects-parallax-y: 0px;
@@ -446,13 +610,8 @@ onBeforeUnmount(() => {
     translateX(-50%)
     translate3d(var(--projects-parallax-x), var(--projects-parallax-y), 0)
     scale(1.04);
-  background:
-    radial-gradient(circle at 50% 0%, rgba(255, 0, 212, 0.18), transparent 24%),
-    radial-gradient(circle at 82% 16%, rgba(122, 214, 255, 0.12), transparent 20%),
-    linear-gradient(180deg, rgba(255, 243, 249, 0.55) 0%, #06060b 12%, #090913 38%, #04050a 100%);
-  opacity: var(--projects-bg-opacity);
+  background: #06060b;
   z-index: -1;
-  transition: transform 0.35s ease-out;
 }
 
 .projects-stage::after {
@@ -461,18 +620,9 @@ onBeforeUnmount(() => {
   inset: 6% auto auto 50%;
   width: 100%;
   height: 72%;
-  transform:
-    translateX(-50%)
-    translate3d(var(--projects-parallax-x-soft), var(--projects-parallax-y-soft), 0);
-  background:
-    radial-gradient(circle at 22% 24%, rgba(255, 51, 212, 0.15), transparent 18%),
-    radial-gradient(circle at 78% 30%, rgba(122, 214, 255, 0.12), transparent 20%),
-    radial-gradient(circle at 55% 72%, rgba(255, 255, 255, 0.07), transparent 24%);
-  opacity: calc(var(--projects-bg-opacity) * 0.92);
+  transform: translateX(-50%);
   pointer-events: none;
   z-index: -1;
-  filter: blur(22px);
-  transition: transform 0.4s ease-out, opacity 0.35s ease;
 }
 
 .projects-stage__inner {
@@ -492,6 +642,14 @@ onBeforeUnmount(() => {
   justify-content: center;
   overflow: hidden;
   min-height: 0;
+  padding-top: calc(var(--projects-header-offset, 88px) + 1.5rem);
+  padding-bottom: 1rem;
+}
+
+.dash-panel-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .dash-terminal {
@@ -503,6 +661,10 @@ onBeforeUnmount(() => {
     0 24px 90px rgba(0, 0, 0, 0.42),
     0 0 42px rgba(255, 51, 212, 0.12),
     0 0 76px rgba(122, 214, 255, 0.08);
+}
+
+.dash-terminal__body {
+  padding-bottom: 3.5rem;
 }
 
 .dash-panel-head__title {
@@ -537,7 +699,27 @@ onBeforeUnmount(() => {
   animation: projects-cursor 0.78s steps(2, start) infinite;
 }
 
+.dash-terminal--typing .dash-panel-head__cursor {
+  animation-duration: 0.4s;
+}
+
 @keyframes projects-cursor { 50% { opacity: 0; } }
+
+.dash-terminal__replay-hint {
+  display: inline-block;
+  margin-top: 0.75rem;
+  font-size: 0.72rem;
+  font-family: 'Fira Code', 'Courier New', monospace;
+  color: rgba(255, 255, 255, 0.25);
+  letter-spacing: 0.05em;
+  animation: projects-hint-pulse 2s ease-in-out infinite;
+  user-select: none;
+}
+
+@keyframes projects-hint-pulse {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.6; }
+}
 
 .projects-stage__viewport-wrapper {
   display: flex;
@@ -705,7 +887,7 @@ onBeforeUnmount(() => {
     0 30px 70px rgba(0, 0, 0, 0.36),
     0 0 28px rgba(255, 51, 212, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+  transition: border-color 0.35s ease, box-shadow 0.35s ease;
 }
 
 .project-card::before {
@@ -851,19 +1033,6 @@ onBeforeUnmount(() => {
   width: 82%;
 }
 
-.project-card--up { animation: project-float-up 4.8s ease-in-out infinite; }
-.project-card--down { animation: project-float-down 5.4s ease-in-out infinite; animation-delay: -1.2s; }
-
-@keyframes project-float-up {
-  0%, 100% { transform: translateY(10px); }
-  50% { transform: translateY(-10px); }
-}
-
-@keyframes project-float-down {
-  0%, 100% { transform: translateY(-8px); }
-  50% { transform: translateY(12px); }
-}
-
 @media (max-width: 1100px) {
   .projects-stage__pane--stack { padding: 1rem; }
   .projects-grid { grid-template-columns: repeat(4, minmax(14rem, 42vw)); }
@@ -880,14 +1049,4 @@ onBeforeUnmount(() => {
   .project-card { width: min(58vw, 240px); min-width: 12rem; height: min(46vh, 360px); border-radius: 22px; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .projects-stage::before,
-  .projects-stage::after {
-    transition: none;
-    transform: translateX(-50%);
-  }
-
-  .project-card--up,
-  .project-card--down { animation: none; }
-}
 </style>

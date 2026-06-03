@@ -184,7 +184,7 @@ function navItemClasses(item) {
     : [
         isProjectsOrStack.value ? 'text-rose-100/82 hover:text-rose-50 hover:tracking-[0.22em]' : 'text-rose-400/85 hover:tracking-[0.22em]',
         item.home
-          ? 'text-[0.94rem] font-light tracking-[0.26em] text-rose-500/90 lg:text-[1rem]'
+          ? 'text-rose-500/90'
           : ''
       ]
 }
@@ -222,8 +222,11 @@ function resolveActiveSection() {
 
   sectionIds.forEach((id) => {
     const section = document.getElementById(id)
+    if (!section) return
 
-    if (section && section.getBoundingClientRect().top - viewportThreshold <= 0) {
+    const rect = section.getBoundingClientRect()
+    if (rect.top - viewportThreshold <= 0) {
+      if (id === 'stack' && rect.left >= window.innerWidth) return
       currentSection = id
     }
   })
