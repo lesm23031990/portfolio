@@ -2,8 +2,8 @@
   <div class="dashboard__parallax" aria-hidden="true">
     <div class="dashboard__grid dashboard__grid--far" :style="layerGridStyle(0.02)" />
     <div class="dashboard__grid dashboard__grid--near" :style="layerGridStyle(0.06)" />
-    <CircuitBackground v-if="isDesktop" :style="layerStyle(0.4)" />
-    <CircuitBackgroundMobile v-if="!isDesktop" :style="layerStyle(0.4)" />
+    <CircuitBackground v-if="isDesktop" />
+    <CircuitBackgroundMobile v-if="!isDesktop" />
     <div class="dashboard__orb dashboard__orb--a" :style="layerStyle(0.18, 0.015)" />
     <div class="dashboard__orb dashboard__orb--b" :style="layerStyle(-0.1, -0.01)" />
     <div class="dashboard__orb dashboard__orb--c" :style="layerStyle(0.06)" />
@@ -42,7 +42,7 @@ function onScroll() {
 
   rafId.value = window.requestAnimationFrame(() => {
     const newY = window.scrollY || document.documentElement.scrollTop
-    if (Math.abs(newY - scrollY.value) > 2) {
+    if (Math.abs(newY - scrollY.value) > 8) {
       scrollY.value = newY
     }
     rafId.value = null
@@ -131,7 +131,7 @@ onBeforeUnmount(() => {
 .dashboard__orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(60px);
+  filter: blur(40px);
   opacity: 0.55;
   will-change: transform;
 }

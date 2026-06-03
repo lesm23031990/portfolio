@@ -77,7 +77,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import CircuitBackground from '@/components/ui/CircuitBackground.vue'
 import CircuitBackgroundMobile from '@/components/ui/CircuitBackgroundMobile.vue'
@@ -112,19 +112,6 @@ const contactLinkedin = computed(() => messages.value?.[locale.value]?.home?.con
 const contactGithub = computed(() => messages.value?.[locale.value]?.home?.contact?.githubUrl || '#')
 const contactEmailHref = computed(() => `mailto:${contactEmail.value}`)
 
-function emitDarkState(value) {
-  document.body.classList.toggle('is-dark-mode', false)
-  window.dispatchEvent(
-    new CustomEvent('section-change', {
-      detail: { isDark: value }
-    })
-  )
-}
-
-watch(isVisible, () => {
-  emitDarkState(false)
-})
-
 onMounted(() => {
   sectionObserver.value = new IntersectionObserver(
     ([entry]) => {
@@ -147,8 +134,6 @@ onBeforeUnmount(() => {
 
   window.removeEventListener('resize', onWidthResize)
   if (widthTimer) window.cancelAnimationFrame(widthTimer)
-
-  emitDarkState(false)
 })
 </script>
 

@@ -108,7 +108,7 @@ const isTerminalHovered = ref(false)
 const isCurrentlyTyping = ref(false)
 const scrollY = shallowRef(0)
 
-const trailCount = 8
+const trailCount = 5
 const trailDots = {}
 
 const audioContext = ref(null)
@@ -131,6 +131,9 @@ let tiltTarget = { x: 0, y: 0 }
 let tiltCurrent = { x: 0, y: 0 }
 let tiltRaf = null
 let parallaxY = 0
+let metricsTiltTarget = { x: 0, y: 0 }
+let metricsTiltCurrent = { x: 0, y: 0 }
+let metricsTiltRaf = null
 let sectionObserver = null
 let typewriterGen = 0
 
@@ -255,14 +258,28 @@ watch(profileText, () => {
 function handleMetricsTilt(event) {
   if (!metricsRef.value) return
   const rect = metricsRef.value.getBoundingClientRect()
-  const cx = gsap.utils.clamp(-1, 1, ((event.clientX - rect.left) / rect.width - 0.5) * 2)
-  const cy = gsap.utils.clamp(-1, 1, ((event.clientY - rect.top) / rect.height - 0.5) * 2)
-  metricsRef.value.style.transform = `perspective(900px) rotateX(${cy * 8}deg) rotateY(${cx * 8}deg)`
+  metricsTiltTarget.x = gsap.utils.clamp(-1, 1, ((event.clientX - rect.left) / rect.width - 0.5) * 2) * 8
+  metricsTiltTarget.y = gsap.utils.clamp(-1, 1, ((event.clientY - rect.top) / rect.height - 0.5) * 2) * 8
+  if (!metricsTiltRaf) metricsTiltRaf = requestAnimationFrame(metricsTiltLoop)
+}
+
+function metricsTiltLoop() {
+  metricsTiltCurrent.x += (metricsTiltTarget.x - metricsTiltCurrent.x) * 0.12
+  metricsTiltCurrent.y += (metricsTiltTarget.y - metricsTiltCurrent.y) * 0.12
+  if (metricsRef.value) {
+    metricsRef.value.style.transform = `perspective(900px) rotateX(${metricsTiltCurrent.y}deg) rotateY(${metricsTiltCurrent.x}deg)`
+  }
+  if (Math.abs(metricsTiltCurrent.x - metricsTiltTarget.x) > 0.01 || Math.abs(metricsTiltCurrent.y - metricsTiltTarget.y) > 0.01) {
+    metricsTiltRaf = requestAnimationFrame(metricsTiltLoop)
+  } else {
+    metricsTiltRaf = null
+  }
 }
 
 function resetMetricsTilt() {
-  if (!metricsRef.value) return
-  metricsRef.value.style.transform = ''
+  metricsTiltTarget.x = 0
+  metricsTiltTarget.y = 0
+  if (!metricsTiltRaf) metricsTiltRaf = requestAnimationFrame(metricsTiltLoop)
 }
 
 function tiltLoop() {
@@ -376,10 +393,14 @@ onMounted(() => {
     prefersReducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   }
 
-  ctx = gsap.context(() => {
-    initNeonTrail()
-    initParallax()
-  }, sectionRef)
+  ctx = gsap.context(() => {}, sectionRef.value)
+
+  if (!prefersReducedMotion.value) {
+    ctx.add(() => {
+      initNeonTrail()
+      initParallax()
+    })
+  }
 
   sectionObserver = new IntersectionObserver(
     ([entry]) => {
@@ -423,6 +444,7 @@ onBeforeUnmount(() => {
 
   cancelTypewriter()
   if (tiltRaf) cancelAnimationFrame(tiltRaf)
+  if (metricsTiltRaf) cancelAnimationFrame(metricsTiltRaf)
   if (metricsRef.value) {
     metricsRef.value.removeEventListener('pointermove', handleMetricsTilt)
     metricsRef.value.removeEventListener('pointerleave', resetMetricsTilt)
@@ -689,7 +711,7 @@ onBeforeUnmount(() => {
 .dash-metrics {
   display: grid;
   gap: 1rem;
-  transition: transform 0.2s ease-out, filter 0.2s ease;
+  transition: filter 0.2s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
