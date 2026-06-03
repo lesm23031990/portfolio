@@ -2,7 +2,11 @@
   <section id="proyectos" ref="sectionRef" class="projects-stage">
     <div ref="sectionInnerRef" class="projects-stage__inner">
       <div ref="terminalSlotRef" class="projects-stage__terminal-slot">
-        <header ref="terminalRef" class="dash-terminal">
+        <header
+          ref="terminalRef"
+          class="dash-terminal"
+          :class="{ 'dash-terminal--typing': isCurrentlyTyping }"
+        >
           <div class="dash-terminal__header">
             <div class="dash-terminal__dots">
               <span class="dot dot--red"></span>
@@ -11,14 +15,21 @@
             </div>
             <div class="dash-terminal__title">projects.sh - bash</div>
           </div>
-          <div class="dash-terminal__body">
+          <div class="dash-terminal__body" @click="handleTerminalClick">
             <div class="dash-panel-head">
               <h3 class="dash-panel-head__title">
                 <span class="dash-code-prefix">~ </span>
                 <span>{{ typedProjectsTitle }}</span>
-                <span v-if="!prefersReducedMotion" class="dash-panel-head__cursor" aria-hidden="true"></span>
+                <span v-if="!prefersReducedMotion && isCurrentlyTyping && !hasTypedTitle" class="dash-panel-head__cursor" aria-hidden="true"></span>
               </h3>
-              <p class="dash-panel-head__sub">{{ t('home.sections.projects.subtitle') }}</p>
+              <p class="dash-panel-head__sub">
+                <span>{{ typedProjectsSubtitle }}</span>
+                <span v-if="!prefersReducedMotion && isCurrentlyTyping && hasTypedTitle" class="dash-panel-head__cursor" aria-hidden="true"></span>
+              </p>
+              <span
+                v-if="!isCurrentlyTyping && hasTypedTitle && typedProjectsSubtitle.length === projectsSubtitle.length"
+                class="dash-terminal__replay-hint"
+              >▸ click to replay</span>
             </div>
           </div>
         </header>
@@ -105,14 +116,18 @@ const portalRef = ref(null)
 const gridRef = ref(null)
 const cardRefs = ref([])
 const typedProjectsTitle = ref('')
+const typedProjectsSubtitle = ref('')
 const prefersReducedMotion = ref(false)
 const isVisible = ref(false)
 const hasTypedTitle = ref(false)
+const isCurrentlyTyping = ref(false)
 const titleDelayId = ref(null)
-const titleIntervalId = ref(null)
+const audioContext = ref(null)
+const canPlayTypingSound = ref(false)
 const gsapContext = ref(null)
 const resizeFrameId = ref(null)
-let entryObserver = null
+let hasTriggeredEntry = false
+let typewriterGen = 0
 
 const projectThemes = {
   migration: { accent: '#ff33d4', accentSoft: '#7ad6ff', start: '#33105f', end: '#0b122a' },
@@ -122,6 +137,7 @@ const projectThemes = {
 }
 
 const projectsTitle = computed(() => t('home.sections.projects.title'))
+const projectsSubtitle = computed(() => t('home.sections.projects.subtitle'))
 const projectItems = computed(() => {
   const localizedItems = messages.value?.[locale.value]?.home?.projectShowcase?.items || {}
   return Object.entries(projectThemes).map(([key, theme], index) => {
@@ -152,9 +168,51 @@ function emitDarkState(value) {
 
 function clearTitleTimers() {
   if (titleDelayId.value) window.clearTimeout(titleDelayId.value)
-  if (titleIntervalId.value) window.clearInterval(titleIntervalId.value)
   titleDelayId.value = null
-  titleIntervalId.value = null
+}
+
+function enableTypingSound() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext
+  if (!AudioContextClass || prefersReducedMotion.value) return
+  if (!audioContext.value) {
+    try {
+      audioContext.value = new AudioContextClass()
+    } catch {
+      return
+    }
+  }
+  if (audioContext.value.state === 'suspended') {
+    audioContext.value.resume()
+  }
+  canPlayTypingSound.value = true
+}
+
+function playTypingClick() {
+  if (!canPlayTypingSound.value || !audioContext.value) return
+  try {
+    const now = audioContext.value.currentTime
+    const oscillator = audioContext.value.createOscillator()
+    const gain = audioContext.value.createGain()
+    oscillator.type = 'square'
+    oscillator.frequency.setValueAtTime(760 + Math.random() * 120, now)
+    gain.gain.setValueAtTime(0.018, now)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035)
+    oscillator.connect(gain)
+    gain.connect(audioContext.value.destination)
+    oscillator.start(now)
+    oscillator.stop(now + 0.035)
+  } catch {
+    // AudioContext may be closed during cleanup
+  }
+}
+
+function getCharDelay(char) {
+  if (/[aeiouáéíóú]/i.test(char)) return 40 + Math.random() * 30
+  if (/[.,!?;:]/.test(char)) return 100 + Math.random() * 60
+  if (/[A-ZÑ]/.test(char)) return 70 + Math.random() * 40
+  if (/[\d]/.test(char)) return 50 + Math.random() * 40
+  if (/[-\s]/.test(char)) return 30 + Math.random() * 20
+  return 60 + Math.random() * 40
 }
 
 function typeTitle(forceRestart = false, bypassVisibility = false) {
@@ -162,27 +220,72 @@ function typeTitle(forceRestart = false, bypassVisibility = false) {
   if (!forceRestart && hasTypedTitle.value) return
 
   clearTitleTimers()
-  typedProjectsTitle.value = ''
+  const gen = ++typewriterGen
 
-  if (prefersReducedMotion.value) {
-    typedProjectsTitle.value = projectsTitle.value
-    hasTypedTitle.value = true
-    return
+  typedProjectsTitle.value = ''
+  typedProjectsSubtitle.value = ''
+  hasTypedTitle.value = false
+  isCurrentlyTyping.value = true
+
+  if (!canPlayTypingSound.value && !prefersReducedMotion.value) enableTypingSound()
+
+  const texts = [projectsTitle.value, projectsSubtitle.value]
+  let textIndex = 0
+  let charIndex = 0
+
+  function typeNext() {
+    if (gen !== typewriterGen) {
+      isCurrentlyTyping.value = false
+      return
+    }
+
+    if (textIndex === 0) {
+      typedProjectsTitle.value = texts[0].slice(0, charIndex)
+    } else {
+      typedProjectsTitle.value = texts[0]
+      typedProjectsSubtitle.value = texts[1].slice(0, charIndex)
+    }
+
+    if (textIndex < texts.length) {
+      if (charIndex < texts[textIndex].length) {
+        const char = texts[textIndex][charIndex]
+        charIndex++
+        if (char !== ' ') {
+          playTypingClick()
+          setTimeout(typeNext, getCharDelay(char))
+        } else {
+          setTimeout(typeNext, 30 + Math.random() * 20)
+        }
+      } else {
+        textIndex++
+        charIndex = 0
+        if (textIndex < texts.length) {
+          setTimeout(typeNext, 400 + Math.random() * 200)
+        } else {
+          hasTypedTitle.value = true
+          isCurrentlyTyping.value = false
+        }
+      }
+    } else {
+      hasTypedTitle.value = true
+      isCurrentlyTyping.value = false
+    }
   }
 
-  hasTypedTitle.value = false
-  let index = 0
+  titleDelayId.value = window.setTimeout(typeNext, 600 + Math.random() * 400)
+}
 
-  titleDelayId.value = window.setTimeout(() => {
-    titleIntervalId.value = window.setInterval(() => {
-      typedProjectsTitle.value += projectsTitle.value[index]
-      index += 1
-      if (index >= projectsTitle.value.length) {
-        clearTitleTimers()
-        hasTypedTitle.value = true
-      }
-    }, 60)
-  }, 900)
+function cancelTypewriter() {
+  typewriterGen++
+  isCurrentlyTyping.value = false
+}
+
+function handleTerminalClick() {
+  if (isCurrentlyTyping.value) return
+  typedProjectsTitle.value = ''
+  typedProjectsSubtitle.value = ''
+  hasTypedTitle.value = false
+  typeTitle(true)
 }
 
 function setCardRef(element, index) {
@@ -251,16 +354,23 @@ function scheduleRefresh() {
 
 watch(isVisible, (visibleNow) => {
   emitDarkState(visibleNow)
-  if (visibleNow) typeTitle()
+  if (visibleNow) {
+    typeTitle(true)
+  } else {
+    cancelTypewriter()
+    hasTypedTitle.value = false
+  }
 })
 
 watch(projectsTitle, () => {
+  cancelTypewriter()
   hasTypedTitle.value = false
   if (isVisible.value) {
     typeTitle(true)
     return
   }
   typedProjectsTitle.value = ''
+  typedProjectsSubtitle.value = ''
 })
 
 onMounted(async () => {
@@ -326,21 +436,7 @@ onMounted(async () => {
   updateLayoutMetrics()
   
   // Entry reveal animation
-  gsap.fromTo(sectionInner,
-    { autoAlpha: 0.12 },
-    {
-      autoAlpha: 1,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: section,
-        start: 'top bottom',
-        end: 'top top',
-        scrub: true
-      }
-    }
-  )
-
-  gsap.set(sectionInner, { autoAlpha: 0.12, y: 132 })
+  gsap.set(sectionInner, { autoAlpha: 0.1, y: 132 })
   gsap.set(terminalSlot, { height: terminalSlot.offsetHeight, autoAlpha: 1 })
   gsap.set(viewport, { width: '92%', height: getViewportHeight(0.5), borderRadius: '34px' })
   gsap.set(frame, { '--frame-progress': 0, opacity: 1 })
@@ -368,7 +464,7 @@ onMounted(async () => {
       }
     })
       .to(sectionInner, { autoAlpha: 1, y: 0, duration: 0.72, ease: 'expo.out' })
-      .fromTo(viewport, { yPercent: 34 }, { yPercent: 0, width: '100%', height: () => getViewportHeight(0.78), duration: 1.18 }, 0.02)
+      .fromTo(viewport, { yPercent: 34 }, { yPercent: 0, height: () => getViewportHeight(0.78), duration: 1.18 }, 0.02)
       .to(grid, { scale: () => getCardFitScale(0.78, 0.84, 0.76), yPercent: -4, duration: 1.18 }, 0.02)
       .to(frame, { '--frame-progress': 1, duration: 0.8, ease: 'none' }, 1.06)
       .to(terminal, { autoAlpha: 0, y: -26, duration: 0.3 }, 1.3)
@@ -390,18 +486,51 @@ onMounted(async () => {
       .to(stackPane, { autoAlpha: 1, xPercent: 0, scale: 1, duration: 0.94, ease: 'expo.out' }, 3.5)
   }, section)
 
-  // IntersectionObserver: activate typewriter + entry animation as soon as section enters viewport
-  entryObserver = new IntersectionObserver(
-    ([entry]) => {
-      if (entry.isIntersecting && !section.classList.contains('projects-stage--entered')) {
-        section.classList.add('projects-stage--entered')
-        typeTitle(false, true)
-        entryObserver?.disconnect()
+  // ScrollTrigger: animate elements in and start typewriter when section enters viewport
+  ScrollTrigger.create({
+    trigger: section,
+    start: 'top bottom-=80',
+    onEnter: () => {
+      if (hasTriggeredEntry) return
+      hasTriggeredEntry = true
+
+      if (prefersReducedMotion.value) {
+        gsap.set([
+          section.querySelector('.dash-terminal__header'),
+          section.querySelector('.dash-terminal__body'),
+          viewportWrapper,
+          ...cards
+        ], { autoAlpha: 1, x: 0, y: 0, scale: 1 })
+        return
       }
+
+      gsap.timeline({ defaults: { ease: 'power2.out' } })
+        .fromTo(
+          section.querySelector('.dash-terminal__header'),
+          { autoAlpha: 0, x: -18 },
+          { autoAlpha: 1, x: 0, duration: 0.4 }
+        )
+        .fromTo(
+          section.querySelector('.dash-terminal__body'),
+          { autoAlpha: 0, x: 18 },
+          { autoAlpha: 1, x: 0, duration: 0.4 },
+          0.08
+        )
+        .fromTo(
+          viewportWrapper,
+          { autoAlpha: 0, scale: 0.92 },
+          { autoAlpha: 1, scale: 1, duration: 0.55 },
+          0.16
+        )
+        .fromTo(
+          cards,
+          { autoAlpha: 0, y: 20 },
+          { autoAlpha: 1, y: 0, duration: 0.4, stagger: 0.07 },
+          0.2
+        )
     },
-    { threshold: 0.08 }
-  )
-  entryObserver.observe(section)
+    once: true
+  })
 
   section.addEventListener('pointermove', handleDepthPointerMove)
   section.addEventListener('pointerleave', resetDepthPointer)
@@ -410,8 +539,8 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+  cancelTypewriter()
   clearTitleTimers()
-  if (entryObserver) entryObserver.disconnect()
   if (gsapContext.value) gsapContext.value.revert()
   if (resizeFrameId.value) window.cancelAnimationFrame(resizeFrameId.value)
   if (sectionRef.value) {
@@ -419,6 +548,7 @@ onBeforeUnmount(() => {
     sectionRef.value.removeEventListener('pointerleave', resetDepthPointer)
   }
   window.removeEventListener('resize', scheduleRefresh)
+  if (audioContext.value) audioContext.value.close()
   resetDepthPointer()
   emitDarkState(false)
 })
@@ -489,6 +619,14 @@ onBeforeUnmount(() => {
   justify-content: center;
   overflow: hidden;
   min-height: 0;
+  padding-top: calc(var(--projects-header-offset, 88px) + 1.5rem);
+  padding-bottom: 1rem;
+}
+
+.dash-panel-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .dash-terminal {
@@ -500,6 +638,10 @@ onBeforeUnmount(() => {
     0 24px 90px rgba(0, 0, 0, 0.42),
     0 0 42px rgba(255, 51, 212, 0.12),
     0 0 76px rgba(122, 214, 255, 0.08);
+}
+
+.dash-terminal__body {
+  padding-bottom: 3.5rem;
 }
 
 .dash-panel-head__title {
@@ -534,7 +676,27 @@ onBeforeUnmount(() => {
   animation: projects-cursor 0.78s steps(2, start) infinite;
 }
 
+.dash-terminal--typing .dash-panel-head__cursor {
+  animation-duration: 0.4s;
+}
+
 @keyframes projects-cursor { 50% { opacity: 0; } }
+
+.dash-terminal__replay-hint {
+  display: inline-block;
+  margin-top: 0.75rem;
+  font-size: 0.72rem;
+  font-family: 'Fira Code', 'Courier New', monospace;
+  color: rgba(255, 255, 255, 0.25);
+  letter-spacing: 0.05em;
+  animation: projects-hint-pulse 2s ease-in-out infinite;
+  user-select: none;
+}
+
+@keyframes projects-hint-pulse {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.6; }
+}
 
 .projects-stage__viewport-wrapper {
   display: flex;
@@ -861,55 +1023,7 @@ onBeforeUnmount(() => {
   50% { transform: translateY(12px); }
 }
 
-/* ── Entry animation ── */
-.projects-stage__inner,
-.dash-terminal {
-  filter: blur(10px);
-  transition: filter 0.7s ease;
-}
 
-.projects-stage--entered .projects-stage__inner,
-.projects-stage--entered .dash-terminal {
-  filter: blur(0);
-}
-
-.projects-stage__viewport-wrapper {
-  filter: blur(6px);
-  clip-path: inset(0 0 4% 0);
-  transition: filter 0.9s ease 0.15s, clip-path 0.9s ease 0.15s;
-}
-
-.projects-stage--entered .projects-stage__viewport-wrapper {
-  filter: blur(0);
-  clip-path: inset(0);
-}
-
-@keyframes project-card-enter {
-  from { opacity: 0; transform: translateY(18px) scale(0.96); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.project-card-link {
-  opacity: 0;
-  animation: project-card-enter 0.5s ease both;
-  animation-play-state: paused;
-}
-
-.projects-stage--entered .project-card-link {
-  animation-play-state: running;
-}
-
-.projects-stage--entered .project-card-link:nth-child(1) { animation-delay: 0.25s; }
-.projects-stage--entered .project-card-link:nth-child(2) { animation-delay: 0.33s; }
-.projects-stage--entered .project-card-link:nth-child(3) { animation-delay: 0.41s; }
-.projects-stage--entered .project-card-link:nth-child(4) { animation-delay: 0.49s; }
-
-@media (prefers-reduced-motion: reduce) {
-  .projects-stage__inner,
-  .dash-terminal,
-  .projects-stage__viewport-wrapper,
-  .project-card-link { filter: none; clip-path: none; opacity: 1; animation: none; }
-}
 
 @media (max-width: 1100px) {
   .projects-stage__pane--stack { padding: 1rem; }
