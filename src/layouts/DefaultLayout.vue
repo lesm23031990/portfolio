@@ -42,6 +42,7 @@ const mouseY = ref(0)
 
 const isDarkMode = ref(false)
 const trails = ref([])
+const SCROLL_SPEED = 1
 
 const updateMouse = (e) => {
   mouseX.value = e.clientX
@@ -52,7 +53,15 @@ const handleSectionChange = (e) => {
   isDarkMode.value = e.detail.isDark;
 };
 
-const MAX_TRAILS = 150
+const handleWheel = (e) => {
+  if (!isDashboard.value) return
+  e.preventDefault()
+  window.scrollBy({
+    top: e.deltaY * SCROLL_SPEED
+  })
+}
+
+const MAX_TRAILS = 50
 let lastTrailTime = 0
 
 const handleMouseMove = (e) => {
@@ -80,12 +89,14 @@ onMounted(() => {
   window.addEventListener('mousemove', updateMouse)
   window.addEventListener('section-change', handleSectionChange)
   window.addEventListener('mousemove', handleMouseMove)
+  window.addEventListener('wheel', handleWheel, { passive: false })
 })
 
 onUnmounted(() => {
   window.removeEventListener('mousemove', updateMouse)
   window.removeEventListener('section-change', handleSectionChange)
   window.removeEventListener('mousemove', handleMouseMove)
+  window.removeEventListener('wheel', handleWheel)
 })
 
 const mouseVars = computed(() => {

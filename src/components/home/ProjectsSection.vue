@@ -179,11 +179,6 @@ const projectItems = computed(() => {
   })
 })
 
-function emitDarkState(value) {
-  document.body.classList.toggle('is-dark-mode', value)
-  window.dispatchEvent(new CustomEvent('section-change', { detail: { isDark: value } }))
-}
-
 function clearTitleTimers() {
   if (titleDelayId.value) window.clearTimeout(titleDelayId.value)
   titleDelayId.value = null
@@ -371,7 +366,6 @@ function scheduleRefresh() {
 }
 
 watch(isVisible, (visibleNow) => {
-  emitDarkState(visibleNow)
   if (visibleNow) {
     typeTitle(true)
   } else {
@@ -573,7 +567,6 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', scheduleRefresh)
   if (audioContext.value) audioContext.value.close()
   resetDepthPointer()
-  emitDarkState(false)
 })
 </script>
 
@@ -888,6 +881,7 @@ onBeforeUnmount(() => {
     0 0 28px rgba(255, 51, 212, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
   transition: border-color 0.35s ease, box-shadow 0.35s ease;
+  will-change: transform;
 }
 
 .project-card::before {

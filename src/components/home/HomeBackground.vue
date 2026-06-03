@@ -42,7 +42,7 @@ function onScroll() {
 
   rafId.value = window.requestAnimationFrame(() => {
     const newY = window.scrollY || document.documentElement.scrollTop
-    if (Math.abs(newY - scrollY.value) > 2) {
+    if (Math.abs(newY - scrollY.value) > 8) {
       scrollY.value = newY
     }
     rafId.value = null
@@ -131,7 +131,7 @@ onBeforeUnmount(() => {
 .dashboard__orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(60px);
+  filter: blur(40px);
   opacity: 0.55;
   will-change: transform;
 }
