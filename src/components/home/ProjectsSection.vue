@@ -468,7 +468,7 @@ onMounted(async () => {
       .to(grid, { scale: () => getCardFitScale(0.78, 0.84, 0.76), yPercent: -4, duration: 1.18 }, 0.02)
       .to(frame, { '--frame-progress': 1, duration: 0.8, ease: 'none' }, 1.06)
       .to(terminal, { autoAlpha: 0, y: -26, duration: 0.3 }, 1.3)
-      .to(terminalSlot, { height: 0, autoAlpha: 0, duration: 0.48 }, 1.26)
+      .to(terminalSlot, { height: 0, padding: 0, autoAlpha: 0, duration: 0.48 }, 1.26)
       .to(viewport, { width: '100%', height: '100%', borderRadius: 0, duration: 1.02 }, 1.84)
       .to(section, { 
         '--projects-inner-top-padding': '0px',
@@ -621,7 +621,8 @@ onBeforeUnmount(() => {
   justify-content: center;
   overflow: hidden;
   min-height: 0;
-  padding-top: var(--projects-header-offset, 88px);
+  padding-top: calc(var(--projects-header-offset, 88px) + 1.5rem);
+  padding-bottom: 1rem;
 }
 
 .dash-panel-head {
