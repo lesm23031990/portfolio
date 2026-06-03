@@ -2,7 +2,8 @@
   <div class="dashboard__parallax" aria-hidden="true">
     <div class="dashboard__grid dashboard__grid--far" :style="layerGridStyle(0.02)" />
     <div class="dashboard__grid dashboard__grid--near" :style="layerGridStyle(0.06)" />
-    <CircuitBackground :style="layerStyle(0.4)" />
+    <CircuitBackground v-if="isDesktop" :style="layerStyle(0.4)" />
+    <CircuitBackgroundMobile v-if="!isDesktop" :style="layerStyle(0.4)" />
     <div class="dashboard__orb dashboard__orb--a" :style="layerStyle(0.18, 0.015)" />
     <div class="dashboard__orb dashboard__orb--b" :style="layerStyle(-0.1, -0.01)" />
     <div class="dashboard__orb dashboard__orb--c" :style="layerStyle(0.06)" />
@@ -13,10 +14,28 @@
 import { onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
 
 import CircuitBackground from '@/components/ui/CircuitBackground.vue'
+import CircuitBackgroundMobile from '@/components/ui/CircuitBackgroundMobile.vue'
 
 const scrollY = shallowRef(0)
 const rafId = ref(null)
 const prefersReducedMotion = ref(false)
+
+const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1920)
+const isDesktop = ref(windowWidth.value >= 768)
+
+function updateWidth() {
+  windowWidth.value = window.innerWidth
+  isDesktop.value = windowWidth.value >= 768
+}
+
+let widthTimer = null
+function onWidthResize() {
+  if (widthTimer) return
+  widthTimer = window.requestAnimationFrame(() => {
+    updateWidth()
+    widthTimer = null
+  })
+}
 
 function onScroll() {
   if (rafId.value) return
@@ -56,13 +75,18 @@ onMounted(() => {
 
   onScroll()
   window.addEventListener('scroll', onScroll, { passive: true })
+  window.addEventListener('resize', onWidthResize, { passive: true })
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', onScroll)
+  window.removeEventListener('resize', onWidthResize)
 
   if (rafId.value) {
     window.cancelAnimationFrame(rafId.value)
+  }
+  if (widthTimer) {
+    window.cancelAnimationFrame(widthTimer)
   }
 })
 </script>
@@ -163,5 +187,6 @@ onBeforeUnmount(() => {
   .dashboard__orb--c {
     display: none;
   }
+
 }
 </style>

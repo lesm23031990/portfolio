@@ -31,25 +31,25 @@
   },
   "home": {
     "hero": {
-      "kicker": "Desarrollo web full stack",
+      "kicker": "Ingeniera en Informatica · Especialista Frontend",
       "title": "Lorena Salas",
-      "profile": "DESARROLLADOR WEB FULL STACK - <br /> INGENIERO DE IA EN FORMACION",
-      "lead": "APIs, Laravel, Vue y productos que migran y escalan. Portafolio en una sola vista tipo panel: desplázate y explora.",
+      "profile": "INGENIERA EN INFORMATICA - ESPECIALISTA FRONTEND - <br /> INGENIERO DE IA EN FORMACION",
+      "lead": "Ingeniera en Informatica con mas de 8 anos creando interfaces modulares y de alta precision con Vue.js, React y Angular. Integracion Fullstack con Laravel y SQL, en transicion hacia AI Engineering con entrenamiento y fine-tuning de LLMs.",
       "ctaProjects": "Ver proyectos",
       "ctaContact": "Contacto"
     },
     "metrics": {
       "experience": {
-        "value": "10+",
-        "label": "anos en desarrollo"
+        "value": "8+",
+        "label": "anos de experiencia"
       },
       "role": {
-        "value": "Full",
-        "label": "stack web"
+        "value": "Frontend",
+        "label": "especialista"
       },
       "core": {
-        "value": "VueJs - ReactJs...",
-        "label": "/ Laravel - NodeJs - Python - Php..."
+        "value": "Vue · React · Angular",
+        "label": "/ Laravel · Node · Python"
       }
     },
     "sections": {
