@@ -6,7 +6,8 @@
     :class="{ 'contact-scene--visible': isVisible }"
   >
     <div class="contact-scene__bg" aria-hidden="true">
-      <CircuitBackground class="contact-scene__circuit" />
+      <CircuitBackground v-if="isDesktop" class="contact-scene__circuit" />
+      <CircuitBackgroundMobile v-if="!isDesktop" class="contact-scene__circuit" />
       <div class="contact-scene__glow contact-scene__glow--left"></div>
       <div class="contact-scene__glow contact-scene__glow--right"></div>
     </div>
@@ -79,12 +80,29 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import CircuitBackground from '@/components/ui/CircuitBackground.vue'
+import CircuitBackgroundMobile from '@/components/ui/CircuitBackgroundMobile.vue'
 
 const { t, locale, messages } = useI18n({ useScope: 'global' })
 
 const sectionRef = ref(null)
 const sectionObserver = ref(null)
 const isVisible = ref(false)
+
+const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1920)
+const isDesktop = ref(windowWidth.value >= 768)
+
+let widthTimer = null
+function updateWidth() {
+  windowWidth.value = window.innerWidth
+  isDesktop.value = windowWidth.value >= 768
+}
+function onWidthResize() {
+  if (widthTimer) return
+  widthTimer = window.requestAnimationFrame(() => {
+    updateWidth()
+    widthTimer = null
+  })
+}
 
 const contactEmail = computed(() => {
   const rawEmail = messages.value?.[locale.value]?.home?.contact?.email
@@ -118,12 +136,17 @@ onMounted(() => {
   if (sectionRef.value) {
     sectionObserver.value.observe(sectionRef.value)
   }
+
+  window.addEventListener('resize', onWidthResize, { passive: true })
 })
 
 onBeforeUnmount(() => {
   if (sectionObserver.value) {
     sectionObserver.value.disconnect()
   }
+
+  window.removeEventListener('resize', onWidthResize)
+  if (widthTimer) window.cancelAnimationFrame(widthTimer)
 
   emitDarkState(false)
 })
@@ -395,4 +418,5 @@ onBeforeUnmount(() => {
     grid-template-columns: 1fr;
   }
 }
+
 </style>

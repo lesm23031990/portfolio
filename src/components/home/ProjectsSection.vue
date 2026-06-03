@@ -419,7 +419,7 @@ onBeforeUnmount(() => {
   --projects-header-offset: 88px;
   --projects-pane-gap: clamp(7.5rem, 14vw, 16rem);
   --projects-bg-opacity: 1;
-  --projects-inner-top-padding: 1.5rem;
+  --projects-inner-top-padding: clamp(2.5rem, 5vh, 4rem);
   --projects-parallax-x: 0px;
   --projects-parallax-y: 0px;
   --projects-parallax-x-soft: 0px;
@@ -449,7 +449,7 @@ onBeforeUnmount(() => {
   background:
     radial-gradient(circle at 50% 0%, rgba(255, 0, 212, 0.18), transparent 24%),
     radial-gradient(circle at 82% 16%, rgba(122, 214, 255, 0.12), transparent 20%),
-    linear-gradient(180deg, #06060b 0%, #090913 34%, #04050a 100%);
+    linear-gradient(180deg, rgba(255, 243, 249, 0.55) 0%, #06060b 12%, #090913 38%, #04050a 100%);
   opacity: var(--projects-bg-opacity);
   z-index: -1;
   transition: transform 0.35s ease-out;

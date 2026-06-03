@@ -2,6 +2,7 @@
   <div class="dashboard">
     <HomeBackground />
     <HeroSection />
+    <div class="dashboard__bridge" aria-hidden="true"></div>
     <ProjectsSection />
     <ContactSection />
   </div>
@@ -31,10 +32,25 @@ import ProjectsSection from '@/components/home/ProjectsSection.vue'
   min-height: 100vh;
   background: linear-gradient(160deg, #fffafe 0%, #fff3f9 46%, #fefcff 100%);
   color: var(--rose-text);
-  overflow-x: hidden;
-  overflow-y: hidden;
   width: 100%;
   max-width: 100%;
+}
+
+.dashboard__bridge {
+  display: block;
+  width: 100%;
+  height: 100vh;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 249, 252, 0) 0%,
+    rgba(255, 243, 249, 0.04) 30%,
+    rgba(20, 10, 24, 0.2) 50%,
+    rgba(6, 6, 11, 0.7) 75%,
+    rgba(6, 6, 11, 1) 100%
+  );
+  pointer-events: none;
+  position: relative;
+  z-index: 5;
 }
 
 section {

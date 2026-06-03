@@ -1,6 +1,6 @@
 <template>
   <header
-    class="relative sticky top-0 z-[100] h-auto pt-0 lg:px-6 after:pointer-events-none after:absolute after:bottom-0 after:left-0 after:h-[3px] after:w-full after:bg-gradient-to-r after:from-rose-300/25 after:via-fuchsia-500/80 after:to-pink-300/25 px-0 pcx-0"
+    class="fixed inset-x-0 top-0 z-[100] h-auto pt-0 lg:px-6 after:pointer-events-none after:absolute after:bottom-0 after:left-0 after:h-[3px] after:w-full after:bg-gradient-to-r after:from-rose-300/25 after:via-fuchsia-500/80 after:to-pink-300/25 px-0 pcx-0"
     :class="{ 'header-dark': isProjectsOrStack }"
   >
     <div class="h-full w-full pt-0 pb-0 backdrop-blur-xl lg:px-4 px-0 transition-colors duration-300" :class="isProjectsOrStack ? 'bg-black/88' : ''">

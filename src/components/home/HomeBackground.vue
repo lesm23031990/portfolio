@@ -1,7 +1,9 @@
 <template>
   <div class="dashboard__parallax" aria-hidden="true">
-    <div class="dashboard__grid" :style="layerStyle(0.04)" />
-    <CircuitBackground :style="layerStyle(0.4)" />
+    <div class="dashboard__grid dashboard__grid--far" :style="layerGridStyle(0.02)" />
+    <div class="dashboard__grid dashboard__grid--near" :style="layerGridStyle(0.06)" />
+    <CircuitBackground v-if="isDesktop" :style="layerStyle(0.4)" />
+    <CircuitBackgroundMobile v-if="!isDesktop" :style="layerStyle(0.4)" />
     <div class="dashboard__orb dashboard__orb--a" :style="layerStyle(0.18, 0.015)" />
     <div class="dashboard__orb dashboard__orb--b" :style="layerStyle(-0.1, -0.01)" />
     <div class="dashboard__orb dashboard__orb--c" :style="layerStyle(0.06)" />
@@ -9,19 +11,40 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
 
 import CircuitBackground from '@/components/ui/CircuitBackground.vue'
+import CircuitBackgroundMobile from '@/components/ui/CircuitBackgroundMobile.vue'
 
-const scrollY = ref(0)
+const scrollY = shallowRef(0)
 const rafId = ref(null)
 const prefersReducedMotion = ref(false)
+
+const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1920)
+const isDesktop = ref(windowWidth.value >= 768)
+
+function updateWidth() {
+  windowWidth.value = window.innerWidth
+  isDesktop.value = windowWidth.value >= 768
+}
+
+let widthTimer = null
+function onWidthResize() {
+  if (widthTimer) return
+  widthTimer = window.requestAnimationFrame(() => {
+    updateWidth()
+    widthTimer = null
+  })
+}
 
 function onScroll() {
   if (rafId.value) return
 
   rafId.value = window.requestAnimationFrame(() => {
-    scrollY.value = window.scrollY || document.documentElement.scrollTop
+    const newY = window.scrollY || document.documentElement.scrollTop
+    if (Math.abs(newY - scrollY.value) > 2) {
+      scrollY.value = newY
+    }
     rafId.value = null
   })
 }
@@ -37,6 +60,14 @@ function layerStyle(speedY, rotate = 0) {
   }
 }
 
+function layerGridStyle(speedY) {
+  if (prefersReducedMotion.value) return {}
+
+  return {
+    '--grid-scroll-y': `${scrollY.value * speedY}px`
+  }
+}
+
 onMounted(() => {
   if (window.matchMedia) {
     prefersReducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -44,13 +75,18 @@ onMounted(() => {
 
   onScroll()
   window.addEventListener('scroll', onScroll, { passive: true })
+  window.addEventListener('resize', onWidthResize, { passive: true })
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', onScroll)
+  window.removeEventListener('resize', onWidthResize)
 
   if (rafId.value) {
     window.cancelAnimationFrame(rafId.value)
+  }
+  if (widthTimer) {
+    window.cancelAnimationFrame(widthTimer)
   }
 })
 </script>
@@ -66,13 +102,30 @@ onBeforeUnmount(() => {
 
 .dashboard__grid {
   position: absolute;
-  inset: -20%;
+  top: -40%;
+  left: -25%;
+  right: -25%;
+  bottom: -5%;
   background-image:
-    linear-gradient(rgba(212, 107, 158, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(212, 107, 158, 0.07) 1px, transparent 1px);
-  background-size: 48px 48px;
-  opacity: 0.32;
+    linear-gradient(rgba(60, 30, 45, 0.25) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(60, 30, 45, 0.25) 1px, transparent 1px);
+  background-size: 80px 80px;
+  opacity: 0.5;
+  transform-origin: 50% 100%;
+  transform: perspective(500px) rotateX(22deg) translateY(var(--grid-scroll-y, 0px));
   will-change: transform;
+}
+
+.dashboard__grid--far {
+  background-size: 120px 120px;
+  opacity: 0.2;
+  transform: perspective(500px) rotateX(26deg) translateY(calc(3% + var(--grid-scroll-y, 0px)));
+}
+
+.dashboard__grid--near {
+  background-size: 48px 48px;
+  opacity: 0.15;
+  transform: perspective(500px) rotateX(18deg) translateY(calc(-2% + var(--grid-scroll-y, 0px)));
 }
 
 .dashboard__orb {
@@ -106,5 +159,34 @@ onBeforeUnmount(() => {
   left: 35%;
   background: radial-gradient(circle, rgba(255, 255, 255, 0.9), rgba(250, 214, 231, 0.45) 48%, transparent 70%);
   opacity: 0.58;
+}
+
+@media (max-width: 767px) {
+  .dashboard__grid {
+    background-size: 48px 48px !important;
+    background-position: 0 0;
+    opacity: 0.2;
+  }
+
+  .dashboard__orb--a {
+    width: min(120vw, 300px);
+    height: min(120vw, 300px);
+    top: -4%;
+    right: -30%;
+    opacity: 0.35;
+  }
+
+  .dashboard__orb--b {
+    width: min(90vw, 260px);
+    height: min(90vw, 260px);
+    bottom: 5%;
+    left: -30%;
+    opacity: 0.3;
+  }
+
+  .dashboard__orb--c {
+    display: none;
+  }
+
 }
 </style>
