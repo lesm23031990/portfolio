@@ -136,4 +136,32 @@ onBeforeUnmount(() => {
   background: radial-gradient(circle, rgba(255, 255, 255, 0.9), rgba(250, 214, 231, 0.45) 48%, transparent 70%);
   opacity: 0.58;
 }
+
+@media (max-width: 767px) {
+  .dashboard__grid {
+    background-size: 48px 48px !important;
+    background-position: 0 0;
+    opacity: 0.2;
+  }
+
+  .dashboard__orb--a {
+    width: min(120vw, 300px);
+    height: min(120vw, 300px);
+    top: -4%;
+    right: -30%;
+    opacity: 0.35;
+  }
+
+  .dashboard__orb--b {
+    width: min(90vw, 260px);
+    height: min(90vw, 260px);
+    bottom: 5%;
+    left: -30%;
+    opacity: 0.3;
+  }
+
+  .dashboard__orb--c {
+    display: none;
+  }
+}
 </style>

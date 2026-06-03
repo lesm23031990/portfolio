@@ -19,6 +19,7 @@
         ref="terminalRef"
         class="dash-terminal"
         :class="{
+          'dash-depth--ready': introReady,
           'dash-terminal--hovered': isTerminalHovered,
           'dash-terminal--typing': isCurrentlyTyping
         }"
@@ -238,23 +239,7 @@ function restartTypewriter() {
 }
 
 function queueIntroAnimation() {
-  if (prefersReducedMotion.value) {
-    introReady.value = true
-    return
-  }
-  gsap.delayedCall(0.05, () => {
-    introReady.value = true
-    gsap.fromTo(
-      heroCardRef.value,
-      { y: 40, opacity: 0, scale: 0.96 },
-      { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: 'power3.out', overwrite: 'auto' }
-    )
-    gsap.fromTo(
-      metricsRef.value,
-      { y: 40, opacity: 0, scale: 0.96 },
-      { y: 0, opacity: 1, scale: 1, duration: 0.8, delay: 0.14, ease: 'power3.out', overwrite: 'auto' }
-    )
-  })
+  introReady.value = true
 }
 
 function handleOverlayFinished() {
@@ -308,6 +293,8 @@ function resetHeroCardTilt() {
   tiltTarget.y = 0
   if (!tiltRaf) tiltRaf = requestAnimationFrame(tiltLoop)
 }
+
+
 
 function handleTerminalClick() {
   if (isCurrentlyTyping.value) return
@@ -376,6 +363,7 @@ function initParallax() {
     const y = window.scrollY || document.documentElement.scrollTop
     scrollY.value = y
     parallaxY = y * -0.045
+    if (!tiltRaf) tiltRaf = requestAnimationFrame(tiltLoop)
     parallaxMetrics(y * -0.03)
   }
 
@@ -496,8 +484,7 @@ onBeforeUnmount(() => {
 }
 
 .dash-terminal {
-  width: min(95vw, 800px);
-  margin: 0 auto 2rem;
+  margin: 0 0 2rem;
 }
 
 .dash-hero-profile {
@@ -582,6 +569,8 @@ onBeforeUnmount(() => {
   backface-visibility: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  transition: filter 0.2s ease;
   overflow: hidden;
 }
 
@@ -605,13 +594,21 @@ onBeforeUnmount(() => {
   );
   opacity: var(--glow-opacity, 0);
   scale: var(--glow-scale, 0.8);
-  transition: opacity 0.5s ease, scale 0.5s ease;
+  transition: opacity 0.25s ease, scale 0.25s ease;
   border-radius: inherit;
 }
 
 .dash-hero-card > *:not(.dash-hero-card__glow) {
   position: relative;
   z-index: 1;
+}
+
+.dash-hero-card:active {
+  filter: brightness(1.08);
+}
+
+.dash-metrics:active {
+  filter: brightness(1.06);
 }
 
 .dash-hero-card__kicker {
@@ -692,11 +689,38 @@ onBeforeUnmount(() => {
 .dash-metrics {
   display: grid;
   gap: 1rem;
-  transition: transform 0.2s ease-out;
+  transition: transform 0.2s ease-out, filter 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.dash-depth--ready {
-  opacity: 1;
+.dash-terminal,
+.dash-hero-card,
+.dash-metrics {
+  opacity: 0;
+  translate: 0 24px;
+}
+
+.dash-terminal.dash-depth--ready {
+  animation: card-enter 0.7s ease-out forwards;
+}
+
+.dash-hero-card.dash-depth--ready {
+  animation: card-enter 0.8s ease-out 0.12s forwards;
+}
+
+.dash-metrics.dash-depth--ready {
+  animation: card-enter 0.8s ease-out 0.26s forwards;
+}
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    translate: 0 24px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
 }
 
 @media (min-width: 900px) {
@@ -778,6 +802,33 @@ onBeforeUnmount(() => {
   will-change: transform, opacity;
   margin-top: -3px;
   margin-left: -3px;
+}
+
+@media (max-width: 767px) {
+  .dash-section--hero {
+    padding: 3.5rem 0.75rem;
+    gap: 1.25rem;
+  }
+
+  .dash-section__inner--content {
+    gap: 1.5rem;
+  }
+
+  .dash-hero-card {
+    padding: 1.25rem 1.25rem 1.5rem;
+  }
+
+  .dash-hero-card__actions {
+    flex-direction: column;
+  }
+
+  .dash-hero-card__actions .dash-btn {
+    width: 100%;
+  }
+
+  .dash-metrics {
+    gap: 0.625rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
