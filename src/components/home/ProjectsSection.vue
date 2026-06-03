@@ -112,6 +112,7 @@ const titleDelayId = ref(null)
 const titleIntervalId = ref(null)
 const gsapContext = ref(null)
 const resizeFrameId = ref(null)
+let entryObserver = null
 
 const projectThemes = {
   migration: { accent: '#ff33d4', accentSoft: '#7ad6ff', start: '#33105f', end: '#0b122a' },
@@ -156,8 +157,8 @@ function clearTitleTimers() {
   titleIntervalId.value = null
 }
 
-function typeTitle(forceRestart = false) {
-  if (!isVisible.value) return
+function typeTitle(forceRestart = false, bypassVisibility = false) {
+  if (!bypassVisibility && !isVisible.value) return
   if (!forceRestart && hasTypedTitle.value) return
 
   clearTitleTimers()
@@ -324,13 +325,11 @@ onMounted(async () => {
 
   updateLayoutMetrics()
   
-  // Entry reveal animation (overlap hero)
-  gsap.fromTo(section, 
-    { 
-      y: 100
-    },
+  // Entry reveal animation
+  gsap.fromTo(sectionInner,
+    { autoAlpha: 0.12 },
     {
-      y: 0,
+      autoAlpha: 1,
       ease: 'none',
       scrollTrigger: {
         trigger: section,
@@ -376,7 +375,6 @@ onMounted(async () => {
       .to(terminalSlot, { height: 0, autoAlpha: 0, duration: 0.48 }, 1.26)
       .to(viewport, { width: '100%', height: '100%', borderRadius: 0, duration: 1.02 }, 1.84)
       .to(section, { 
-        '--projects-bg-opacity': 0.18, 
         '--projects-inner-top-padding': '0px',
         '--projects-inner-side-padding': '0px',
         duration: 1.02 
@@ -392,6 +390,19 @@ onMounted(async () => {
       .to(stackPane, { autoAlpha: 1, xPercent: 0, scale: 1, duration: 0.94, ease: 'expo.out' }, 3.5)
   }, section)
 
+  // IntersectionObserver: activate typewriter + entry animation as soon as section enters viewport
+  entryObserver = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting && !section.classList.contains('projects-stage--entered')) {
+        section.classList.add('projects-stage--entered')
+        typeTitle(false, true)
+        entryObserver?.disconnect()
+      }
+    },
+    { threshold: 0.08 }
+  )
+  entryObserver.observe(section)
+
   section.addEventListener('pointermove', handleDepthPointerMove)
   section.addEventListener('pointerleave', resetDepthPointer)
   window.addEventListener('resize', scheduleRefresh)
@@ -400,6 +411,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   clearTitleTimers()
+  if (entryObserver) entryObserver.disconnect()
   if (gsapContext.value) gsapContext.value.revert()
   if (resizeFrameId.value) window.cancelAnimationFrame(resizeFrameId.value)
   if (sectionRef.value) {
@@ -418,7 +430,6 @@ onBeforeUnmount(() => {
 .projects-stage {
   --projects-header-offset: 88px;
   --projects-pane-gap: clamp(7.5rem, 14vw, 16rem);
-  --projects-bg-opacity: 1;
   --projects-inner-top-padding: clamp(2.5rem, 5vh, 4rem);
   --projects-parallax-x: 0px;
   --projects-parallax-y: 0px;
@@ -446,13 +457,8 @@ onBeforeUnmount(() => {
     translateX(-50%)
     translate3d(var(--projects-parallax-x), var(--projects-parallax-y), 0)
     scale(1.04);
-  background:
-    radial-gradient(circle at 50% 0%, rgba(255, 0, 212, 0.18), transparent 24%),
-    radial-gradient(circle at 82% 16%, rgba(122, 214, 255, 0.12), transparent 20%),
-    linear-gradient(180deg, rgba(255, 243, 249, 0.55) 0%, #06060b 12%, #090913 38%, #04050a 100%);
-  opacity: var(--projects-bg-opacity);
+  background: #06060b;
   z-index: -1;
-  transition: transform 0.35s ease-out;
 }
 
 .projects-stage::after {
@@ -461,18 +467,9 @@ onBeforeUnmount(() => {
   inset: 6% auto auto 50%;
   width: 100%;
   height: 72%;
-  transform:
-    translateX(-50%)
-    translate3d(var(--projects-parallax-x-soft), var(--projects-parallax-y-soft), 0);
-  background:
-    radial-gradient(circle at 22% 24%, rgba(255, 51, 212, 0.15), transparent 18%),
-    radial-gradient(circle at 78% 30%, rgba(122, 214, 255, 0.12), transparent 20%),
-    radial-gradient(circle at 55% 72%, rgba(255, 255, 255, 0.07), transparent 24%);
-  opacity: calc(var(--projects-bg-opacity) * 0.92);
+  transform: translateX(-50%);
   pointer-events: none;
   z-index: -1;
-  filter: blur(22px);
-  transition: transform 0.4s ease-out, opacity 0.35s ease;
 }
 
 .projects-stage__inner {
@@ -864,6 +861,56 @@ onBeforeUnmount(() => {
   50% { transform: translateY(12px); }
 }
 
+/* ── Entry animation ── */
+.projects-stage__inner,
+.dash-terminal {
+  filter: blur(10px);
+  transition: filter 0.7s ease;
+}
+
+.projects-stage--entered .projects-stage__inner,
+.projects-stage--entered .dash-terminal {
+  filter: blur(0);
+}
+
+.projects-stage__viewport-wrapper {
+  filter: blur(6px);
+  clip-path: inset(0 0 4% 0);
+  transition: filter 0.9s ease 0.15s, clip-path 0.9s ease 0.15s;
+}
+
+.projects-stage--entered .projects-stage__viewport-wrapper {
+  filter: blur(0);
+  clip-path: inset(0);
+}
+
+@keyframes project-card-enter {
+  from { opacity: 0; transform: translateY(18px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.project-card-link {
+  opacity: 0;
+  animation: project-card-enter 0.5s ease both;
+  animation-play-state: paused;
+}
+
+.projects-stage--entered .project-card-link {
+  animation-play-state: running;
+}
+
+.projects-stage--entered .project-card-link:nth-child(1) { animation-delay: 0.25s; }
+.projects-stage--entered .project-card-link:nth-child(2) { animation-delay: 0.33s; }
+.projects-stage--entered .project-card-link:nth-child(3) { animation-delay: 0.41s; }
+.projects-stage--entered .project-card-link:nth-child(4) { animation-delay: 0.49s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .projects-stage__inner,
+  .dash-terminal,
+  .projects-stage__viewport-wrapper,
+  .project-card-link { filter: none; clip-path: none; opacity: 1; animation: none; }
+}
+
 @media (max-width: 1100px) {
   .projects-stage__pane--stack { padding: 1rem; }
   .projects-grid { grid-template-columns: repeat(4, minmax(14rem, 42vw)); }
@@ -881,12 +928,6 @@ onBeforeUnmount(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .projects-stage::before,
-  .projects-stage::after {
-    transition: none;
-    transform: translateX(-50%);
-  }
-
   .project-card--up,
   .project-card--down { animation: none; }
 }
