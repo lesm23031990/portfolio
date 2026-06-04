@@ -73,74 +73,21 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useContent } from '@/content/useContent'
 
-const { t } = useI18n({ useScope: 'global' })
+const { t, locale } = useI18n({ useScope: 'global' })
+const { getStackGroups, getStackOrbs } = useContent()
 
 const defaultGroup = 'frontend'
 const activeGroup = ref(defaultGroup)
 
-const stackGroups = computed(() => [
-  {
-    key: 'frontend',
-    label: t('home.stackScene.groups.frontend.label'),
-    description: t('home.stackScene.groups.frontend.description')
-  },
-  {
-    key: 'backend',
-    label: t('home.stackScene.groups.backend.label'),
-    description: t('home.stackScene.groups.backend.description')
-  },
-  {
-    key: 'apis',
-    label: t('home.stackScene.groups.apis.label'),
-    description: t('home.stackScene.groups.apis.description')
-  },
-  {
-    key: 'data',
-    label: t('home.stackScene.groups.data.label'),
-    description: t('home.stackScene.groups.data.description')
-  },
-  {
-    key: 'ux',
-    label: t('home.stackScene.groups.ux.label'),
-    description: t('home.stackScene.groups.ux.description')
-  },
-  {
-    key: 'workflow',
-    label: t('home.stackScene.groups.workflow.label'),
-    description: t('home.stackScene.groups.workflow.description')
-  }
-])
+const stackGroups = computed(() => getStackGroups(locale.value))
 
 const activeStackGroup = computed(() => (
   stackGroups.value.find((group) => group.key === activeGroup.value) || stackGroups.value[0]
 ))
 
-const orbBlueprints = [
-  { id: 'orb-vue', group: 'frontend', labelKey: 'home.stackTags.vue', x: '14%', y: '20%', size: '10rem', accent: '#7ad6ff', glow: '#2d8cff', delay: '0s' },
-  { id: 'orb-js', group: 'frontend', labelKey: 'home.stackTags.javascript', x: '38%', y: '8%', size: '8rem', accent: '#ffd166', glow: '#ff9b54', delay: '-1.1s' },
-  { id: 'orb-laravel', group: 'backend', labelKey: 'home.stackTags.laravel', x: '64%', y: '18%', size: '11rem', accent: '#ff5c7a', glow: '#ff33d4', delay: '-0.8s' },
-  { id: 'orb-api', group: 'apis', labelKey: 'home.stackTags.rest', x: '78%', y: '44%', size: '8.5rem', accent: '#5cf2ff', glow: '#7ad6ff', delay: '-2.1s' },
-  { id: 'orb-db', group: 'data', labelKey: 'home.stackTags.postgresql', x: '28%', y: '54%', size: '12rem', accent: '#6df7c8', glow: '#0bd39c', delay: '-1.7s' },
-  { id: 'orb-mysql', group: 'data', labelKey: 'home.stackTags.mysql', x: '52%', y: '58%', size: '7.4rem', accent: '#84b6ff', glow: '#4b7bff', delay: '-0.4s' },
-  { id: 'orb-ui', group: 'ux', labelKey: 'home.stackTags.htmlCss', x: '10%', y: '70%', size: '8.2rem', accent: '#ff8df6', glow: '#c950ff', delay: '-1.5s' },
-  { id: 'orb-flow', group: 'workflow', labelKey: 'home.stackTags.scrum', x: '70%', y: '74%', size: '9rem', accent: '#b4ff8a', glow: '#3ed17f', delay: '-2.6s' }
-]
-
-const orbs = computed(() =>
-  orbBlueprints.map((orb) => ({
-    ...orb,
-    label: t(orb.labelKey),
-    style: {
-      '--orb-size': orb.size,
-      '--orb-accent': orb.accent,
-      '--orb-glow': orb.glow,
-      '--orb-x': orb.x,
-      '--orb-y': orb.y,
-      '--orb-delay': orb.delay
-    }
-  }))
-)
+const orbs = computed(() => getStackOrbs(locale.value))
 
 function setActiveGroup(group) {
   activeGroup.value = group

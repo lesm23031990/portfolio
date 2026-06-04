@@ -95,12 +95,14 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useI18n } from 'vue-i18n'
+import { useContent } from '@/content/useContent'
 
 import StackSection from '@/components/home/StackSection.vue'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const { t, locale, messages } = useI18n({ useScope: 'global' })
+const { t, locale } = useI18n({ useScope: 'global' })
+const { getProjects, getProjectTheme } = useContent()
 
 const sectionRef = ref(null)
 const sectionInnerRef = ref(null)
@@ -147,33 +149,25 @@ function startCardFloat(cardElements) {
   })
 }
 
-const projectThemes = {
-  migration: { accent: '#ff33d4', accentSoft: '#7ad6ff', start: '#33105f', end: '#0b122a' },
-  admin: { accent: '#7ad6ff', accentSoft: '#9effc9', start: '#09213a', end: '#081117' },
-  portfolio: { accent: '#ff88f1', accentSoft: '#ffd166', start: '#2d0d2f', end: '#130f1f' },
-  automation: { accent: '#9effc9', accentSoft: '#ff8df6', start: '#0a2b22', end: '#07141a' }
-}
-
 const projectsTitle = computed(() => t('home.sections.projects.title'))
 const projectsSubtitle = computed(() => t('home.sections.projects.subtitle'))
 const projectItems = computed(() => {
-  const localizedItems = messages.value?.[locale.value]?.home?.projectShowcase?.items || {}
-  return Object.entries(projectThemes).map(([key, theme], index) => {
-    const item = localizedItems[key] || {}
+  return getProjects(locale.value).map((project, index) => {
+    const theme = getProjectTheme(project.theme)
     return {
-      key,
+      key: project.id,
       id: `${index + 1}`.padStart(2, '0'),
-      title: item.title || '',
-      stack: item.stack || '',
-      summary: item.summary || '',
-      previewTag: item.previewTag || '',
-      repo: item.repo || '#',
-      cta: item.cta || '',
+      title: project.title,
+      stack: project.stack,
+      summary: project.summary,
+      previewTag: project.previewTag,
+      repo: project.repo,
+      cta: project.cta,
       previewStyle: {
-        '--preview-start': theme.start,
-        '--preview-end': theme.end,
-        '--preview-accent': theme.accent,
-        '--preview-accent-soft': theme.accentSoft
+        '--preview-start': theme.start || '#0b122a',
+        '--preview-end': theme.end || '#06080f',
+        '--preview-accent': theme.accent || '#ff33d4',
+        '--preview-accent-soft': theme.accentSoft || '#7ad6ff'
       }
     }
   })

@@ -1,6 +1,7 @@
 import { createI18n } from 'vue-i18n'
-import en from '@/locales/en.json'
-import es from '@/locales/es.json'
+import { loadContent } from '@/content/loadContent'
+
+const content = loadContent()
 
 const STORAGE_KEY = 'portfolio-locale'
 
@@ -46,8 +47,8 @@ const i18n = createI18n({
   fallbackLocale: 'es',
   warnHtmlMessage: false,
   messages: {
-    es,
-    en
+    es: content.es || {},
+    en: content.en || {}
   }
 })
 
@@ -60,6 +61,12 @@ export function setLocale(localeToSet) {
   if (typeof window !== 'undefined') {
     window.localStorage.setItem(STORAGE_KEY, localeToSet)
   }
+}
+
+export function reloadMessages() {
+  const refreshed = loadContent()
+  if (refreshed.es) i18n.global.setLocaleMessage('es', refreshed.es)
+  if (refreshed.en) i18n.global.setLocaleMessage('en', refreshed.en)
 }
 
 export default i18n
