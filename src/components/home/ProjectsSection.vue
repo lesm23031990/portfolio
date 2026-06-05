@@ -72,7 +72,11 @@
                     </div>
                   </article>
                 </a>
-              </div>
+            </div>
+          </div>
+
+            <div ref="decorativeRef" class="projects-stage__decorative">
+              <span class="decorative-text">portafolio cinematográfico</span>
             </div>
 
             <div ref="portalRef" class="projects-stage__portal">
@@ -116,6 +120,7 @@ const projectsPaneRef = ref(null)
 const stackPaneRef = ref(null)
 const portalRef = ref(null)
 const gridRef = ref(null)
+const decorativeRef = ref(null)
 const cardRefs = ref([])
 const typedProjectsTitle = ref('')
 const typedProjectsSubtitle = ref('')
@@ -299,47 +304,44 @@ function setCardRef(element, index) {
   if (element) cardRefs.value[index] = element
 }
 
+let stickyHeader
 function getHeaderOffset() {
-  const stickyHeader = document.querySelector('header.sticky')
+  if (!stickyHeader) stickyHeader = document.querySelector('header.sticky')
   return Math.ceil(stickyHeader?.getBoundingClientRect().height || 88)
 }
 
-function getPaneGapPx() {
-  return Math.round(Math.min(Math.max(window.innerWidth * 0.85, 300), 1800))
-}
+let setParallaxX, setParallaxY, setParallaxXSoft, setParallaxYSoft
 
-function getBaseGridGapPx() {
-  return Math.round(Math.min(Math.max(window.innerWidth * 0.018, 16), 28))
-}
-
-function getExpandedGridGapPx() {
-  return Math.round(getBaseGridGapPx() * 1.4)
+function initParallaxSetters() {
+  const el = sectionRef.value
+  if (!el) return
+  setParallaxX = gsap.quickSetter(el, '--projects-parallax-x', 'px')
+  setParallaxY = gsap.quickSetter(el, '--projects-parallax-y', 'px')
+  setParallaxXSoft = gsap.quickSetter(el, '--projects-parallax-x-soft', 'px')
+  setParallaxYSoft = gsap.quickSetter(el, '--projects-parallax-y-soft', 'px')
 }
 
 function handleDepthPointerMove(event) {
   if (prefersReducedMotion.value || !sectionRef.value) return
 
+  if (!setParallaxX) initParallaxSetters()
+
   const rect = sectionRef.value.getBoundingClientRect()
   const offsetX = ((event.clientX - rect.left) / rect.width - 0.5) * 2
   const offsetY = ((event.clientY - rect.top) / rect.height - 0.5) * 2
 
-  gsap.to(sectionRef.value, {
-    duration: 1.05,
-    ease: 'expo.out',
-    overwrite: 'auto',
-    '--projects-parallax-x': `${Math.round(offsetX * 18)}px`,
-    '--projects-parallax-y': `${Math.round(offsetY * 14)}px`,
-    '--projects-parallax-x-soft': `${Math.round(offsetX * -10)}px`,
-    '--projects-parallax-y-soft': `${Math.round(offsetY * -8)}px`
-  })
+  setParallaxX(Math.round(offsetX * 18))
+  setParallaxY(Math.round(offsetY * 14))
+  setParallaxXSoft(Math.round(offsetX * -10))
+  setParallaxYSoft(Math.round(offsetY * -8))
 }
 
 function resetDepthPointer() {
   if (!sectionRef.value) return
 
   gsap.to(sectionRef.value, {
-    duration: 1.2,
-    ease: 'expo.out',
+    duration: 0.6,
+    ease: 'power2.out',
     overwrite: 'auto',
     '--projects-parallax-x': '0px',
     '--projects-parallax-y': '0px',
@@ -399,8 +401,9 @@ onMounted(async () => {
   const portal = portalRef.value
   const grid = gridRef.value
   const cards = cardRefs.value.filter(Boolean)
+  const decorative = decorativeRef.value
 
-  if (!section || !sectionInner || !terminalSlot || !terminal || !viewportWrapper || !viewport || !frame || !track || !projectsPane || !stackPane || !portal || !grid || !cards.length) {
+  if (!section || !sectionInner || !terminalSlot || !terminal || !viewportWrapper || !viewport || !frame || !track || !projectsPane || !stackPane || !portal || !grid || !cards.length || !decorative) {
     return
   }
 
@@ -415,12 +418,32 @@ onMounted(async () => {
     if (trigger.vars.trigger === section || trigger.pin === section || ownsTrigger || ownsPin) trigger.kill()
   })
 
+  const paneGap = Math.round(Math.min(Math.max(window.innerWidth * 0.85, 300), 1800))
+  const baseGridGap = Math.round(Math.min(Math.max(window.innerWidth * 0.018, 16), 28))
+  const portalGrid = portal.querySelector('.portal-grid')
+  const portalLight = portal.querySelector('.portal-light')
+  const terminalHeader = section.querySelector('.dash-terminal__header')
+  const terminalBody = section.querySelector('.dash-terminal__body')
+  let cardBaseWidth, cardBaseHeight
+
+  function alignDecorativeText() {
+    const totalCardWidths = cards.reduce((sum, c) => sum + c.offsetWidth, 0)
+    const expandedGap = Math.round(baseGridGap * 1.4)
+    const totalGaps = (cards.length - 1) * expandedGap
+    const finalScale = getCardFitScale(1, 0.88, 0.72)
+    const gridVisualWidth = (totalCardWidths + totalGaps) * finalScale
+    const panePadLeft = parseFloat(getComputedStyle(projectsPane).paddingLeft) || 0
+    const decoMargin = Math.round(panePadLeft + gridVisualWidth - projectsPane.offsetWidth + 200)
+    section.style.setProperty('--decorative-left', `${decoMargin}px`)
+  }
+
   const updateLayoutMetrics = () => {
     const sectionWidth = Math.round(section.getBoundingClientRect().width || window.innerWidth)
     section.style.setProperty('--projects-header-offset', `${getHeaderOffset()}px`)
-    section.style.setProperty('--projects-pane-gap', `${getPaneGapPx()}px`)
+    section.style.setProperty('--projects-pane-gap', `${paneGap}px`)
     section.style.setProperty('--projects-inner-side-padding', '1.5rem')
     section.style.setProperty('--viewport-width', `${sectionWidth}px`)
+    alignDecorativeText()
   }
 
   const getViewportHeight = (ratio) => {
@@ -428,15 +451,19 @@ onMounted(async () => {
     return `${Math.round(Math.min(window.innerHeight * ratio, wrapperHeight))}px`
   }
 
-  const getTrackShift = () => -(Math.round(section.getBoundingClientRect().width || viewport.clientWidth) + getPaneGapPx())
+  const getTrackShift = () => {
+    const decoWidth = decorative.offsetWidth || 0
+    return -(Math.round(section.getBoundingClientRect().width || viewport.clientWidth) + decoWidth + paneGap)
+  }
 
   const getCardFitScale = (ratio, widthCoverage = 0.84, heightCoverage = 0.86) => {
-    const sampleCard = cards[0]
-    const baseCardWidth = sampleCard?.offsetWidth || 1
-    const baseCardHeight = sampleCard?.offsetHeight || 1
+    if (!cardBaseWidth) {
+      cardBaseWidth = cards[0]?.offsetWidth || 1
+      cardBaseHeight = cards[0]?.offsetHeight || 1
+    }
     const availableWidth = Math.max(projectsPane.clientWidth * widthCoverage, 1)
     const availableHeight = Math.max(Math.min(window.innerHeight * ratio, viewportWrapper.clientHeight) * heightCoverage, 1)
-    return Math.min(availableWidth / baseCardWidth, availableHeight / baseCardHeight)
+    return Math.min(availableWidth / cardBaseWidth, availableHeight / cardBaseHeight)
   }
 
   updateLayoutMetrics()
@@ -447,9 +474,10 @@ onMounted(async () => {
   gsap.set(viewport, { width: '92%', height: getViewportHeight(0.5), borderRadius: '34px' })
   gsap.set(frame, { '--frame-progress': 0, opacity: 1 })
   gsap.set(track, { x: 0 })
-  gsap.set(grid, { scale: 0.45, yPercent: 12, gap: `${getBaseGridGapPx()}px`, transformOrigin: 'center center' })
+  gsap.set(grid, { scale: 0.45, yPercent: 12, gap: `${baseGridGap}px`, transformOrigin: 'center center' })
   gsap.set(stackPane, { autoAlpha: 0.12, xPercent: 12, scale: 0.96, transformOrigin: 'center center' })
   gsap.set(terminal, { autoAlpha: 1, y: 0 })
+  gsap.set(decorative, { autoAlpha: 0 })
 
   gsapContext.value = gsap.context(() => {
     gsap.timeline({
@@ -482,16 +510,16 @@ onMounted(async () => {
         duration: 1.02 
       }, 1.84)
       .to(sectionInner, { gap: 0, duration: 1.02 }, 1.84)
-      .to(projectsPane, { padding: '0px', duration: 1.02 }, 1.84)
       .to(grid, { scale: () => getCardFitScale(1, 0.8, 0.72), yPercent: -6, duration: 1.02 }, 1.84)
       .to(frame, { opacity: 0, duration: 0.34 }, 2.04)
-      .to(grid, { scale: () => getCardFitScale(1, 0.88, 0.72), gap: `${getExpandedGridGapPx()}px`, duration: 0.48, ease: 'expo.out' }, 2.18)
+      .to(grid, { scale: () => getCardFitScale(1, 0.88, 0.72), gap: `${Math.round(baseGridGap * 1.4)}px`, duration: 0.48, ease: 'expo.out' }, 2.18)
       .call(startCardFloat, [cards], 2.4)
       .to(track, { x: () => getTrackShift(), duration: 3.6, ease: 'none' }, 2.64)
-      .to(portal.querySelector('.portal-grid'), { opacity: 0.6, y: -100, duration: 1.8, ease: 'power2.inOut' }, 2.64)
-      .to(portal.querySelector('.portal-light'), { opacity: 1, scaleY: 1.5, duration: 1.8, ease: 'power2.inOut' }, 2.64)
-      .to(portal.querySelector('.portal-grid'), { opacity: 0, y: -200, duration: 1.8, ease: 'power2.inOut' }, 4.44)
-      .to(portal.querySelector('.portal-light'), { opacity: 0, scaleY: 0, duration: 1.8, ease: 'power2.inOut' }, 4.44)
+      .to(decorative, { autoAlpha: 1, duration: 1.2, ease: 'power2.out' }, 2.64)
+      .to(portalGrid, { opacity: 0.6, y: -100, duration: 1.8, ease: 'power2.inOut' }, 2.64)
+      .to(portalLight, { opacity: 1, scaleY: 1.5, duration: 1.8, ease: 'power2.inOut' }, 2.64)
+      .to(portalGrid, { opacity: 0, y: -200, duration: 1.8, ease: 'power2.inOut' }, 4.44)
+      .to(portalLight, { opacity: 0, scaleY: 0, duration: 1.8, ease: 'power2.inOut' }, 4.44)
       .to(stackPane, { autoAlpha: 1, xPercent: 0, scale: 1, duration: 1.88, ease: 'expo.out' }, 4.36)
   }, section)
 
@@ -505,9 +533,10 @@ onMounted(async () => {
 
       if (prefersReducedMotion.value) {
         gsap.set([
-          section.querySelector('.dash-terminal__header'),
-          section.querySelector('.dash-terminal__body'),
+          terminalHeader,
+          terminalBody,
           viewportWrapper,
+          decorative,
           ...cards
         ], { autoAlpha: 1, x: 0, y: 0, scale: 1 })
         return
@@ -515,12 +544,12 @@ onMounted(async () => {
 
       gsap.timeline({ defaults: { ease: 'power2.out' } })
         .fromTo(
-          section.querySelector('.dash-terminal__header'),
+          terminalHeader,
           { autoAlpha: 0, x: -18 },
           { autoAlpha: 1, x: 0, duration: 0.4 }
         )
         .fromTo(
-          section.querySelector('.dash-terminal__body'),
+          terminalBody,
           { autoAlpha: 0, x: 18 },
           { autoAlpha: 1, x: 0, duration: 0.4 },
           0.08
@@ -586,6 +615,7 @@ onBeforeUnmount(() => {
   height: 100vh;
   box-sizing: border-box;
   overflow: clip;
+  will-change: transform;
 }
 
 .projects-stage::before {
@@ -599,6 +629,7 @@ onBeforeUnmount(() => {
     scale(1.04);
   background: #06060b;
   z-index: -1;
+  will-change: transform;
 }
 
 .projects-stage::after {
@@ -622,6 +653,7 @@ onBeforeUnmount(() => {
   gap: 1rem;
   padding: var(--projects-inner-top-padding) var(--projects-inner-side-padding, 1.5rem) var(--projects-inner-side-padding, 1.5rem);
   box-sizing: border-box;
+  will-change: transform, opacity;
 }
 
 .projects-stage__terminal-slot {
@@ -728,6 +760,7 @@ onBeforeUnmount(() => {
   max-height: 100%;
   overflow: hidden;
   border-radius: 34px;
+  will-change: transform, height, width;
   background:
     linear-gradient(180deg, rgba(8, 10, 16, 0.92), rgba(5, 7, 12, 0.74)),
     rgba(7, 9, 14, 0.4);
@@ -771,6 +804,7 @@ onBeforeUnmount(() => {
   padding: 2px;
   border-radius: inherit;
   pointer-events: none;
+  will-change: opacity;
   background: conic-gradient(from -90deg, rgba(255, 51, 212, 0.9) calc(var(--frame-progress) * 1turn), rgba(255, 255, 255, 0.03) 0);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
@@ -784,6 +818,7 @@ onBeforeUnmount(() => {
   width: max-content;
   height: 100%;
   flex: 1 0 auto;
+  will-change: transform;
 }
 
 .projects-stage__portal {
@@ -829,8 +864,8 @@ onBeforeUnmount(() => {
 .projects-stage__pane--projects {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: clamp(1rem, 2.5vh, 2rem) clamp(1.2rem, 3vw, 2.25rem);
+  justify-content: flex-start;
+  padding: clamp(5rem, 10vh, 8rem) clamp(3rem, 5vw, 5rem) clamp(1rem, 2.5vh, 2rem) clamp(10rem, 15vw, 16rem);
 }
 
 .projects-stage__pane--stack {
@@ -843,13 +878,14 @@ onBeforeUnmount(() => {
 }
 
 .projects-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(16rem, 18vw));
+  display: flex;
+  flex-direction: row;
   align-items: center;
   gap: clamp(1.15rem, 2vw, 1.8rem);
   width: max-content;
   transform: scale(0.45);
   transform-origin: center center;
+  will-change: transform, gap;
 }
 
 .project-card-link {
@@ -1021,9 +1057,33 @@ onBeforeUnmount(() => {
   width: 82%;
 }
 
+.projects-stage__decorative {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0 clamp(6rem, 10vw, 12rem) 0 0;
+  margin-left: var(--decorative-left, 350px);
+}
+
+.decorative-text {
+  font-size: clamp(3.5rem, 7vw, 6rem);
+  font-weight: 800;
+  color: rgba(255, 51, 212, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  white-space: nowrap;
+  user-select: none;
+  line-height: 1.1;
+  text-shadow:
+    0 0 40px rgba(255, 51, 212, 0.18),
+    0 0 100px rgba(255, 51, 212, 0.1),
+    0 0 160px rgba(255, 51, 212, 0.06),
+    0 0 240px rgba(255, 51, 212, 0.03);
+}
+
 @media (max-width: 1100px) {
   .projects-stage__pane--stack { padding: 1rem; }
-  .projects-grid { grid-template-columns: repeat(4, minmax(14rem, 42vw)); }
   .project-card { width: min(42vw, 320px); height: min(54vh, 460px); }
 }
 
@@ -1033,7 +1093,7 @@ onBeforeUnmount(() => {
   }
 
   .projects-stage__viewport { width: 100%; border-radius: 24px; }
-  .projects-grid { grid-template-columns: repeat(4, minmax(12rem, 58vw)); gap: 1rem; }
+  .projects-grid { gap: 1rem; }
   .project-card { width: min(58vw, 240px); min-width: 12rem; height: min(46vh, 360px); border-radius: 22px; }
 }
 

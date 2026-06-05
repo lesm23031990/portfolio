@@ -120,7 +120,7 @@ function removeProject(index) {
 
 function handleSave() {
   const ordered = projects.value.map((p, i) => {
-    const data = Object.fromEntries(Object.entries(p).filter(([k]) => !k.startsWith('_')))
+    const data = Object.fromEntries(Object.entries(p).filter(([k]) => !k.startsWith('_'))) // eslint-disable-line no-unused-vars
     return { ...data, order: i }
   })
   const full = JSON.parse(JSON.stringify(content))

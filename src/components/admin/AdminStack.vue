@@ -124,11 +124,11 @@ function removeOrb(index) {
 
 function handleSave() {
   const cleanGroups = groups.value.map(g => {
-    const data = Object.fromEntries(Object.entries(g).filter(([k]) => !k.startsWith('_')))
+    const data = Object.fromEntries(Object.entries(g).filter(([k]) => !k.startsWith('_'))) // eslint-disable-line no-unused-vars
     return data
   })
   const cleanOrbs = orbs.value.map(o => {
-    const data = Object.fromEntries(Object.entries(o).filter(([k]) => !k.startsWith('_')))
+    const data = Object.fromEntries(Object.entries(o).filter(([k]) => !k.startsWith('_'))) // eslint-disable-line no-unused-vars
     return data
   })
   const full = JSON.parse(JSON.stringify(content))
