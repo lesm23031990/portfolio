@@ -67,6 +67,14 @@
               <option v-for="t in themeKeys" :key="t" :value="t">{{ t }}</option>
             </select>
           </div>
+          <div class="field-row field-row--wide">
+            <label>Imagen del proyecto</label>
+            <div class="image-upload-row">
+              <input type="file" accept="image/*" @change="e => handleImageUpload(e, proj)" />
+              <button v-if="proj.image" class="btn-remove-image" @click="proj.image = ''">Eliminar imagen</button>
+            </div>
+            <img v-if="proj.image" :src="proj.image" class="image-preview" alt="Preview" />
+          </div>
         </div>
       </div>
     </div>
@@ -109,13 +117,23 @@ function startAdd() {
     repo: '',
     cta: { es: '', en: '' },
     previewTag: 'Hover to reveal',
-    theme: themeKeys.value[0] || 'portfolio'
+    theme: themeKeys.value[0] || 'portfolio',
+    image: ''
   })
 }
 
 function removeProject(index) {
   projects.value.splice(index, 1)
   projects.value.forEach((p, i) => { p.order = i })
+}
+
+function handleImageUpload(event, project) {
+  const file = event.target.files?.[0]
+  if (!file) return
+  if (file.size > 5 * 1024 * 1024) return
+  const reader = new FileReader()
+  reader.onload = () => { project.image = reader.result }
+  reader.readAsDataURL(file)
 }
 
 function handleSave() {
@@ -177,4 +195,16 @@ function handleSave() {
 }
 .field-row textarea { resize: vertical; }
 .theme-select option { background: #141622; }
+.field-row--wide { grid-column: 1 / -1; }
+.image-upload-row { display: flex; align-items: center; gap: 0.5rem; }
+.image-upload-row input[type="file"] { font-size: 0.75rem; color: rgba(255, 255, 255, 0.6); }
+.btn-remove-image {
+  padding: 0.25rem 0.6rem; border: 1px solid rgba(255, 92, 122, 0.3);
+  border-radius: 6px; background: transparent; color: #ff5c7a;
+  font-family: inherit; font-size: 0.65rem; cursor: pointer;
+}
+.image-preview {
+  max-width: 200px; max-height: 120px; border-radius: 8px;
+  margin-top: 0.4rem; object-fit: cover; border: 1px solid rgba(255,255,255,0.08);
+}
 </style>

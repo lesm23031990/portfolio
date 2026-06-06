@@ -51,19 +51,21 @@
                   rel="noopener noreferrer"
                   :aria-label="project.cta"
                 >
-                  <article class="project-card">
-                    <span class="project-card__id">{{ project.id }}</span>
-                    <div class="project-card__visual" :style="project.previewStyle">
-                      <div class="project-card__screen">
-                        <div class="project-card__topbar"></div>
-                        <div class="project-card__screen-grid">
-                          <span></span>
-                          <span></span>
-                          <span></span>
+                    <article class="project-card">
+                      <span class="project-card__id">{{ project.id }}</span>
+                      <div class="project-card__visual" :style="project.previewStyle">
+                        <div class="project-card__screen" :class="{ 'project-card__screen--img': !!project.image }" :style="project.image ? { backgroundImage: `url(${project.image})` } : {}">
+                          <template v-if="!project.image">
+                            <div class="project-card__topbar"></div>
+                            <div class="project-card__screen-grid">
+                              <span></span>
+                              <span></span>
+                              <span></span>
+                            </div>
+                          </template>
                         </div>
+                        <div class="project-card__overlay">{{ project.previewTag }}</div>
                       </div>
-                      <div class="project-card__overlay">{{ project.previewTag }}</div>
-                    </div>
                     <div class="project-card__body">
                       <span class="project-card__line"></span>
                       <p class="project-card__stack">{{ project.stack }}</p>
@@ -168,6 +170,7 @@ const projectItems = computed(() => {
       previewTag: project.previewTag,
       repo: project.repo,
       cta: project.cta,
+      image: project.image,
       previewStyle: {
         '--preview-start': theme.start || '#0b122a',
         '--preview-end': theme.end || '#06080f',
@@ -304,13 +307,17 @@ function setCardRef(element, index) {
   if (element) cardRefs.value[index] = element
 }
 
-let stickyHeader
+let stickyHeader, cachedHeaderHeight = 88
 function getHeaderOffset() {
-  if (!stickyHeader) stickyHeader = document.querySelector('header.sticky')
-  return Math.ceil(stickyHeader?.getBoundingClientRect().height || 88)
+  if (!stickyHeader) {
+    stickyHeader = document.querySelector('header.sticky')
+    if (stickyHeader) cachedHeaderHeight = Math.ceil(stickyHeader.getBoundingClientRect().height)
+  }
+  return cachedHeaderHeight
 }
 
 let setParallaxX, setParallaxY, setParallaxXSoft, setParallaxYSoft
+let pointermoveRAF = null
 
 function initParallaxSetters() {
   const el = sectionRef.value
@@ -323,21 +330,25 @@ function initParallaxSetters() {
 
 function handleDepthPointerMove(event) {
   if (prefersReducedMotion.value || !sectionRef.value) return
+  if (pointermoveRAF) return
+  pointermoveRAF = window.requestAnimationFrame(() => {
+    pointermoveRAF = null
+    if (!setParallaxX) initParallaxSetters()
 
-  if (!setParallaxX) initParallaxSetters()
+    const rect = sectionRef.value.getBoundingClientRect()
+    const offsetX = ((event.clientX - rect.left) / rect.width - 0.5) * 2
+    const offsetY = ((event.clientY - rect.top) / rect.height - 0.5) * 2
 
-  const rect = sectionRef.value.getBoundingClientRect()
-  const offsetX = ((event.clientX - rect.left) / rect.width - 0.5) * 2
-  const offsetY = ((event.clientY - rect.top) / rect.height - 0.5) * 2
-
-  setParallaxX(Math.round(offsetX * 18))
-  setParallaxY(Math.round(offsetY * 14))
-  setParallaxXSoft(Math.round(offsetX * -10))
-  setParallaxYSoft(Math.round(offsetY * -8))
+    setParallaxX(Math.round(offsetX * 18))
+    setParallaxY(Math.round(offsetY * 14))
+    setParallaxXSoft(Math.round(offsetX * -10))
+    setParallaxYSoft(Math.round(offsetY * -8))
+  })
 }
 
 function resetDepthPointer() {
-  if (!sectionRef.value) return
+  if (prefersReducedMotion.value || !sectionRef.value) return
+  pointermoveRAF = null
 
   gsap.to(sectionRef.value, {
     duration: 0.6,
@@ -583,6 +594,7 @@ onBeforeUnmount(() => {
   cardFloatAnimations.length = 0
   if (gsapContext.value) gsapContext.value.revert()
   if (resizeFrameId.value) window.cancelAnimationFrame(resizeFrameId.value)
+  if (pointermoveRAF) window.cancelAnimationFrame(pointermoveRAF)
   if (sectionRef.value) {
     sectionRef.value.removeEventListener('pointermove', handleDepthPointerMove)
     sectionRef.value.removeEventListener('pointerleave', resetDepthPointer)
@@ -615,6 +627,7 @@ onBeforeUnmount(() => {
   height: 100vh;
   box-sizing: border-box;
   overflow: clip;
+  contain: layout style paint;
   will-change: transform;
 }
 
@@ -762,9 +775,7 @@ onBeforeUnmount(() => {
   border-radius: 34px;
   will-change: transform, height, width;
   background:
-    linear-gradient(180deg, rgba(8, 10, 16, 0.92), rgba(5, 7, 12, 0.74)),
-    rgba(7, 9, 14, 0.4);
-  backdrop-filter: blur(18px);
+    linear-gradient(180deg, rgba(8, 10, 16, 0.96), rgba(5, 7, 12, 0.92));
   box-shadow:
     0 40px 120px rgba(0, 0, 0, 0.44),
     0 0 48px rgba(255, 51, 212, 0.09),
@@ -899,6 +910,7 @@ onBeforeUnmount(() => {
   width: min(19vw, 288px);
   min-width: 16rem;
   height: min(58vh, 510px);
+  max-height: 70vh;
   display: flex;
   flex-direction: column;
   border-radius: 24px;
@@ -911,7 +923,6 @@ onBeforeUnmount(() => {
     0 0 28px rgba(255, 51, 212, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
   transition: border-color 0.35s ease, box-shadow 0.35s ease;
-  will-change: transform;
 }
 
 .project-card::before {
@@ -954,6 +965,13 @@ onBeforeUnmount(() => {
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     0 0 24px rgba(122, 214, 255, 0.06);
   transition: transform 0.35s ease;
+  overflow: hidden;
+}
+
+.project-card__screen--img {
+  background-size: cover;
+  background-position: top center;
+  background-repeat: no-repeat;
 }
 
 .project-card__topbar {
@@ -1095,6 +1113,7 @@ onBeforeUnmount(() => {
   .projects-stage__viewport { width: 100%; border-radius: 24px; }
   .projects-grid { gap: 1rem; }
   .project-card { width: min(58vw, 240px); min-width: 12rem; height: min(46vh, 360px); border-radius: 22px; }
+  .project-card__summary { display: none; }
 }
 
 </style>
