@@ -1,9 +1,8 @@
 <template>
   <header
     class="fixed inset-x-0 top-0 z-[100] h-auto pt-0 lg:px-6 after:pointer-events-none after:absolute after:bottom-0 after:left-0 after:h-[3px] after:w-full after:bg-gradient-to-r after:from-rose-300/25 after:via-fuchsia-500/80 after:to-pink-300/25 px-0 pcx-0"
-    :class="{ 'header-dark': isProjectsOrStack }"
   >
-    <div class="h-full w-full pt-0 pb-0 backdrop-blur-xl lg:px-4 px-0 transition-colors duration-300" :class="isProjectsOrStack ? 'bg-black/88' : ''">
+    <div class="h-full w-full pt-0 pb-0 backdrop-blur-xl lg:px-4 px-0 transition-colors duration-300">
       <nav
         ref="navRef"
         class="flex min-h-[4.5rem] w-full items-center justify-end text-center md:grid md:min-h-[5.5rem] md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-4"
@@ -34,10 +33,7 @@
             <select
               id="header-language"
               v-model="selectedLanguage"
-            class="rounded-full border px-4 py-2 text-[0.82rem] font-light uppercase tracking-[0.22em] outline-none transition"
-            :class="isProjectsOrStack
-              ? 'border-fuchsia-400/35 bg-black/70 text-rose-50 hover:border-fuchsia-300/60 focus:border-fuchsia-200'
-              : 'border-fuchsia-400/30 bg-white/70 text-rose-900/85 hover:border-fuchsia-300/60 focus:border-fuchsia-200'"
+              class="rounded-full border border-fuchsia-400/30 bg-white/70 px-4 py-2 text-[0.82rem] font-light uppercase tracking-[0.22em] text-rose-900/85 outline-none transition hover:border-fuchsia-300/60 focus:border-fuchsia-200"
               :aria-label="t('layout.language.ariaLabel')"
             >
               <option
@@ -53,10 +49,7 @@
 
           <button
             type="button"
-            class="mr-3 inline-flex h-12 w-12 self-center items-center justify-center rounded-full border transition md:hidden"
-            :class="isProjectsOrStack
-              ? 'border-fuchsia-400/35 bg-black/70 text-rose-50 hover:border-fuchsia-300/60 hover:bg-black/80'
-              : 'border-fuchsia-400/35 bg-white/70 text-rose-900/85 hover:border-fuchsia-300/60 hover:bg-white/80'"
+            class="mr-3 inline-flex h-12 w-12 self-center items-center justify-center rounded-full border border-fuchsia-400/35 bg-white/70 text-rose-900/85 transition hover:border-fuchsia-300/60 hover:bg-white/80 md:hidden"
             :aria-expanded="isMobileMenuOpen ? 'true' : 'false'"
             :aria-controls="mobileMenuId"
             :aria-label="t('layout.nav.openMenu')"
@@ -168,7 +161,6 @@ const languageOptions = computed(() => [
 ])
 
 const isHomeRoute = computed(() => route.name === 'home')
-const isProjectsOrStack = computed(() => isHomeRoute.value && ['proyectos', 'stack'].includes(activeSection.value))
 
 let frameId = null
 
@@ -182,7 +174,7 @@ function navItemClasses(item) {
           : 'text-[0.98rem] font-normal tracking-[0.26em] lg:text-[1.08rem]'
       ]
     : [
-        isProjectsOrStack.value ? 'text-rose-100/82 hover:text-rose-50 hover:tracking-[0.22em]' : 'text-rose-400/85 hover:tracking-[0.22em]',
+        'text-rose-400/85 hover:tracking-[0.22em]',
         item.home
           ? 'text-rose-500/90'
           : ''
@@ -293,8 +285,5 @@ onBeforeUnmount(() => {
   padding-right: 0 !important;
 }
 
-.header-dark::after {
-  opacity: 0.9;
-}
 </style>
 
