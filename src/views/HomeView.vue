@@ -4,6 +4,7 @@
     <HeroSection />
     <div class="dashboard__bridge" aria-hidden="true"></div>
     <ProjectsSection />
+    <div class="dashboard__bridge--dark" aria-hidden="true"></div>
     <ContactSection />
   </div>
 </template>
@@ -49,6 +50,24 @@ import ProjectsSection from '@/components/home/ProjectsSection.vue'
     rgba(6, 6, 11, 0.5) 55%,
     rgba(6, 6, 11, 0.85) 78%,
     #06060b 100%
+  );
+  pointer-events: none;
+  position: relative;
+  z-index: 5;
+}
+
+.dashboard__bridge--dark {
+  display: block;
+  width: 100%;
+  height: calc(100vh + 1px);
+  margin-top: -1px;
+  background: linear-gradient(
+    to bottom,
+    #06060b 0%,
+    rgba(6, 6, 11, 0.95) 30%,
+    rgba(6, 6, 11, 0.6) 55%,
+    rgba(255, 243, 249, 0.04) 85%,
+    transparent 100%
   );
   pointer-events: none;
   position: relative;

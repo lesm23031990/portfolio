@@ -38,6 +38,7 @@
       <div ref="viewportWrapperRef" class="projects-stage__viewport-wrapper">
         <div ref="viewportRef" class="projects-stage__viewport">
           <div ref="frameRef" class="projects-stage__frame" aria-hidden="true"></div>
+          <div ref="exitOverlayRef" class="projects-stage__exit-overlay"></div>
           <div ref="trackRef" class="projects-stage__track">
             <div ref="projectsPaneRef" class="projects-stage__pane projects-stage__pane--projects">
               <div ref="gridRef" class="projects-grid">
@@ -117,6 +118,7 @@ const terminalRef = ref(null)
 const viewportWrapperRef = ref(null)
 const viewportRef = ref(null)
 const frameRef = ref(null)
+const exitOverlayRef = ref(null)
 const trackRef = ref(null)
 const projectsPaneRef = ref(null)
 const stackPaneRef = ref(null)
@@ -186,9 +188,14 @@ function clearTitleTimers() {
   titleDelayId.value = null
 }
 
+function isAudioUsable() {
+  return audioContext.value && audioContext.value.state === 'running'
+}
+
 function enableTypingSound() {
   const AudioContextClass = window.AudioContext || window.webkitAudioContext
   if (!AudioContextClass || prefersReducedMotion.value) return
+  if (audioContext.value?.state === 'closed') return
   if (!audioContext.value) {
     try {
       audioContext.value = new AudioContextClass()
@@ -197,13 +204,16 @@ function enableTypingSound() {
     }
   }
   if (audioContext.value.state === 'suspended') {
-    audioContext.value.resume()
+    audioContext.value.resume().then(() => {
+      canPlayTypingSound.value = true
+    }).catch(() => {})
+    return
   }
   canPlayTypingSound.value = true
 }
 
 function playTypingClick() {
-  if (!canPlayTypingSound.value || !audioContext.value) return
+  if (!canPlayTypingSound.value || !isAudioUsable()) return
   try {
     const now = audioContext.value.currentTime
     const oscillator = audioContext.value.createOscillator()
@@ -414,7 +424,7 @@ onMounted(async () => {
   const cards = cardRefs.value.filter(Boolean)
   const decorative = decorativeRef.value
 
-  if (!section || !sectionInner || !terminalSlot || !terminal || !viewportWrapper || !viewport || !frame || !track || !projectsPane || !stackPane || !portal || !grid || !cards.length || !decorative) {
+  if (!section || !sectionInner || !terminalSlot || !terminal || !viewportWrapper || !viewport || !frame || !exitOverlayRef.value || !track || !projectsPane || !stackPane || !portal || !grid || !cards.length || !decorative) {
     return
   }
 
@@ -464,7 +474,8 @@ onMounted(async () => {
 
   const getTrackShift = () => {
     const decoWidth = decorative.offsetWidth || 0
-    return -(Math.round(section.getBoundingClientRect().width || viewport.clientWidth) + decoWidth + paneGap)
+    const decoMargin = parseFloat(section.style.getPropertyValue('--decorative-left')) || 0
+    return -(Math.round(section.getBoundingClientRect().width || viewport.clientWidth) + decoMargin + decoWidth + paneGap)
   }
 
   const getCardFitScale = (ratio, widthCoverage = 0.84, heightCoverage = 0.86) => {
@@ -489,6 +500,9 @@ onMounted(async () => {
   gsap.set(stackPane, { autoAlpha: 0.12, xPercent: 12, scale: 0.96, transformOrigin: 'center center' })
   gsap.set(terminal, { autoAlpha: 1, y: 0 })
   gsap.set(decorative, { autoAlpha: 0 })
+  gsap.set(exitOverlayRef.value, { autoAlpha: 0 })
+  gsap.set(frame, { filter: 'blur(0px)' })
+  gsap.set(stackPane.querySelectorAll('.tcs__left, .tcs__center, .tcs__right'), { autoAlpha: 0, y: 28 })
 
   gsapContext.value = gsap.context(() => {
     gsap.timeline({
@@ -496,7 +510,7 @@ onMounted(async () => {
       scrollTrigger: {
         trigger: section,
         start: 'top top',
-        end: '+=3800',
+        end: '+=5800',
         pin: true,
         pinSpacing: true,
         scrub: 1,
@@ -532,6 +546,32 @@ onMounted(async () => {
       .to(portalGrid, { opacity: 0, y: -200, duration: 1.8, ease: 'power2.inOut' }, 4.44)
       .to(portalLight, { opacity: 0, scaleY: 0, duration: 1.8, ease: 'power2.inOut' }, 4.44)
       .to(stackPane, { autoAlpha: 1, xPercent: 0, scale: 1, duration: 1.88, ease: 'expo.out' }, 4.36)
+      // ── Staggered entrance for stack elements ──
+      .fromTo(stackPane.querySelectorAll('.tcs__left, .tcs__center, .tcs__right'),
+        { autoAlpha: 0, y: 28 },
+        { autoAlpha: 1, y: 0, duration: 0.5, stagger: 0.12, ease: 'power2.out' },
+        6.25)
+      // ── Exit: inverse entry — window shrinks, neon border appears then blurs ──
+      .to(frame, { opacity: 1, '--frame-progress': 1, filter: 'blur(0px)', duration: 0.35, ease: 'power2.out' }, 6.3)
+      .to(viewport, {
+        scale: 0.86,
+        borderRadius: '28px',
+        y: '6%',
+        paddingBottom: '2.5rem',
+        duration: 0.8,
+        ease: 'power2.inOut'
+      }, 6.5)
+      .to(exitOverlayRef.value, { autoAlpha: 0.3, duration: 0.6, ease: 'power2.out' }, 6.5)
+      .to(frame, {
+        opacity: 0.3,
+        '--frame-progress': 0.3,
+        filter: 'blur(5px)',
+        duration: 1.2,
+        ease: 'power1.in'
+      }, 7.0)
+      .to(exitOverlayRef.value, { autoAlpha: 0.65, duration: 0.8, ease: 'power2.out' }, 7.6)
+      .to(frame, { opacity: 0, filter: 'blur(14px)', duration: 0.6 }, 8.6)
+      .to(sectionInner, { autoAlpha: 0, duration: 0.7, ease: 'power2.in' }, 8.6)
   }, section)
 
   // ScrollTrigger: animate elements in and start typewriter when section enters viewport
@@ -600,7 +640,10 @@ onBeforeUnmount(() => {
     sectionRef.value.removeEventListener('pointerleave', resetDepthPointer)
   }
   window.removeEventListener('resize', scheduleRefresh)
-  if (audioContext.value) audioContext.value.close()
+  if (audioContext.value) {
+    canPlayTypingSound.value = false
+    audioContext.value.close()
+  }
   resetDepthPointer()
 })
 </script>
@@ -627,8 +670,6 @@ onBeforeUnmount(() => {
   height: 100vh;
   box-sizing: border-box;
   overflow: clip;
-  contain: layout style paint;
-  will-change: transform;
 }
 
 .projects-stage::before {
@@ -773,7 +814,8 @@ onBeforeUnmount(() => {
   max-height: 100%;
   overflow: hidden;
   border-radius: 34px;
-  will-change: transform, height, width;
+  transform-origin: center center;
+  will-change: transform, height, width, border-radius;
   background:
     linear-gradient(180deg, rgba(8, 10, 16, 0.96), rgba(5, 7, 12, 0.92));
   box-shadow:
@@ -815,12 +857,21 @@ onBeforeUnmount(() => {
   padding: 2px;
   border-radius: inherit;
   pointer-events: none;
-  will-change: opacity;
+  will-change: opacity, filter;
   background: conic-gradient(from -90deg, rgba(255, 51, 212, 0.9) calc(var(--frame-progress) * 1turn), rgba(255, 255, 255, 0.03) 0);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask-composite: exclude;
+}
+
+.projects-stage__exit-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background: #06060b;
+  pointer-events: none;
+  will-change: opacity;
 }
 
 .projects-stage__track {
@@ -830,6 +881,7 @@ onBeforeUnmount(() => {
   height: 100%;
   flex: 1 0 auto;
   will-change: transform;
+  transform: translateZ(0);
 }
 
 .projects-stage__portal {
@@ -1082,6 +1134,7 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
   padding: 0 clamp(6rem, 10vw, 12rem) 0 0;
   margin-left: var(--decorative-left, 350px);
+  will-change: transform;
 }
 
 .decorative-text {
@@ -1094,10 +1147,8 @@ onBeforeUnmount(() => {
   user-select: none;
   line-height: 1.1;
   text-shadow:
-    0 0 40px rgba(255, 51, 212, 0.18),
-    0 0 100px rgba(255, 51, 212, 0.1),
-    0 0 160px rgba(255, 51, 212, 0.06),
-    0 0 240px rgba(255, 51, 212, 0.03);
+    0 0 40px rgba(255, 51, 212, 0.12),
+    0 0 120px rgba(255, 51, 212, 0.08);
 }
 
 @media (max-width: 1100px) {

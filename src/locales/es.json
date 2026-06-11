@@ -31,10 +31,10 @@
   },
   "home": {
     "hero": {
-      "kicker": "Ingeniera en Informatica · Especialista Frontend",
+      "kicker": "Ingeniera en Informatica · Senior Frontend Developer",
       "title": "Lorena Salas",
-      "profile": "INGENIERA EN INFORMATICA - ESPECIALISTA FRONTEND - <br /> INGENIERO DE IA EN FORMACION",
-      "lead": "Ingeniera en Informatica con mas de 8 anos creando interfaces modulares y de alta precision con Vue.js, React y Angular. Integracion Fullstack con Laravel y SQL, en transicion hacia AI Engineering con entrenamiento y fine-tuning de LLMs.",
+      "profile": "INGENIERA EN INFORMATICA - SENIOR FRONTEND DEVELOPER - <br /> AI ENGINEER / LLM SPECIALIST EN TRANSICION",
+      "lead": "Ingeniera en Informatica con mas de 8 anos de experiencia en desarrollo de software. Solida base logico-matematica y resolucion de algoritmos complejos. Especialista en JavaScript (Avanzado), Vue.js, Nuxt.js, React y Angular, con integracion Fullstack en PHP (Laravel, Yii2) y Node.js. Desarrollo backend con APIs REST, Docker y bases de datos SQL (MySQL, PostgreSQL, Oracle). Programacion asistida por IA usando Cursor, reglas personalizadas (rules), skills y MCPs. Principios de ciberseguridad y buenas practicas DevOps. En transicion activa hacia AI Engineer / LLM Specialist.",
       "ctaProjects": "Ver proyectos",
       "ctaContact": "Contacto"
     },
@@ -44,12 +44,12 @@
         "label": "anos de experiencia"
       },
       "role": {
-        "value": "Frontend",
+        "value": "Senior Frontend",
         "label": "especialista"
       },
       "core": {
-        "value": "Vue · React · Angular",
-        "label": "/ Laravel · Node · Python"
+        "value": "Vue · React · Angular · Node",
+        "label": "/ Laravel · PHP · SQL · IA"
       }
     },
     "sections": {
@@ -59,7 +59,7 @@
       },
       "stack": {
         "title": "Stack y herramientas",
-        "subtitle": "Lo que mas uso en produccion; la lista es orientativa."
+        "subtitle": "Frontend moderno, integracion backend, IA aplicada y principios de ciberseguridad."
       },
       "certifications": {
         "title": "Certificaciones"
@@ -111,56 +111,56 @@
       "groups": {
         "frontend": {
           "label": "Frontend",
-          "description": "Interfaces SPA, vistas responsivas y movimiento UI."
+          "description": "SPA modernas con Vue, Nuxt, React y Angular, mas Three.js y Canvas para graficos."
         },
         "backend": {
           "label": "Backend",
-          "description": "Arquitectura de negocio, seguridad y modularidad."
+          "description": "PHP (Laravel, Yii2), Node.js, APIs REST, Docker y principios de ciberseguridad."
         },
         "apis": {
           "label": "Integraciones",
-          "description": "REST, flujos de datos y handoff entre servicios."
+          "description": "REST, flujos de datos, handoff entre servicios y automatizaciones."
         },
         "data": {
           "label": "Datos",
-          "description": "Persistencia, consultas y diseno de estructuras utiles."
+          "description": "SQL, MySQL, PostgreSQL, Oracle: persistencia y modelado de datos."
         },
         "ux": {
           "label": "UI / UX",
-          "description": "Maquetacion, estados, detalle visual y contraste."
+          "description": "HTML5, CSS (SASS, BEM), Tailwind, Bootstrap, Vuetify, Materialize."
         },
         "workflow": {
           "label": "Workflow",
-          "description": "Scrum, Git y entregas con seguimiento continuo."
+          "description": "Git, Scrum, CI/CD, Docker, AI-assisted: Cursor, rules, skills, MCPs."
         }
       }
     },
     "certifications": {
-      "headline": "Bloque activo para mostrar formacion relevante sin perder el ritmo neon del panel.",
+      "headline": "Formacion continua en IA, ciberseguridad y buenas practicas DevOps.",
       "items": {
         "primary": {
-          "title": "Certificacion en progreso: IA aplicada al desarrollo",
+          "title": "Certificacion en progreso: AI Engineer / LLM Specialist",
           "issuer": "Learning track",
-          "meta": "Espacio compacto para destacar formacion relevante sin quitar protagonismo a la experiencia principal."
+          "meta": "Programacion asistida por IA con Cursor, rules, skills y MCPs. Principios de ciberseguridad y ultimas tendencias del ecosistema."
         }
       }
     },
     "stackTags": {
-      "vue": "Vue 3",
-      "javascript": "JavaScript",
-      "laravel": "Laravel",
-      "php": "PHP",
-      "rest": "REST APIs",
-      "mysql": "MySQL",
-      "postgresql": "PostgreSQL",
-      "git": "Git",
-      "htmlCss": "HTML/CSS",
-      "responsive": "Responsive",
-      "scrum": "Scrum"
+      "vue": "Vue 3", "nuxt": "Nuxt.js", "react": "React", "angular": "Angular",
+      "javascript": "JavaScript", "threejs": "Three.js", "canvas": "Canvas",
+      "laravel": "Laravel", "php": "PHP", "yii2": "Yii2", "node": "Node.js",
+      "rest": "REST APIs", "docker": "Docker",
+      "mysql": "MySQL", "postgresql": "PostgreSQL", "oracle": "Oracle",
+      "htmlCss": "HTML/CSS", "sass": "SASS", "bem": "BEM",
+      "tailwind": "Tailwind", "bootstrap": "Bootstrap", "vuetify": "Vuetify", "materialize": "Materialize",
+      "git": "Git", "svn": "SVN", "pnpm": "pnpm", "prettier": "Prettier",
+      "responsive": "Responsive", "scrum": "Scrum",
+      "cursor": "Cursor", "coderabbit": "CodeRabbit",
+      "cybersecurity": "Ciberseguridad"
     },
     "contactPanel": {
       "title": "Construyamos una experiencia web que se vea bien y funcione mejor.",
-      "subtitle": "Si tienes una idea, un rediseño o una migracion en mente, conversemos sobre alcance, tiempos y la mejor forma de aterrizarlo.",
+      "subtitle": "Si tienes una idea, un rediseño o una migracion en mente, conversemos sobre alcance, tiempos y la mejor forma de aterrizarlo. Tambien ofrezco integracion de IA asistida y principios de ciberseguridad.",
       "primaryCta": "Escribirme por correo",
       "secondaryCta": "Ver LinkedIn",
       "cards": {
@@ -204,7 +204,7 @@
     },
     "replies": {
       "projects": "Puedes abrir cada tarjeta de proyectos para ir al repositorio. La seccion de proyectos esta pensada para funcionar como vitrina y acceso rapido al codigo.",
-      "stack": "El stack esta distribuido por capas: frontend, backend, APIs, datos, UI/UX y workflow. Cada orbita resalta una parte del trabajo real.",
+      "stack": "El stack esta distribuido por capas: frontend (Vue, Nuxt, React, Angular), backend (Laravel, Node, Docker), APIs, datos (MySQL, PostgreSQL, Oracle), UI/UX y workflow con AI asistida.",
       "contact": "Puedes escribir por correo o usar LinkedIn desde la seccion de contacto. El cierre del portfolio esta preparado para derivar la conversacion a un canal real.",
       "default": "Esta es una fase visual del chat. El siguiente paso de aprendizaje es conectar este panel a un endpoint backend que llame a un modelo real."
     }

@@ -1,12 +1,10 @@
 <template>
   <div class="admin-translations">
-    <div class="toolbar">
+    <div class="locale-bar">
       <select v-model="editingLocale" class="locale-select">
         <option value="es">Español</option>
         <option value="en">English</option>
       </select>
-      <button class="btn-save" @click="handleSave">Guardar cambios</button>
-      <span v-if="saved" class="saved-msg">✓ Guardado</span>
     </div>
     <div class="flat-keys">
       <div v-for="(entry, path) in flatKeys" :key="path" class="key-row">
@@ -80,6 +78,8 @@ function handleSave() {
   saved.value = true
   setTimeout(() => { saved.value = false }, 2000)
 }
+
+defineExpose({ handleSave })
 </script>
 
 <style scoped>
@@ -87,11 +87,9 @@ function handleSave() {
   display: grid;
   gap: 1rem;
 }
-.toolbar {
+.locale-bar {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
 }
 .locale-select {
   padding: 0.5rem 0.8rem;
@@ -102,25 +100,6 @@ function handleSave() {
   font-family: inherit;
   font-size: 0.82rem;
   outline: none;
-}
-.btn-save {
-  padding: 0.5rem 1.2rem;
-  border: 1px solid rgba(122, 214, 255, 0.3);
-  border-radius: 10px;
-  background: rgba(122, 214, 255, 0.08);
-  color: #7ad6ff;
-  font-family: inherit;
-  font-size: 0.82rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-save:hover {
-  border-color: rgba(122, 214, 255, 0.6);
-  box-shadow: 0 0 18px rgba(122, 214, 255, 0.1);
-}
-.saved-msg {
-  font-size: 0.78rem;
-  color: #6df7c8;
 }
 .flat-keys {
   display: grid;

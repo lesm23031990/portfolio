@@ -1,10 +1,5 @@
 <template>
   <div class="admin-projects">
-    <div class="toolbar">
-      <button class="btn-add" @click="startAdd">+ Nuevo proyecto</button>
-      <button class="btn-save" @click="handleSave">Guardar cambios</button>
-      <span v-if="saved" class="saved-msg">✓ Guardado</span>
-    </div>
     <p v-if="projects.length >= 4" class="limit-msg">Límite alcanzado: máximo 4 proyectos</p>
     <div class="project-list">
       <div v-for="(proj, i) in projects" :key="proj._key" class="project-card-admin">
@@ -149,22 +144,12 @@ function handleSave() {
   saved.value = true
   setTimeout(() => { saved.value = false }, 2000)
 }
+
+defineExpose({ handleSave, startAdd })
 </script>
 
 <style scoped>
 .admin-projects { display: grid; gap: 1rem; }
-.toolbar { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
-.btn-add {
-  padding: 0.5rem 1.2rem; border: 1px solid rgba(109, 247, 200, 0.3);
-  border-radius: 10px; background: rgba(109, 247, 200, 0.08);
-  color: #6df7c8; font-family: inherit; font-size: 0.82rem; cursor: pointer;
-}
-.btn-save {
-  padding: 0.5rem 1.2rem; border: 1px solid rgba(122, 214, 255, 0.3);
-  border-radius: 10px; background: rgba(122, 214, 255, 0.08);
-  color: #7ad6ff; font-family: inherit; font-size: 0.82rem; cursor: pointer;
-}
-.saved-msg { font-size: 0.78rem; color: #6df7c8; }
 .limit-msg { font-size: 0.78rem; color: #ff5c7a; margin: 0; }
 .project-list { display: grid; gap: 1.5rem; }
 .project-card-admin {
