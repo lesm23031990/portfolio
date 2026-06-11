@@ -510,7 +510,7 @@ onMounted(async () => {
       scrollTrigger: {
         trigger: section,
         start: 'top top',
-        end: '+=5800',
+        end: '+=6400',
         pin: true,
         pinSpacing: true,
         scrub: 1,
@@ -552,7 +552,7 @@ onMounted(async () => {
         { autoAlpha: 1, y: 0, duration: 0.5, stagger: 0.12, ease: 'power2.out' },
         6.25)
       // ── Exit: inverse entry — window shrinks, neon border appears then blurs ──
-      .to(frame, { opacity: 1, '--frame-progress': 1, filter: 'blur(0px)', duration: 0.35, ease: 'power2.out' }, 6.3)
+      .to(frame, { opacity: 1, '--frame-progress': 1, filter: 'blur(0px)', duration: 0.35, ease: 'power2.out' }, 7.3)
       .to(viewport, {
         scale: 0.86,
         borderRadius: '28px',
@@ -560,18 +560,18 @@ onMounted(async () => {
         paddingBottom: '2.5rem',
         duration: 0.8,
         ease: 'power2.inOut'
-      }, 6.5)
-      .to(exitOverlayRef.value, { autoAlpha: 0.3, duration: 0.6, ease: 'power2.out' }, 6.5)
+      }, 7.5)
+      .to(exitOverlayRef.value, { autoAlpha: 0.3, duration: 0.6, ease: 'power2.out' }, 7.5)
       .to(frame, {
         opacity: 0.3,
         '--frame-progress': 0.3,
         filter: 'blur(5px)',
         duration: 1.2,
         ease: 'power1.in'
-      }, 7.0)
-      .to(exitOverlayRef.value, { autoAlpha: 0.65, duration: 0.8, ease: 'power2.out' }, 7.6)
-      .to(frame, { opacity: 0, filter: 'blur(14px)', duration: 0.6 }, 8.6)
-      .to(sectionInner, { autoAlpha: 0, duration: 0.7, ease: 'power2.in' }, 8.6)
+      }, 8.0)
+      .to(exitOverlayRef.value, { autoAlpha: 0.65, duration: 0.8, ease: 'power2.out' }, 8.6)
+      .to(frame, { opacity: 0, filter: 'blur(14px)', duration: 0.6 }, 9.6)
+      .to(sectionInner, { autoAlpha: 0, duration: 0.7, ease: 'power2.in' }, 10.2)
   }, section)
 
   // ScrollTrigger: animate elements in and start typewriter when section enters viewport
