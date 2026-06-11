@@ -32,7 +32,6 @@
         </div>
       </div>
     </div>
-    <button class="btn-add" @click="addGroup">+ Añadir grupo</button>
 
     <h3 class="section-title" style="margin-top:2rem">Orbes (Tecnologías)</h3>
     <p class="section-hint">Cada orbe representa una tecnología en el mapa del stack.</p>
@@ -60,11 +59,6 @@
           <div class="field-row"><label>Delay</label><input v-model="orb.delay" placeholder="0s" /></div>
         </div>
       </div>
-    </div>
-    <div class="toolbar" style="margin-top:1rem">
-      <button class="btn-add" @click="addOrb">+ Añadir orbe</button>
-      <button class="btn-save" @click="handleSave">Guardar cambios</button>
-      <span v-if="saved" class="saved-msg">✓ Guardado</span>
     </div>
   </div>
 </template>
@@ -140,6 +134,8 @@ function handleSave() {
   saved.value = true
   setTimeout(() => { saved.value = false }, 2000)
 }
+
+defineExpose({ handleSave, addGroup, addOrb })
 </script>
 
 <style scoped>
@@ -149,18 +145,6 @@ function handleSave() {
   letter-spacing: 0.12em; text-transform: uppercase; color: #7ad6ff;
 }
 .section-hint { margin: 0; font-size: 0.72rem; color: rgba(255,255,255,0.3); }
-.toolbar { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
-.btn-add {
-  padding: 0.5rem 1.2rem; border: 1px solid rgba(109,247,200,0.3);
-  border-radius: 10px; background: rgba(109,247,200,0.08);
-  color: #6df7c8; font-family: inherit; font-size: 0.82rem; cursor: pointer;
-}
-.btn-save {
-  padding: 0.5rem 1.2rem; border: 1px solid rgba(122,214,255,0.3);
-  border-radius: 10px; background: rgba(122,214,255,0.08);
-  color: #7ad6ff; font-family: inherit; font-size: 0.82rem; cursor: pointer;
-}
-.saved-msg { font-size: 0.78rem; color: #6df7c8; }
 .group-list, .orb-list { display: grid; gap: 1rem; }
 .group-card, .orb-card {
   padding: 1rem; border-radius: 14px;

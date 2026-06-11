@@ -9,12 +9,7 @@
       <input v-model="adminPassword" type="password" class="input-wide" placeholder="········" autocomplete="new-password" />
       <label class="field-label" style="margin-top:0.6rem">Confirmar contraseña</label>
       <input v-model="adminPasswordConfirm" type="password" class="input-wide" placeholder="········" autocomplete="new-password" />
-    </div>
-
-    <div class="toolbar">
-      <button class="btn-save" @click="handleSave">Guardar configuración</button>
-      <span v-if="saved" class="saved-msg">✓ Guardado</span>
-      <span v-if="error" class="error-msg">{{ error }}</span>
+      <span v-if="error" class="error-msg" style="margin-top:0.5rem">{{ error }}</span>
     </div>
   </div>
 </template>
@@ -61,6 +56,8 @@ async function handleSave() {
   saved.value = true
   setTimeout(() => { saved.value = false }, 2000)
 }
+
+defineExpose({ handleSave })
 </script>
 
 <style scoped>
@@ -84,16 +81,5 @@ async function handleSave() {
   font-family: inherit; font-size: 0.82rem; outline: none;
 }
 .input-wide:focus { border-color: rgba(122, 214, 255, 0.4); }
-.toolbar { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
-.btn-save {
-  padding: 0.5rem 1.2rem; border: 1px solid rgba(122, 214, 255, 0.3);
-  border-radius: 10px; background: rgba(122, 214, 255, 0.08);
-  color: #7ad6ff; font-family: inherit; font-size: 0.82rem; cursor: pointer;
-}
-.btn-save:hover {
-  border-color: rgba(122, 214, 255, 0.6);
-  box-shadow: 0 0 18px rgba(122, 214, 255, 0.1);
-}
-.saved-msg { font-size: 0.78rem; color: #6df7c8; }
 .error-msg { font-size: 0.78rem; color: #ff5c7a; }
 </style>
