@@ -510,7 +510,7 @@ onMounted(async () => {
       scrollTrigger: {
         trigger: section,
         start: 'top top',
-        end: '+=6400',
+        end: '+=6800',
         pin: true,
         pinSpacing: true,
         scrub: 1,
