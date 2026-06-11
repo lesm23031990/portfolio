@@ -20,6 +20,7 @@
         <span class="admin-email">{{ sessionUser }}</span>
         <button class="admin-logout" @click="handleLogout">Cerrar sesión</button>
         <a href="/" class="admin-back-link">← Portfolio</a>
+        <button class="admin-export" @click="handleExport">⬇ Exportar JSON</button>
       </div>
     </aside>
     <main class="admin-main">
@@ -41,6 +42,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { logout, getSessionUser } from '@/content/auth'
+import { useContent } from '@/content/useContent'
 import AdminTranslations from '@/components/admin/AdminTranslations.vue'
 import AdminProjects from '@/components/admin/AdminProjects.vue'
 import AdminStack from '@/components/admin/AdminStack.vue'
@@ -51,6 +53,7 @@ const activeTab = ref('translations')
 const saveKey = ref(0)
 
 const sessionUser = getSessionUser()
+const { content } = useContent()
 
 const tabs = [
   { key: 'translations', label: 'Traducciones', desc: 'Editar textos por idioma' },
@@ -64,6 +67,17 @@ const currentTab = computed(() => tabs.find(t => t.key === activeTab.value) || t
 function handleLogout() {
   logout()
   router.push('/login')
+}
+
+function handleExport() {
+  const json = JSON.stringify(content, null, 2)
+  const blob = new Blob([json], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'content.json'
+  a.click()
+  URL.revokeObjectURL(url)
 }
 </script>
 
@@ -153,6 +167,20 @@ function handleLogout() {
   font-size: 0.72rem;
   color: rgba(255, 255, 255, 0.3);
   text-decoration: none;
+}
+.admin-export {
+  padding: 0.5rem;
+  border: 1px solid rgba(109, 247, 200, 0.3);
+  border-radius: 10px;
+  background: transparent;
+  color: #6df7c8;
+  font-family: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.admin-export:hover {
+  background: rgba(109, 247, 200, 0.1);
 }
 .admin-main {
   flex: 1;
