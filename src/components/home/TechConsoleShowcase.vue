@@ -819,7 +819,7 @@ function onBubbleEnter(i) {
 function getBubbleStyle(item, i) {
   const count = activeItems.value.length
   const center = (count - 1) / 2
-  const yOffset = (i - center) * 60
+  const yOffset = window.innerWidth <= 860 ? 0 : (i - center) * 60
   return {
     '--bubble-accent': item.accent,
     '--bubble-glow': item.glow,
@@ -830,6 +830,7 @@ function getBubbleStyle(item, i) {
 }
 
 function initBubbleFloat() {
+  if (window.innerWidth <= 860) return
   const els = bubbleEls.value.filter(Boolean)
   if (!els.length) return
   els.forEach((el, i) => {
@@ -851,9 +852,10 @@ function killBubbleFloat() {
 
 function initEntryAnimation() {
   if (!consoleRef.value || !bubbleAreaRef.value) return
+  const isMobile = window.innerWidth <= 860
   const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
   tl.fromTo(consoleRef.value,
-    { x: -80, opacity: 0 },
+    { x: isMobile ? 0 : -80, opacity: 0 },
     { x: 0, opacity: 1, duration: 0.7 },
     'start'
   ).fromTo(deviceRef.value,
@@ -861,7 +863,7 @@ function initEntryAnimation() {
     { y: 0, opacity: 1, duration: 0.7 },
     '-=0.3'
   ).fromTo([...bubbleEls.value.filter(Boolean)],
-    { x: 40, opacity: 0, scale: 0.4 },
+    { x: isMobile ? 0 : 40, opacity: 0, scale: 0.4 },
     {
       x: 0, opacity: 1, scale: 1,
       duration: 0.6,
@@ -927,6 +929,7 @@ onBeforeUnmount(() => {
 /* ── IDE Window ── */
 .tcs-ide {
   width: 100%;
+  max-width: 100%;
   background: rgba(10, 8, 16, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
@@ -1522,10 +1525,25 @@ onBeforeUnmount(() => {
     flex: none;
     width: 100%;
     flex-direction: row;
+    flex-wrap: wrap;
     justify-content: center;
-    gap: 1rem;
+    gap: 0.75rem;
     min-height: auto;
     padding: 0.5rem 0 0;
+  }
+
+  .tcs-bubble {
+    transform: none !important;
+    padding: 12px 16px 10px;
+  }
+
+  .tcs-bubble__icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .tcs-bubble__label {
+    font-size: 0.55rem;
   }
 
   .tcs-ide__body {
@@ -1536,24 +1554,12 @@ onBeforeUnmount(() => {
     font-size: 0.68rem;
     padding: 8px 10px;
   }
-
-  .tcs-bubble {
-    padding: 14px 18px 12px;
-  }
-
-  .tcs-bubble__icon {
-    width: 30px;
-    height: 30px;
-  }
-
-  .tcs-bubble__label {
-    font-size: 0.58rem;
-  }
 }
 
 @media (max-width: 480px) {
   .tcs {
-    padding: calc(88px + 1rem) 0.75rem 1rem;
+    padding: calc(88px + 1rem) 0.5rem 1rem;
+    overflow-x: hidden;
   }
 
   .tcs-ide__body {
@@ -1572,7 +1578,7 @@ onBeforeUnmount(() => {
   }
 
   .tcs__center {
-    width: 95%;
+    width: 100%;
     margin-left: 0;
   }
 
@@ -1580,23 +1586,67 @@ onBeforeUnmount(() => {
     max-width: 380px;
   }
 
+  /* Horizontal scrollable menu inside laptop screen */
+  .tcs-laptop__screen-body {
+    flex-direction: column;
+  }
+
+  .tcs-laptop__menu {
+    width: 100%;
+    max-width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 2px 0;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .tcs-laptop__menu::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tcs-laptop__menu-item {
+    padding: 6px 10px;
+    border-left: none;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .tcs-laptop__menu-item.active {
+    border-left-color: transparent;
+    border-bottom-color: var(--item-accent, #ff14a2);
+  }
+
+  .tcs-laptop__main {
+    padding: 4% 4% 6%;
+  }
+
+  .tcs-laptop__card-icon {
+    width: 28px;
+    height: 28px;
+  }
+
   .tcs__right {
-    gap: 0.75rem;
+    gap: 0.5rem;
   }
 
   .tcs-bubble {
-    padding: 10px 14px 8px;
-    gap: 4px;
-    border-radius: 16px;
+    padding: 8px 12px 6px;
+    gap: 3px;
+    border-radius: 14px;
   }
 
   .tcs-bubble__icon {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
   }
 
   .tcs-bubble__label {
-    font-size: 0.5rem;
+    font-size: 0.48rem;
   }
 }
 
