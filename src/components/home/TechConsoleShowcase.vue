@@ -1469,25 +1469,25 @@ onBeforeUnmount(() => {
 @media (max-width: 860px) {
   .tcs__inner {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
     min-height: auto;
     gap: 0.5rem;
   }
 
   .tcs__left {
     flex: none;
-    width: 100%;
+    width: 70%;
     padding-top: 0;
   }
 
   .tcs__center {
     flex: none;
-    width: 80%;
+    width: 95%;
     margin: 0 auto;
   }
 
   .tcs-laptop {
-    max-width: 420px;
+    max-width: 520px;
   }
 
   .tcs__right {
@@ -1516,7 +1516,8 @@ onBeforeUnmount(() => {
   }
 
   .tcs-ide__body {
-    min-height: 200px;
+    min-height: 0;
+    max-height: 180px;
   }
 
   .tcs-ide__code {
@@ -1576,19 +1577,24 @@ onBeforeUnmount(() => {
     overflow-x: hidden;
   }
 
+  .tcs__left {
+    width: 80%;
+  }
+
   .tcs-ide__body {
-    min-height: 160px;
+    min-height: 0;
+    max-height: 140px;
   }
 
   .tcs-ide__code {
-    font-size: 0.58rem;
+    font-size: 0.55rem;
     padding: 6px 8px;
-    line-height: 1.65;
+    line-height: 1.6;
   }
 
   .tcs-ide__num {
-    font-size: 0.5rem;
-    min-width: 1.5em;
+    font-size: 0.45rem;
+    min-width: 1.3em;
   }
 
   .tcs__center {
@@ -1597,7 +1603,7 @@ onBeforeUnmount(() => {
   }
 
   .tcs-laptop {
-    max-width: 380px;
+    max-width: 440px;
   }
 
   .tcs__right {

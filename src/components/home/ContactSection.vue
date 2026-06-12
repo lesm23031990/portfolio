@@ -29,6 +29,14 @@
           >
             {{ t('home.contactPanel.secondaryCta') }}
           </a>
+          <a
+            v-if="contactCvUrl"
+            class="contact-action contact-action--tertiary"
+            :href="contactCvUrl"
+            download="CV-Lorena-Salas.pdf"
+          >
+            {{ t('home.contactPanel.tertiaryCta') }}
+          </a>
         </div>
 
         <div ref="cardsRef" class="contact-scene__cards">
@@ -47,6 +55,17 @@
             <span class="contact-card__label">{{ t('home.contactPanel.cards.linkedin.label') }}</span>
             <strong class="contact-card__value">{{ t('home.contact.linkedin') }}</strong>
             <span class="contact-card__meta">{{ t('home.contactPanel.cards.linkedin.meta') }}</span>
+          </a>
+
+          <a
+            v-if="contactCvUrl"
+            class="contact-card"
+            :href="contactCvUrl"
+            download="CV-Lorena-Salas.pdf"
+          >
+            <span class="contact-card__label">{{ t('home.contactPanel.cards.cv.label') }}</span>
+            <strong class="contact-card__value">{{ t('home.contactPanel.cards.cv.value') }}</strong>
+            <span class="contact-card__meta">{{ t('home.contactPanel.cards.cv.meta') }}</span>
           </a>
         </div>
       </div>
@@ -124,6 +143,7 @@ const contactEmail = computed(() => {
 const contactLinkedin = computed(() => messages.value?.[locale.value]?.home?.contact?.linkedinUrl || '#')
 const contactGithub = computed(() => messages.value?.[locale.value]?.home?.contact?.githubUrl || '#')
 const contactPhoto = computed(() => messages.value?.[locale.value]?.home?.contact?.photo || '')
+const contactCvUrl = computed(() => messages.value?.[locale.value]?.home?.contact?.cvUrl || '')
 const contactEmailHref = computed(() => `mailto:${contactEmail.value}`)
 
 onMounted(() => {
@@ -151,28 +171,30 @@ onMounted(() => {
   gsap.set([eyebrow, title, sub, actions.children, cards.children, portrait], {
     autoAlpha: 0
   })
-  gsap.set(eyebrow, { y: -18 })
-  gsap.set(title, { y: -12, scale: 0.96 })
-  gsap.set(sub, { y: 20 })
-  gsap.set(actions.children, { y: 30 })
-  gsap.set(cards.children, { y: 24 })
-  gsap.set(portrait, { x: 36, scale: 0.97 })
+  gsap.set(eyebrow, { y: -14, opacity: 0 })
+  gsap.set(title, { y: -20, scale: 0.9, opacity: 0 })
+  gsap.set(sub, { y: 16, opacity: 0 })
+  gsap.set(actions.children, { y: 24, opacity: 0 })
+  gsap.set(cards.children, { y: 20, opacity: 0 })
+  gsap.set(portrait, { x: 40, scale: 0.95, opacity: 0 })
 
   gsapCtx.value = gsap.timeline({
     scrollTrigger: {
       trigger: section,
-      start: 'top 82%',
+      start: 'top 80%',
       toggleActions: 'play none none reverse',
       invalidateOnRefresh: true
     },
-    defaults: { ease: 'power3.out' }
+    defaults: { ease: 'power4.out' }
   })
-    .to(eyebrow, { autoAlpha: 1, y: 0, duration: 0.55 }, 0)
-    .to(title, { autoAlpha: 1, y: 0, scale: 1, duration: 0.6 }, '-=0.25')
-    .to(sub, { autoAlpha: 1, y: 0, duration: 0.5 }, '-=0.3')
-    .to(actions.children, { autoAlpha: 1, y: 0, duration: 0.45, stagger: 0.1 }, '-=0.25')
-    .to(cards.children, { autoAlpha: 1, y: 0, duration: 0.5, stagger: 0.12 }, '-=0.2')
-    .to(portrait, { autoAlpha: 1, x: 0, scale: 1, duration: 0.7, ease: 'power2.out' }, '-=0.35')
+    .to(eyebrow, { autoAlpha: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0)
+    .to(title, { autoAlpha: 1, y: 0, scale: 1, duration: 0.7, ease: 'back.out(1.4)' }, '-=0.2')
+    .to(sub, { autoAlpha: 1, y: 0, duration: 0.55, ease: 'power3.out' }, '-=0.25')
+    .to(actions.children, { autoAlpha: 1, y: 0, duration: 0.4, stagger: 0.08, ease: 'back.out(1.2)' }, '-=0.2')
+    .to(cards.children, { autoAlpha: 1, y: 0, duration: 0.45, stagger: 0.1, ease: 'power3.out' }, '-=0.15')
+    .to(portrait, { autoAlpha: 1, x: 0, scale: 1, duration: 0.8, ease: 'power2.out' }, '-=0.35')
+
+  gsap.fromTo('.portrait-frame', { rotateZ: -1.5 }, { rotateZ: 1.5, duration: 4, ease: 'sine.inOut', yoyo: true, repeat: -1, delay: 1.5 })
 
   window.addEventListener('resize', onWidthResize, { passive: true })
 })
@@ -196,7 +218,7 @@ onBeforeUnmount(() => {
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  padding: 2rem 1.25rem;
+  padding: 1rem 1.25rem;
   overflow: hidden;
   background: linear-gradient(180deg, transparent 0%, #fff5fa 20%, #fff9fc 50%, #fff3f9 100%);
 }
@@ -208,8 +230,8 @@ onBeforeUnmount(() => {
   max-width: 1180px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(14rem, 0.7fr);
-  gap: clamp(1rem, 3vw, 2.5rem);
+  grid-template-columns: minmax(0, 1fr) minmax(12rem, 0.55fr);
+  gap: clamp(0.75rem, 2vw, 1.5rem);
   align-items: center;
 }
 
@@ -252,46 +274,45 @@ onBeforeUnmount(() => {
 }
 
 .contact-scene__eyebrow {
-  margin: 0 0 0.6rem;
-  font-size: 0.76rem;
-  letter-spacing: 0.26em;
+  margin: 0 0 0.3rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--rose-accent);
-  text-shadow: 0 0 12px rgba(212, 107, 158, 0.3);
 }
 
 .contact-scene__title {
   margin: 0;
-  font-size: clamp(1.8rem, 3.8vw, 2.8rem);
-  line-height: 1.08;
+  font-size: clamp(1.3rem, 2.8vw, 2rem);
+  line-height: 1.1;
   font-weight: 300;
   color: var(--rose-text);
 }
 
 .contact-scene__sub {
-  margin: 0.7rem 0 0;
-  max-width: 32rem;
+  margin: 0.4rem 0 0;
+  max-width: 30rem;
   color: var(--rose-text-soft);
-  line-height: 1.6;
-  font-size: 0.92rem;
+  line-height: 1.4;
+  font-size: 0.82rem;
 }
 
 .contact-scene__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.7rem;
-  margin-top: 1.4rem;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
 }
 
 .contact-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 11rem;
-  padding: 0.75rem 1.15rem;
+  min-width: 9rem;
+  padding: 0.55rem 1rem;
   border-radius: 999px;
   text-decoration: none;
-  font-size: 0.88rem;
+  font-size: 0.8rem;
   transition:
     transform 0.24s ease,
     box-shadow 0.24s ease;
@@ -304,69 +325,61 @@ onBeforeUnmount(() => {
 .contact-action--primary {
   background: linear-gradient(135deg, #f7bad6, #d46b9e);
   color: #fff;
-  box-shadow: 0 18px 34px rgba(212, 107, 158, 0.24);
 }
 
 .contact-action--secondary {
   background: rgba(255, 255, 255, 0.85);
   color: var(--rose-accent-strong);
   border: 1px solid var(--rose-border-strong);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+
+.contact-action--tertiary {
+  background: transparent;
+  color: var(--rose-accent-strong);
+  border: 1px dashed var(--rose-border-strong);
 }
 
 .contact-scene__cards {
   display: grid;
-  gap: 0.75rem;
-  margin-top: 1.4rem;
+  gap: 0.35rem;
+  margin-top: 0.6rem;
 }
 
 .contact-card {
   display: grid;
-  gap: 0.25rem;
-  padding: 1rem 1.25rem;
+  gap: 0.1rem;
+  padding: 0.55rem 0.9rem;
   text-decoration: none;
-  border-radius: 20px;
+  border-radius: 12px;
   color: var(--rose-text);
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.7);
   border: 1px solid var(--rose-border-strong);
-  box-shadow:
-    0 18px 34px rgba(227, 182, 206, 0.22),
-    0 0 0 1px rgba(255, 255, 255, 0.5),
-    0 0 14px rgba(255, 0, 170, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(16px);
-  transition:
-    transform 0.24s ease,
-    box-shadow 0.24s ease;
+  transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .contact-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(255, 0, 170, 0.3);
-  box-shadow:
-    0 24px 40px rgba(227, 182, 206, 0.26),
-    0 0 0 1px rgba(255, 255, 255, 0.6),
-    0 0 24px rgba(255, 0, 170, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(212, 107, 158, 0.12);
 }
 
 .contact-card__label {
-  font-size: 0.72rem;
-  letter-spacing: 0.16em;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--rose-accent);
 }
 
 .contact-card__value {
-  font-size: clamp(0.9rem, 1.6vw, 1.05rem);
+  font-size: clamp(0.78rem, 1.2vw, 0.88rem);
   font-weight: 500;
   word-break: break-all;
 }
 
 .contact-card__meta {
   color: var(--rose-text-soft);
-  line-height: 1.5;
-  font-size: 0.85rem;
+  line-height: 1.3;
+  font-size: 0.7rem;
 }
 
 .contact-scene__portrait {
@@ -375,40 +388,30 @@ onBeforeUnmount(() => {
 }
 
 .portrait-shell {
-  width: min(100%, 16rem);
+  width: min(100%, 14rem);
   display: grid;
-  gap: 0.85rem;
+  gap: 0.5rem;
 }
 
 .portrait-frame {
   position: relative;
   aspect-ratio: 4 / 5;
-  border-radius: 28px;
-  padding: 0.85rem;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(255, 245, 250, 0.94)),
-    linear-gradient(135deg, rgba(212, 107, 158, 0.18), rgba(255, 255, 255, 0.3));
+  border-radius: 20px;
+  padding: 0.5rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(255, 245, 250, 0.94));
   border: 1px solid var(--rose-border-strong);
-  box-shadow:
-    0 24px 48px rgba(214, 123, 165, 0.2),
-    0 0 40px rgba(255, 0, 170, 0.1),
-    0 0 0 1px rgba(255, 255, 255, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.76);
-  backdrop-filter: blur(14px);
 }
 
 .portrait-placeholder {
   position: relative;
   width: 100%;
   height: 100%;
-  border-radius: 22px;
+  border-radius: 16px;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  background:
-    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(247, 186, 214, 0.36) 32%, transparent 62%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 241, 247, 0.92));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 241, 247, 0.92));
 }
 
 .portrait-placeholder--filled {
@@ -419,40 +422,34 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 22px;
+  border-radius: 16px;
 }
 
 .portrait-placeholder__tag {
   position: relative;
   z-index: 1;
-  font-size: 0.76rem;
-  letter-spacing: 0.28em;
+  font-size: 0.65rem;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--rose-accent-strong);
 }
 
 .portrait-placeholder__glow {
-  position: absolute;
-  inset: auto 14% 8%;
-  height: 26%;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.68), transparent 70%);
-  filter: blur(26px);
+  display: none;
 }
 
 .portrait-caption {
   display: grid;
-  gap: 0.25rem;
-  padding: 0.85rem 1rem;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.88);
+  gap: 0.15rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
   border: 1px solid var(--rose-border-strong);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
 }
 
 .portrait-caption span {
-  font-size: 0.72rem;
-  letter-spacing: 0.16em;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--rose-accent);
 }
@@ -460,8 +457,8 @@ onBeforeUnmount(() => {
 .portrait-caption a {
   color: var(--rose-accent-strong);
   text-decoration: none;
-  line-height: 1.5;
-  font-size: 0.85rem;
+  line-height: 1.4;
+  font-size: 0.75rem;
 }
 
 .portrait-caption a:hover {
@@ -470,22 +467,45 @@ onBeforeUnmount(() => {
 
 @media (max-width: 900px) {
   .contact-scene {
-    padding: 1.5rem 1rem;
+    padding: 1rem;
     height: auto;
     min-height: 100dvh;
   }
 
   .contact-scene__inner {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 1rem;
   }
 
   .contact-scene__portrait {
-    order: -1;
+    order: 1;
+    display: flex;
+    justify-content: center;
   }
 
   .portrait-shell {
-    width: min(100%, 14rem);
+    width: 100%;
+    max-width: 18rem;
+  }
+
+  .portrait-frame {
+    padding: 0.45rem;
+    border-radius: 16px;
+  }
+
+  .portrait-placeholder {
+    border-radius: 12px;
+  }
+
+  .portrait-img {
+    border-radius: 12px;
+  }
+
+  .portrait-caption {
+    padding: 0.55rem 0.8rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid var(--rose-border-strong);
   }
 }
 </style>

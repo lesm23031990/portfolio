@@ -9,6 +9,7 @@
     "sync-rules": "node -e \"const fs = require('fs'); fs.mkdirSync('.cursor/rules', { recursive: true }); fs.mkdirSync('.github', { recursive: true }); fs.copyFileSync('tech-stack.mdc', '.cursor/rules/tech-stack.mdc'); fs.copyFileSync('tech-stack.mdc', '.coderules'); fs.writeFileSync('.github/copilot-instructions.md', '# GitHub Copilot Instructions\\n@tech-stack.mdc'); console.log('✅ ¡Reglas sincronizadas en todo el ecosistema!');\""
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "core-js": "^3.8.3",
     "gsap": "^3.15.0",
     "vue": "^3.2.13",
