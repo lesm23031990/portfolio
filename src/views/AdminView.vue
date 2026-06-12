@@ -50,6 +50,7 @@
       <AdminTranslations v-if="activeTab === 'translations'" :key="saveKey" ref="translationsRef" />
       <AdminProjects v-else-if="activeTab === 'projects'" :key="saveKey" ref="projectsRef" />
       <AdminStack v-else-if="activeTab === 'stack'" :key="saveKey" ref="stackRef" />
+      <AdminContact v-else-if="activeTab === 'contact'" :key="saveKey" ref="contactRef" />
       <AdminConfig v-else-if="activeTab === 'config'" :key="saveKey" ref="configRef" />
     </main>
   </div>
@@ -63,6 +64,7 @@ import { useContent } from '@/content/useContent'
 import AdminTranslations from '@/components/admin/AdminTranslations.vue'
 import AdminProjects from '@/components/admin/AdminProjects.vue'
 import AdminStack from '@/components/admin/AdminStack.vue'
+import AdminContact from '@/components/admin/AdminContact.vue'
 import AdminConfig from '@/components/admin/AdminConfig.vue'
 
 const router = useRouter()
@@ -73,6 +75,7 @@ const sidebarSaved = ref(false)
 const translationsRef = ref(null)
 const projectsRef = ref(null)
 const stackRef = ref(null)
+const contactRef = ref(null)
 const configRef = ref(null)
 
 const sessionUser = getSessionUser()
@@ -82,6 +85,7 @@ const tabs = [
   { key: 'translations', label: 'Traducciones', desc: 'Editar textos por idioma' },
   { key: 'projects', label: 'Proyectos', desc: 'Administrar proyectos (máx. 4)' },
   { key: 'stack', label: 'Stack', desc: 'Administrar tecnologías y orbes' },
+  { key: 'contact', label: 'Contacto', desc: 'Foto de perfil y redes sociales' },
   { key: 'config', label: 'Config', desc: 'Credenciales de acceso' }
 ]
 
@@ -101,6 +105,8 @@ async function handleSidebarSave() {
       projectsRef.value?.handleSave()
     } else if (activeTab.value === 'stack') {
       stackRef.value?.handleSave()
+    } else if (activeTab.value === 'contact') {
+      contactRef.value?.handleSave()
     } else if (activeTab.value === 'config') {
       await configRef.value?.handleSave()
     }

@@ -3,7 +3,6 @@
     id="contacto"
     ref="sectionRef"
     class="contact-scene"
-    :class="{ 'contact-scene--visible': isVisible }"
   >
     <div class="contact-scene__bg" aria-hidden="true">
       <CircuitBackground v-if="isDesktop" class="contact-scene__circuit" />
@@ -14,11 +13,11 @@
 
     <div class="contact-scene__inner">
       <div class="contact-scene__copy">
-        <p class="contact-scene__eyebrow">{{ t('home.sections.contact.title') }}</p>
-        <h3 class="contact-scene__title">{{ t('home.contactPanel.title') }}</h3>
-        <p class="contact-scene__sub">{{ t('home.contactPanel.subtitle') }}</p>
+        <p ref="eyebrowRef" class="contact-scene__eyebrow">{{ t('home.sections.contact.title') }}</p>
+        <h3 ref="titleRef" class="contact-scene__title">{{ t('home.contactPanel.title') }}</h3>
+        <p ref="subRef" class="contact-scene__sub">{{ t('home.contactPanel.subtitle') }}</p>
 
-        <div class="contact-scene__actions">
+        <div ref="actionsRef" class="contact-scene__actions">
           <a class="contact-action contact-action--primary" :href="contactEmailHref">
             {{ t('home.contactPanel.primaryCta') }}
           </a>
@@ -32,7 +31,7 @@
           </a>
         </div>
 
-        <div class="contact-scene__cards">
+        <div ref="cardsRef" class="contact-scene__cards">
           <a class="contact-card" :href="contactEmailHref">
             <span class="contact-card__label">{{ t('home.contactPanel.cards.email.label') }}</span>
             <strong class="contact-card__value">{{ contactEmail }}</strong>
@@ -52,12 +51,15 @@
         </div>
       </div>
 
-      <div class="contact-scene__portrait">
+      <div ref="portraitRef" class="contact-scene__portrait">
         <div class="portrait-shell">
           <div class="portrait-frame">
-            <div class="portrait-placeholder">
-              <span class="portrait-placeholder__tag">PHOTO SPACE</span>
-              <div class="portrait-placeholder__glow"></div>
+            <div class="portrait-placeholder" :class="{ 'portrait-placeholder--filled': contactPhoto }">
+              <img v-if="contactPhoto" :src="contactPhoto" alt="Profile" class="portrait-img" />
+              <template v-else>
+                <span class="portrait-placeholder__tag">PHOTO SPACE</span>
+                <div class="portrait-placeholder__glow"></div>
+              </template>
             </div>
           </div>
           <div class="portrait-caption">
@@ -79,23 +81,34 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import CircuitBackground from '@/components/ui/CircuitBackground.vue'
 import CircuitBackgroundMobile from '@/components/ui/CircuitBackgroundMobile.vue'
+
+gsap.registerPlugin(ScrollTrigger)
 
 const { t, locale, messages } = useI18n({ useScope: 'global' })
 
 const sectionRef = ref(null)
-const sectionObserver = ref(null)
-const isVisible = ref(false)
+const eyebrowRef = ref(null)
+const titleRef = ref(null)
+const subRef = ref(null)
+const actionsRef = ref(null)
+const cardsRef = ref(null)
+const portraitRef = ref(null)
 
 const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1920)
 const isDesktop = ref(windowWidth.value >= 768)
+const gsapCtx = ref(null)
 
 let widthTimer = null
+
 function updateWidth() {
   windowWidth.value = window.innerWidth
   isDesktop.value = windowWidth.value >= 768
 }
+
 function onWidthResize() {
   if (widthTimer) return
   widthTimer = window.requestAnimationFrame(() => {
@@ -110,28 +123,66 @@ const contactEmail = computed(() => {
 })
 const contactLinkedin = computed(() => messages.value?.[locale.value]?.home?.contact?.linkedinUrl || '#')
 const contactGithub = computed(() => messages.value?.[locale.value]?.home?.contact?.githubUrl || '#')
+const contactPhoto = computed(() => messages.value?.[locale.value]?.home?.contact?.photo || '')
 const contactEmailHref = computed(() => `mailto:${contactEmail.value}`)
 
 onMounted(() => {
-  sectionObserver.value = new IntersectionObserver(
-    ([entry]) => {
-      isVisible.value = entry.isIntersecting
-    },
-    { threshold: 0.18 }
-  )
+  const section = sectionRef.value
+  const eyebrow = eyebrowRef.value
+  const title = titleRef.value
+  const sub = subRef.value
+  const actions = actionsRef.value
+  const cards = cardsRef.value
+  const portrait = portraitRef.value
+  if (!section || !eyebrow || !title || !sub || !actions || !cards || !portrait) return
 
-  if (sectionRef.value) {
-    sectionObserver.value.observe(sectionRef.value)
+  const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
+  if (prefersReducedMotion) {
+    gsap.set([eyebrow, title, sub, actions.children, cards.children, portrait], {
+      autoAlpha: 1,
+      y: 0,
+      x: 0,
+      scale: 1
+    })
+    return
   }
+
+  gsap.set([eyebrow, title, sub, actions.children, cards.children, portrait], {
+    autoAlpha: 0
+  })
+  gsap.set(eyebrow, { y: -18 })
+  gsap.set(title, { y: -12, scale: 0.96 })
+  gsap.set(sub, { y: 20 })
+  gsap.set(actions.children, { y: 30 })
+  gsap.set(cards.children, { y: 24 })
+  gsap.set(portrait, { x: 36, scale: 0.97 })
+
+  gsapCtx.value = gsap.timeline({
+    scrollTrigger: {
+      trigger: section,
+      start: 'top 82%',
+      toggleActions: 'play none none reverse',
+      invalidateOnRefresh: true
+    },
+    defaults: { ease: 'power3.out' }
+  })
+    .to(eyebrow, { autoAlpha: 1, y: 0, duration: 0.55 }, 0)
+    .to(title, { autoAlpha: 1, y: 0, scale: 1, duration: 0.6 }, '-=0.25')
+    .to(sub, { autoAlpha: 1, y: 0, duration: 0.5 }, '-=0.3')
+    .to(actions.children, { autoAlpha: 1, y: 0, duration: 0.45, stagger: 0.1 }, '-=0.25')
+    .to(cards.children, { autoAlpha: 1, y: 0, duration: 0.5, stagger: 0.12 }, '-=0.2')
+    .to(portrait, { autoAlpha: 1, x: 0, scale: 1, duration: 0.7, ease: 'power2.out' }, '-=0.35')
 
   window.addEventListener('resize', onWidthResize, { passive: true })
 })
 
 onBeforeUnmount(() => {
-  if (sectionObserver.value) {
-    sectionObserver.value.disconnect()
+  if (gsapCtx.value) {
+    gsapCtx.value.scrollTrigger?.kill()
+    gsapCtx.value.kill()
+    gsapCtx.value = null
   }
-
   window.removeEventListener('resize', onWidthResize)
   if (widthTimer) window.cancelAnimationFrame(widthTimer)
 })
@@ -140,21 +191,14 @@ onBeforeUnmount(() => {
 <style scoped>
 .contact-scene {
   position: relative;
-  min-height: 100vh;
+  height: 100dvh;
+  min-height: 100dvh;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
-  padding: 4rem 1.25rem;
-  opacity: 0;
-  transform: translate3d(0, 48px, 0);
+  padding: 2rem 1.25rem;
   overflow: hidden;
-  transition:
-    opacity 0.75s ease,
-    transform 0.75s ease;
-}
-
-.contact-scene--visible {
-  opacity: 1;
-  transform: translate3d(0, 0, 0);
+  background: linear-gradient(180deg, transparent 0%, #fff5fa 20%, #fff9fc 50%, #fff3f9 100%);
 }
 
 .contact-scene__inner {
@@ -164,8 +208,8 @@ onBeforeUnmount(() => {
   max-width: 1180px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.9fr);
-  gap: clamp(1.5rem, 4vw, 3rem);
+  grid-template-columns: minmax(0, 1fr) minmax(14rem, 0.7fr);
+  gap: clamp(1rem, 3vw, 2.5rem);
   align-items: center;
 }
 
@@ -176,73 +220,78 @@ onBeforeUnmount(() => {
 }
 
 .contact-scene__circuit {
-  opacity: 0.2;
+  opacity: 0.3;
   mix-blend-mode: screen;
   mask-image: linear-gradient(to bottom, black 0%, black 100%);
   -webkit-mask-image: linear-gradient(to bottom, black 0%, black 100%);
+  filter: drop-shadow(0 0 6px rgba(255, 0, 162, 0.3));
+  will-change: filter;
 }
 
 .contact-scene__glow {
   position: absolute;
   border-radius: 999px;
   filter: blur(70px);
-  opacity: 0.22;
+  opacity: 0.25;
 }
 
 .contact-scene__glow--left {
-  width: min(42vw, 28rem);
-  height: min(42vw, 28rem);
+  width: min(38vw, 24rem);
+  height: min(38vw, 24rem);
   top: 10%;
   left: -8%;
-  background: radial-gradient(circle, rgba(255, 0, 170, 0.6), transparent 70%);
+  background: radial-gradient(circle, rgba(255, 0, 170, 0.5), transparent 70%);
 }
 
 .contact-scene__glow--right {
-  width: min(32vw, 24rem);
-  height: min(32vw, 24rem);
+  width: min(28vw, 20rem);
+  height: min(28vw, 20rem);
   right: -4%;
   bottom: 8%;
-  background: radial-gradient(circle, rgba(122, 214, 255, 0.5), transparent 72%);
+  background: radial-gradient(circle, rgba(122, 214, 255, 0.4), transparent 72%);
 }
 
 .contact-scene__eyebrow {
-  margin: 0 0 0.8rem;
+  margin: 0 0 0.6rem;
   font-size: 0.76rem;
   letter-spacing: 0.26em;
   text-transform: uppercase;
   color: var(--rose-accent);
+  text-shadow: 0 0 12px rgba(212, 107, 158, 0.3);
 }
 
 .contact-scene__title {
   margin: 0;
-  font-size: clamp(2.15rem, 4.6vw, 3.3rem);
+  font-size: clamp(1.8rem, 3.8vw, 2.8rem);
   line-height: 1.08;
   font-weight: 300;
   color: var(--rose-text);
 }
 
 .contact-scene__sub {
-  margin: 1rem 0 0;
-  max-width: 34rem;
+  margin: 0.7rem 0 0;
+  max-width: 32rem;
   color: var(--rose-text-soft);
-  line-height: 1.78;
+  line-height: 1.6;
+  font-size: 0.92rem;
 }
 
 .contact-scene__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.85rem;
-  margin-top: 1.8rem;
+  gap: 0.7rem;
+  margin-top: 1.4rem;
 }
 
 .contact-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 12rem;
-  padding: 0.9rem 1.25rem;
+  min-width: 11rem;
+  padding: 0.75rem 1.15rem;
   border-radius: 999px;
   text-decoration: none;
+  font-size: 0.88rem;
   transition:
     transform 0.24s ease,
     box-shadow 0.24s ease;
@@ -259,31 +308,33 @@ onBeforeUnmount(() => {
 }
 
 .contact-action--secondary {
-  background: rgba(255, 255, 255, 0.68);
+  background: rgba(255, 255, 255, 0.85);
   color: var(--rose-accent-strong);
-  border: 1px solid var(--rose-border);
+  border: 1px solid var(--rose-border-strong);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
 }
 
 .contact-scene__cards {
   display: grid;
-  gap: 1rem;
-  margin-top: 1.8rem;
+  gap: 0.75rem;
+  margin-top: 1.4rem;
 }
 
 .contact-card {
   display: grid;
-  gap: 0.35rem;
-  padding: 1.1rem 1.2rem;
+  gap: 0.25rem;
+  padding: 1rem 1.25rem;
   text-decoration: none;
-  border-radius: 24px;
+  border-radius: 20px;
   color: var(--rose-text);
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(255, 0, 170, 0.14);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--rose-border-strong);
   box-shadow:
     0 18px 34px rgba(227, 182, 206, 0.22),
-    0 0 0 1px rgba(255, 255, 255, 0.36),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(14px);
+    0 0 0 1px rgba(255, 255, 255, 0.5),
+    0 0 14px rgba(255, 0, 170, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(16px);
   transition:
     transform 0.24s ease,
     box-shadow 0.24s ease;
@@ -291,26 +342,31 @@ onBeforeUnmount(() => {
 
 .contact-card:hover {
   transform: translateY(-4px);
+  border-color: rgba(255, 0, 170, 0.3);
   box-shadow:
     0 24px 40px rgba(227, 182, 206, 0.26),
-    inset 0 1px 0 rgba(255, 255, 255, 0.78);
+    0 0 0 1px rgba(255, 255, 255, 0.6),
+    0 0 24px rgba(255, 0, 170, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
 .contact-card__label {
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--rose-accent);
 }
 
 .contact-card__value {
-  font-size: clamp(1rem, 2vw, 1.2rem);
+  font-size: clamp(0.9rem, 1.6vw, 1.05rem);
   font-weight: 500;
+  word-break: break-all;
 }
 
 .contact-card__meta {
   color: var(--rose-text-soft);
-  line-height: 1.55;
+  line-height: 1.5;
+  font-size: 0.85rem;
 }
 
 .contact-scene__portrait {
@@ -319,32 +375,33 @@ onBeforeUnmount(() => {
 }
 
 .portrait-shell {
-  width: min(100%, 26rem);
+  width: min(100%, 16rem);
   display: grid;
-  gap: 1rem;
+  gap: 0.85rem;
 }
 
 .portrait-frame {
   position: relative;
   aspect-ratio: 4 / 5;
-  border-radius: 32px;
-  padding: 1rem;
+  border-radius: 28px;
+  padding: 0.85rem;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.74), rgba(255, 245, 250, 0.88)),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(255, 245, 250, 0.94)),
     linear-gradient(135deg, rgba(212, 107, 158, 0.18), rgba(255, 255, 255, 0.3));
-  border: 1px solid var(--rose-border);
+  border: 1px solid var(--rose-border-strong);
   box-shadow:
     0 24px 48px rgba(214, 123, 165, 0.2),
-    0 0 40px rgba(255, 0, 170, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(12px);
+    0 0 40px rgba(255, 0, 170, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.76);
+  backdrop-filter: blur(14px);
 }
 
 .portrait-placeholder {
   position: relative;
   width: 100%;
   height: 100%;
-  border-radius: 26px;
+  border-radius: 22px;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -354,10 +411,21 @@ onBeforeUnmount(() => {
     linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 241, 247, 0.92));
 }
 
+.portrait-placeholder--filled {
+  background: none;
+}
+
+.portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 22px;
+}
+
 .portrait-placeholder__tag {
   position: relative;
   z-index: 1;
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   letter-spacing: 0.28em;
   text-transform: uppercase;
   color: var(--rose-accent-strong);
@@ -374,15 +442,16 @@ onBeforeUnmount(() => {
 
 .portrait-caption {
   display: grid;
-  gap: 0.35rem;
-  padding: 1rem 1.15rem;
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid var(--rose-border);
+  gap: 0.25rem;
+  padding: 0.85rem 1rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--rose-border-strong);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
 }
 
 .portrait-caption span {
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--rose-accent);
@@ -391,7 +460,8 @@ onBeforeUnmount(() => {
 .portrait-caption a {
   color: var(--rose-accent-strong);
   text-decoration: none;
-  line-height: 1.55;
+  line-height: 1.5;
+  font-size: 0.85rem;
 }
 
 .portrait-caption a:hover {
@@ -399,9 +469,23 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 900px) {
+  .contact-scene {
+    padding: 1.5rem 1rem;
+    height: auto;
+    min-height: 100dvh;
+  }
+
   .contact-scene__inner {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .contact-scene__portrait {
+    order: -1;
+  }
+
+  .portrait-shell {
+    width: min(100%, 14rem);
   }
 }
-
 </style>

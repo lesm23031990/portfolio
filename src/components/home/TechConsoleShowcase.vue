@@ -150,7 +150,6 @@ const activeCategoryIndex = ref(0)
 const activeItemIndex = ref(0)
 const bubbleEls = ref([])
 let bubbleTweens = []
-let ctx = null
 
 const orbContent = {
   'orb-vue': {
@@ -797,17 +796,13 @@ function syncBubbles() {
     const i = Number(key)
     el.classList.toggle('tcs-bubble--active', i === active)
     el.classList.toggle('tcs-bubble--idle', i !== active)
-    if (ctx) {
-      ctx.add(() => {
-        gsap.to(el, {
-          scale: i === active ? 1.18 : 1,
-          opacity: i === active ? 1 : 0.3,
-          duration: 0.45,
-          ease: 'power2.out',
-          overwrite: 'auto'
-        })
-      })
-    }
+    gsap.to(el, {
+      scale: i === active ? 1.18 : 1,
+      opacity: i === active ? 1 : 0.3,
+      duration: 0.45,
+      ease: 'power2.out',
+      overwrite: 'auto'
+    })
   })
 }
 
@@ -850,40 +845,14 @@ function killBubbleFloat() {
   bubbleTweens = []
 }
 
-function initEntryAnimation() {
-  if (!consoleRef.value || !bubbleAreaRef.value) return
-  const isMobile = window.innerWidth <= 860
-  const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
-  tl.fromTo(consoleRef.value,
-    { x: isMobile ? 0 : -80, opacity: 0 },
-    { x: 0, opacity: 1, duration: 0.7 },
-    'start'
-  ).fromTo(deviceRef.value,
-    { y: 60, opacity: 0 },
-    { y: 0, opacity: 1, duration: 0.7 },
-    '-=0.3'
-  ).fromTo([...bubbleEls.value.filter(Boolean)],
-    { x: isMobile ? 0 : 40, opacity: 0, scale: 0.4 },
-    {
-      x: 0, opacity: 1, scale: 1,
-      duration: 0.6,
-      stagger: 0.15,
-      ease: 'back.out(1.3)',
-      onComplete: initBubbleFloat
-    },
-    '-=0.45'
-  )
-  ctx.add(() => tl)
-}
-
 onMounted(() => {
-  ctx = gsap.context(() => {}, sectionRef.value)
-  initEntryAnimation()
+  nextTick(() => {
+    initBubbleFloat()
+  })
 })
 
 onBeforeUnmount(() => {
   killBubbleFloat()
-  if (ctx) ctx.revert()
 })
 </script>
 
@@ -1118,7 +1087,7 @@ onBeforeUnmount(() => {
   background: linear-gradient(90deg, transparent, #ff14a2, #7ad6ff, transparent);
   border-radius: 2px;
   z-index: 5;
-  opacity: 0.6;
+  will-change: filter, transform;
 }
 
 .tcs-laptop__lid {
@@ -1556,37 +1525,7 @@ onBeforeUnmount(() => {
   }
 }
 
-@media (max-width: 480px) {
-  .tcs {
-    padding: calc(88px + 1rem) 0.5rem 1rem;
-    overflow-x: hidden;
-  }
-
-  .tcs-ide__body {
-    min-height: 160px;
-  }
-
-  .tcs-ide__code {
-    font-size: 0.58rem;
-    padding: 6px 8px;
-    line-height: 1.65;
-  }
-
-  .tcs-ide__num {
-    font-size: 0.5rem;
-    min-width: 1.5em;
-  }
-
-  .tcs__center {
-    width: 100%;
-    margin-left: 0;
-  }
-
-  .tcs-laptop {
-    max-width: 380px;
-  }
-
-  /* Horizontal scrollable menu inside laptop screen */
+@media (max-width: 640px) {
   .tcs-laptop__screen-body {
     flex-direction: column;
   }
@@ -1628,6 +1567,37 @@ onBeforeUnmount(() => {
   .tcs-laptop__card-icon {
     width: 28px;
     height: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tcs {
+    padding: calc(88px + 1rem) 0.5rem 1rem;
+    overflow-x: hidden;
+  }
+
+  .tcs-ide__body {
+    min-height: 160px;
+  }
+
+  .tcs-ide__code {
+    font-size: 0.58rem;
+    padding: 6px 8px;
+    line-height: 1.65;
+  }
+
+  .tcs-ide__num {
+    font-size: 0.5rem;
+    min-width: 1.5em;
+  }
+
+  .tcs__center {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .tcs-laptop {
+    max-width: 380px;
   }
 
   .tcs__right {

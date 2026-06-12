@@ -111,9 +111,6 @@ const scrollY = shallowRef(0)
 const trailCount = 5
 const trailDots = {}
 
-const audioContext = ref(null)
-const canPlayTypingSound = ref(false)
-
 const profileText = computed(() => t('home.hero.profile'))
 const profileTextPlain = computed(() => profileText.value.replace(/<br\s*\/?>/gi, ' '))
 const profileTokens = computed(() => tokenizeProfile(profileText.value))
@@ -145,41 +142,6 @@ function tokenizeProfile(html) {
     .flatMap((token) => (/^<br\s*\/?>$/i.test(token) ? [token] : token.split('')))
 }
 
-function enableTypingSound() {
-  const AudioContextClass = window.AudioContext || window.webkitAudioContext
-  if (!AudioContextClass || prefersReducedMotion.value) return
-  if (!audioContext.value) {
-    try {
-      audioContext.value = new AudioContextClass()
-    } catch {
-      return
-    }
-  }
-  if (audioContext.value.state === 'suspended') {
-    audioContext.value.resume()
-  }
-  canPlayTypingSound.value = true
-}
-
-function playTypingClick() {
-  if (!canPlayTypingSound.value || !audioContext.value) return
-  try {
-    const now = audioContext.value.currentTime
-    const oscillator = audioContext.value.createOscillator()
-    const gain = audioContext.value.createGain()
-    oscillator.type = 'square'
-    oscillator.frequency.setValueAtTime(760 + Math.random() * 120, now)
-    gain.gain.setValueAtTime(0.018, now)
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035)
-    oscillator.connect(gain)
-    gain.connect(audioContext.value.destination)
-    oscillator.start(now)
-    oscillator.stop(now + 0.035)
-  } catch {
-    // AudioContext may be closed during cleanup
-  }
-}
-
 function getCharDelay(char) {
   if (/[aeiouáéíóú]/i.test(char)) return 40 + Math.random() * 30
   if (/[.,!?;:]/.test(char)) return 100 + Math.random() * 60
@@ -195,8 +157,6 @@ function startTypewriter() {
   typedProfileText.value = ''
   hasTypedProfile.value = false
   isCurrentlyTyping.value = true
-
-  if (!canPlayTypingSound.value) enableTypingSound()
 
   const tokens = profileTokens.value
   let i = 0
@@ -217,7 +177,6 @@ function startTypewriter() {
       if (isBreak) {
         setTimeout(typeNext, 300 + Math.random() * 200)
       } else if (token !== ' ') {
-        playTypingClick()
         setTimeout(typeNext, getCharDelay(token))
       } else {
         setTimeout(typeNext, 30 + Math.random() * 20)
@@ -422,8 +381,6 @@ onMounted(() => {
   }
 
   window.addEventListener('portfolio:overlay-finished', handleOverlayFinished)
-  window.addEventListener('pointerdown', enableTypingSound, { once: true, passive: true })
-  window.addEventListener('keydown', enableTypingSound, { once: true })
 
   if (!document.querySelector('.loading-overlay')) {
     queueIntroAnimation()
@@ -439,8 +396,6 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('portfolio:overlay-finished', handleOverlayFinished)
-  window.removeEventListener('pointerdown', enableTypingSound)
-  window.removeEventListener('keydown', enableTypingSound)
 
   cancelTypewriter()
   if (tiltRaf) cancelAnimationFrame(tiltRaf)
@@ -449,7 +404,6 @@ onBeforeUnmount(() => {
     metricsRef.value.removeEventListener('pointermove', handleMetricsTilt)
     metricsRef.value.removeEventListener('pointerleave', resetMetricsTilt)
   }
-  if (audioContext.value) audioContext.value.close()
   if (sectionObserver) sectionObserver.disconnect()
   if (ctx) ctx.revert()
 })
