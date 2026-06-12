@@ -133,8 +133,6 @@ const isVisible = ref(false)
 const hasTypedTitle = ref(false)
 const isCurrentlyTyping = ref(false)
 const titleDelayId = ref(null)
-const audioContext = ref(null)
-const canPlayTypingSound = ref(false)
 const gsapContext = ref(null)
 const resizeFrameId = ref(null)
 let hasTriggeredEntry = false
@@ -188,49 +186,6 @@ function clearTitleTimers() {
   titleDelayId.value = null
 }
 
-function isAudioUsable() {
-  return audioContext.value && audioContext.value.state === 'running'
-}
-
-function enableTypingSound() {
-  const AudioContextClass = window.AudioContext || window.webkitAudioContext
-  if (!AudioContextClass || prefersReducedMotion.value) return
-  if (audioContext.value?.state === 'closed') return
-  if (!audioContext.value) {
-    try {
-      audioContext.value = new AudioContextClass()
-    } catch {
-      return
-    }
-  }
-  if (audioContext.value.state === 'suspended') {
-    audioContext.value.resume().then(() => {
-      canPlayTypingSound.value = true
-    }).catch(() => {})
-    return
-  }
-  canPlayTypingSound.value = true
-}
-
-function playTypingClick() {
-  if (!canPlayTypingSound.value || !isAudioUsable()) return
-  try {
-    const now = audioContext.value.currentTime
-    const oscillator = audioContext.value.createOscillator()
-    const gain = audioContext.value.createGain()
-    oscillator.type = 'square'
-    oscillator.frequency.setValueAtTime(760 + Math.random() * 120, now)
-    gain.gain.setValueAtTime(0.018, now)
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035)
-    oscillator.connect(gain)
-    gain.connect(audioContext.value.destination)
-    oscillator.start(now)
-    oscillator.stop(now + 0.035)
-  } catch {
-    // AudioContext may be closed during cleanup
-  }
-}
-
 function getCharDelay(char) {
   if (/[aeiouáéíóú]/i.test(char)) return 40 + Math.random() * 30
   if (/[.,!?;:]/.test(char)) return 100 + Math.random() * 60
@@ -251,8 +206,6 @@ function typeTitle(forceRestart = false, bypassVisibility = false) {
   typedProjectsSubtitle.value = ''
   hasTypedTitle.value = false
   isCurrentlyTyping.value = true
-
-  if (!canPlayTypingSound.value && !prefersReducedMotion.value) enableTypingSound()
 
   const texts = [projectsTitle.value, projectsSubtitle.value]
   let textIndex = 0
@@ -276,7 +229,6 @@ function typeTitle(forceRestart = false, bypassVisibility = false) {
         const char = texts[textIndex][charIndex]
         charIndex++
         if (char !== ' ') {
-          playTypingClick()
           setTimeout(typeNext, getCharDelay(char))
         } else {
           setTimeout(typeNext, 30 + Math.random() * 20)
@@ -503,6 +455,10 @@ onMounted(async () => {
   gsap.set(exitOverlayRef.value, { autoAlpha: 0 })
   gsap.set(frame, { filter: 'blur(0px)' })
   gsap.set(stackPane.querySelectorAll('.tcs__left, .tcs__center, .tcs__right'), { autoAlpha: 0, y: 28 })
+  gsap.set(stackPane.querySelector('.tcs-laptop__accent'), { scaleX: 4, opacity: 0, filter: 'blur(14px)', transformOrigin: 'center center' })
+
+  const accentEl = stackPane.querySelector('.tcs-laptop__accent')
+  const stackEls = stackPane.querySelectorAll('.tcs__left, .tcs__center, .tcs__right')
 
   gsapContext.value = gsap.context(() => {
     gsap.timeline({
@@ -510,7 +466,7 @@ onMounted(async () => {
       scrollTrigger: {
         trigger: section,
         start: 'top top',
-        end: '+=5800',
+        end: '+=6800',
         pin: true,
         pinSpacing: true,
         scrub: 1,
@@ -546,13 +502,17 @@ onMounted(async () => {
       .to(portalGrid, { opacity: 0, y: -200, duration: 1.8, ease: 'power2.inOut' }, 4.44)
       .to(portalLight, { opacity: 0, scaleY: 0, duration: 1.8, ease: 'power2.inOut' }, 4.44)
       .to(stackPane, { autoAlpha: 1, xPercent: 0, scale: 1, duration: 1.88, ease: 'expo.out' }, 4.36)
-      // ── Staggered entrance for stack elements ──
-      .fromTo(stackPane.querySelectorAll('.tcs__left, .tcs__center, .tcs__right'),
-        { autoAlpha: 0, y: 28 },
-        { autoAlpha: 1, y: 0, duration: 0.5, stagger: 0.12, ease: 'power2.out' },
-        6.25)
+      // ── Stack elements staggered entrance ──
+      .to(stackEls,
+        { opacity: 1, y: 0, visibility: 'visible', duration: 0.5, stagger: 0.12, ease: 'power2.out' },
+        5.5)
+      // ── Neon accent sharpens once elements are fully visible ──
+      .fromTo(accentEl,
+        { scaleX: 4, opacity: 0, filter: 'blur(14px)' },
+        { scaleX: 1, opacity: 0.7, filter: 'blur(0px)', duration: 1.6, ease: 'power2.out' },
+        5.6)
       // ── Exit: inverse entry — window shrinks, neon border appears then blurs ──
-      .to(frame, { opacity: 1, '--frame-progress': 1, filter: 'blur(0px)', duration: 0.35, ease: 'power2.out' }, 6.3)
+      .to(frame, { opacity: 1, '--frame-progress': 1, filter: 'blur(0px)', duration: 0.35, ease: 'power2.out' }, 7.3)
       .to(viewport, {
         scale: 0.86,
         borderRadius: '28px',
@@ -560,18 +520,18 @@ onMounted(async () => {
         paddingBottom: '2.5rem',
         duration: 0.8,
         ease: 'power2.inOut'
-      }, 6.5)
-      .to(exitOverlayRef.value, { autoAlpha: 0.3, duration: 0.6, ease: 'power2.out' }, 6.5)
+      }, 7.5)
+      .to(exitOverlayRef.value, { autoAlpha: 0.3, duration: 0.6, ease: 'power2.out' }, 7.5)
       .to(frame, {
         opacity: 0.3,
         '--frame-progress': 0.3,
         filter: 'blur(5px)',
         duration: 1.2,
         ease: 'power1.in'
-      }, 7.0)
-      .to(exitOverlayRef.value, { autoAlpha: 0.65, duration: 0.8, ease: 'power2.out' }, 7.6)
-      .to(frame, { opacity: 0, filter: 'blur(14px)', duration: 0.6 }, 8.6)
-      .to(sectionInner, { autoAlpha: 0, duration: 0.7, ease: 'power2.in' }, 8.6)
+      }, 8.0)
+      .to(exitOverlayRef.value, { autoAlpha: 0.65, duration: 0.8, ease: 'power2.out' }, 8.6)
+      .to(frame, { opacity: 0, filter: 'blur(14px)', duration: 0.6 }, 9.6)
+      .to(sectionInner, { autoAlpha: 0, duration: 0.7, ease: 'power2.in' }, 10.2)
   }, section)
 
   // ScrollTrigger: animate elements in and start typewriter when section enters viewport
@@ -640,10 +600,6 @@ onBeforeUnmount(() => {
     sectionRef.value.removeEventListener('pointerleave', resetDepthPointer)
   }
   window.removeEventListener('resize', scheduleRefresh)
-  if (audioContext.value) {
-    canPlayTypingSound.value = false
-    audioContext.value.close()
-  }
   resetDepthPointer()
 })
 </script>
@@ -962,7 +918,7 @@ onBeforeUnmount(() => {
   width: min(19vw, 288px);
   min-width: 16rem;
   height: min(58vh, 510px);
-  max-height: 70vh;
+  max-height: 80vh;
   display: flex;
   flex-direction: column;
   border-radius: 24px;

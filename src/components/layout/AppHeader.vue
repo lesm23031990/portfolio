@@ -12,7 +12,7 @@
 
         <div class="hidden md:flex md:min-w-0 md:items-center md:justify-center">
           <div
-            class="mx-auto flex h-full w-full flex-wrap items-center justify-center border-b-[3px] border-fuchsia-500/30 px-6 sm:px-8 md:grid md:min-w-[60vw] md:max-w-5xl md:grid-cols-5 md:px-10 lg:px-12 xl:px-14"
+            class="mx-auto flex h-full w-full flex-wrap items-center justify-center border-b-[3px] border-fuchsia-500/30 px-6 sm:px-8 md:grid md:min-w-[60vw] md:max-w-5xl md:grid-cols-4 md:px-10 lg:px-12 xl:px-14"
           >
             <a
               v-for="item in navItems"
@@ -148,9 +148,8 @@ const selectedLanguage = computed({
 })
 
 const navItems = computed(() => [
-  { key: 'profile', label: t('layout.nav.items.profile'), href: '#inicio', sectionId: null },
-  { key: 'projects', label: t('layout.nav.items.projects'), href: '#proyectos', sectionId: 'proyectos' },
   { key: 'home', label: t('layout.nav.items.home'), href: '#inicio', sectionId: 'inicio', home: true },
+  { key: 'projects', label: t('layout.nav.items.projects'), href: '#proyectos', sectionId: 'proyectos' },
   { key: 'stack', label: t('layout.nav.items.stack'), href: '#stack', sectionId: 'stack' },
   { key: 'contact', label: t('layout.nav.items.contact'), href: '#contacto', sectionId: 'contacto' }
 ])

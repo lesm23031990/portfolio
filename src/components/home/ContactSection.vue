@@ -3,7 +3,6 @@
     id="contacto"
     ref="sectionRef"
     class="contact-scene"
-    :class="{ 'contact-scene--visible': isVisible }"
   >
     <div class="contact-scene__bg" aria-hidden="true">
       <CircuitBackground v-if="isDesktop" class="contact-scene__circuit" />
@@ -14,11 +13,11 @@
 
     <div class="contact-scene__inner">
       <div class="contact-scene__copy">
-        <p class="contact-scene__eyebrow">{{ t('home.sections.contact.title') }}</p>
-        <h3 class="contact-scene__title">{{ t('home.contactPanel.title') }}</h3>
-        <p class="contact-scene__sub">{{ t('home.contactPanel.subtitle') }}</p>
+        <p ref="eyebrowRef" class="contact-scene__eyebrow">{{ t('home.sections.contact.title') }}</p>
+        <h3 ref="titleRef" class="contact-scene__title">{{ t('home.contactPanel.title') }}</h3>
+        <p ref="subRef" class="contact-scene__sub">{{ t('home.contactPanel.subtitle') }}</p>
 
-        <div class="contact-scene__actions">
+        <div ref="actionsRef" class="contact-scene__actions">
           <a class="contact-action contact-action--primary" :href="contactEmailHref">
             {{ t('home.contactPanel.primaryCta') }}
           </a>
@@ -30,9 +29,17 @@
           >
             {{ t('home.contactPanel.secondaryCta') }}
           </a>
+          <a
+            v-if="contactCvUrl"
+            class="contact-action contact-action--tertiary"
+            :href="contactCvUrl"
+            download="CV-Lorena-Salas.pdf"
+          >
+            {{ t('home.contactPanel.tertiaryCta') }}
+          </a>
         </div>
 
-        <div class="contact-scene__cards">
+        <div ref="cardsRef" class="contact-scene__cards">
           <a class="contact-card" :href="contactEmailHref">
             <span class="contact-card__label">{{ t('home.contactPanel.cards.email.label') }}</span>
             <strong class="contact-card__value">{{ contactEmail }}</strong>
@@ -49,15 +56,29 @@
             <strong class="contact-card__value">{{ t('home.contact.linkedin') }}</strong>
             <span class="contact-card__meta">{{ t('home.contactPanel.cards.linkedin.meta') }}</span>
           </a>
+
+          <a
+            v-if="contactCvUrl"
+            class="contact-card"
+            :href="contactCvUrl"
+            download="CV-Lorena-Salas.pdf"
+          >
+            <span class="contact-card__label">{{ t('home.contactPanel.cards.cv.label') }}</span>
+            <strong class="contact-card__value">{{ t('home.contactPanel.cards.cv.value') }}</strong>
+            <span class="contact-card__meta">{{ t('home.contactPanel.cards.cv.meta') }}</span>
+          </a>
         </div>
       </div>
 
-      <div class="contact-scene__portrait">
+      <div ref="portraitRef" class="contact-scene__portrait">
         <div class="portrait-shell">
           <div class="portrait-frame">
-            <div class="portrait-placeholder">
-              <span class="portrait-placeholder__tag">PHOTO SPACE</span>
-              <div class="portrait-placeholder__glow"></div>
+            <div class="portrait-placeholder" :class="{ 'portrait-placeholder--filled': contactPhoto }">
+              <img v-if="contactPhoto" :src="contactPhoto" alt="Profile" class="portrait-img" />
+              <template v-else>
+                <span class="portrait-placeholder__tag">PHOTO SPACE</span>
+                <div class="portrait-placeholder__glow"></div>
+              </template>
             </div>
           </div>
           <div class="portrait-caption">
@@ -79,23 +100,34 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import CircuitBackground from '@/components/ui/CircuitBackground.vue'
 import CircuitBackgroundMobile from '@/components/ui/CircuitBackgroundMobile.vue'
+
+gsap.registerPlugin(ScrollTrigger)
 
 const { t, locale, messages } = useI18n({ useScope: 'global' })
 
 const sectionRef = ref(null)
-const sectionObserver = ref(null)
-const isVisible = ref(false)
+const eyebrowRef = ref(null)
+const titleRef = ref(null)
+const subRef = ref(null)
+const actionsRef = ref(null)
+const cardsRef = ref(null)
+const portraitRef = ref(null)
 
 const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1920)
 const isDesktop = ref(windowWidth.value >= 768)
+const gsapCtx = ref(null)
 
 let widthTimer = null
+
 function updateWidth() {
   windowWidth.value = window.innerWidth
   isDesktop.value = windowWidth.value >= 768
 }
+
 function onWidthResize() {
   if (widthTimer) return
   widthTimer = window.requestAnimationFrame(() => {
@@ -110,28 +142,69 @@ const contactEmail = computed(() => {
 })
 const contactLinkedin = computed(() => messages.value?.[locale.value]?.home?.contact?.linkedinUrl || '#')
 const contactGithub = computed(() => messages.value?.[locale.value]?.home?.contact?.githubUrl || '#')
+const contactPhoto = computed(() => messages.value?.[locale.value]?.home?.contact?.photo || '')
+const contactCvUrl = computed(() => messages.value?.[locale.value]?.home?.contact?.cvUrl || '')
 const contactEmailHref = computed(() => `mailto:${contactEmail.value}`)
 
 onMounted(() => {
-  sectionObserver.value = new IntersectionObserver(
-    ([entry]) => {
-      isVisible.value = entry.isIntersecting
-    },
-    { threshold: 0.18 }
-  )
+  const section = sectionRef.value
+  const eyebrow = eyebrowRef.value
+  const title = titleRef.value
+  const sub = subRef.value
+  const actions = actionsRef.value
+  const cards = cardsRef.value
+  const portrait = portraitRef.value
+  if (!section || !eyebrow || !title || !sub || !actions || !cards || !portrait) return
 
-  if (sectionRef.value) {
-    sectionObserver.value.observe(sectionRef.value)
+  const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
+  if (prefersReducedMotion) {
+    gsap.set([eyebrow, title, sub, actions.children, cards.children, portrait], {
+      autoAlpha: 1,
+      y: 0,
+      x: 0,
+      scale: 1
+    })
+    return
   }
+
+  gsap.set([eyebrow, title, sub, actions.children, cards.children, portrait], {
+    autoAlpha: 0
+  })
+  gsap.set(eyebrow, { y: -14, opacity: 0 })
+  gsap.set(title, { y: -20, scale: 0.9, opacity: 0 })
+  gsap.set(sub, { y: 16, opacity: 0 })
+  gsap.set(actions.children, { y: 24, opacity: 0 })
+  gsap.set(cards.children, { y: 20, opacity: 0 })
+  gsap.set(portrait, { x: 40, scale: 0.95, opacity: 0 })
+
+  gsapCtx.value = gsap.timeline({
+    scrollTrigger: {
+      trigger: section,
+      start: 'top 80%',
+      toggleActions: 'play none none reverse',
+      invalidateOnRefresh: true
+    },
+    defaults: { ease: 'power4.out' }
+  })
+    .to(eyebrow, { autoAlpha: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0)
+    .to(title, { autoAlpha: 1, y: 0, scale: 1, duration: 0.7, ease: 'back.out(1.4)' }, '-=0.2')
+    .to(sub, { autoAlpha: 1, y: 0, duration: 0.55, ease: 'power3.out' }, '-=0.25')
+    .to(actions.children, { autoAlpha: 1, y: 0, duration: 0.4, stagger: 0.08, ease: 'back.out(1.2)' }, '-=0.2')
+    .to(cards.children, { autoAlpha: 1, y: 0, duration: 0.45, stagger: 0.1, ease: 'power3.out' }, '-=0.15')
+    .to(portrait, { autoAlpha: 1, x: 0, scale: 1, duration: 0.8, ease: 'power2.out' }, '-=0.35')
+
+  gsap.fromTo('.portrait-frame', { rotateZ: -1.5 }, { rotateZ: 1.5, duration: 4, ease: 'sine.inOut', yoyo: true, repeat: -1, delay: 1.5 })
 
   window.addEventListener('resize', onWidthResize, { passive: true })
 })
 
 onBeforeUnmount(() => {
-  if (sectionObserver.value) {
-    sectionObserver.value.disconnect()
+  if (gsapCtx.value) {
+    gsapCtx.value.scrollTrigger?.kill()
+    gsapCtx.value.kill()
+    gsapCtx.value = null
   }
-
   window.removeEventListener('resize', onWidthResize)
   if (widthTimer) window.cancelAnimationFrame(widthTimer)
 })
@@ -140,21 +213,14 @@ onBeforeUnmount(() => {
 <style scoped>
 .contact-scene {
   position: relative;
-  min-height: 100vh;
+  height: 100dvh;
+  min-height: 100dvh;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
-  padding: 4rem 1.25rem;
-  opacity: 0;
-  transform: translate3d(0, 48px, 0);
+  padding: 1rem 1.25rem;
   overflow: hidden;
-  transition:
-    opacity 0.75s ease,
-    transform 0.75s ease;
-}
-
-.contact-scene--visible {
-  opacity: 1;
-  transform: translate3d(0, 0, 0);
+  background: linear-gradient(180deg, transparent 0%, #fff5fa 20%, #fff9fc 50%, #fff3f9 100%);
 }
 
 .contact-scene__inner {
@@ -164,8 +230,8 @@ onBeforeUnmount(() => {
   max-width: 1180px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.9fr);
-  gap: clamp(1.5rem, 4vw, 3rem);
+  grid-template-columns: minmax(0, 1fr) minmax(12rem, 0.55fr);
+  gap: clamp(0.75rem, 2vw, 1.5rem);
   align-items: center;
 }
 
@@ -176,73 +242,77 @@ onBeforeUnmount(() => {
 }
 
 .contact-scene__circuit {
-  opacity: 0.2;
+  opacity: 0.3;
   mix-blend-mode: screen;
   mask-image: linear-gradient(to bottom, black 0%, black 100%);
   -webkit-mask-image: linear-gradient(to bottom, black 0%, black 100%);
+  filter: drop-shadow(0 0 6px rgba(255, 0, 162, 0.3));
+  will-change: filter;
 }
 
 .contact-scene__glow {
   position: absolute;
   border-radius: 999px;
   filter: blur(70px);
-  opacity: 0.22;
+  opacity: 0.25;
 }
 
 .contact-scene__glow--left {
-  width: min(42vw, 28rem);
-  height: min(42vw, 28rem);
+  width: min(38vw, 24rem);
+  height: min(38vw, 24rem);
   top: 10%;
   left: -8%;
-  background: radial-gradient(circle, rgba(255, 0, 170, 0.6), transparent 70%);
+  background: radial-gradient(circle, rgba(255, 0, 170, 0.5), transparent 70%);
 }
 
 .contact-scene__glow--right {
-  width: min(32vw, 24rem);
-  height: min(32vw, 24rem);
+  width: min(28vw, 20rem);
+  height: min(28vw, 20rem);
   right: -4%;
   bottom: 8%;
-  background: radial-gradient(circle, rgba(122, 214, 255, 0.5), transparent 72%);
+  background: radial-gradient(circle, rgba(122, 214, 255, 0.4), transparent 72%);
 }
 
 .contact-scene__eyebrow {
-  margin: 0 0 0.8rem;
-  font-size: 0.76rem;
-  letter-spacing: 0.26em;
+  margin: 0 0 0.3rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--rose-accent);
 }
 
 .contact-scene__title {
   margin: 0;
-  font-size: clamp(2.15rem, 4.6vw, 3.3rem);
-  line-height: 1.08;
+  font-size: clamp(1.3rem, 2.8vw, 2rem);
+  line-height: 1.1;
   font-weight: 300;
   color: var(--rose-text);
 }
 
 .contact-scene__sub {
-  margin: 1rem 0 0;
-  max-width: 34rem;
+  margin: 0.4rem 0 0;
+  max-width: 30rem;
   color: var(--rose-text-soft);
-  line-height: 1.78;
+  line-height: 1.4;
+  font-size: 0.82rem;
 }
 
 .contact-scene__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.85rem;
-  margin-top: 1.8rem;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
 }
 
 .contact-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 12rem;
-  padding: 0.9rem 1.25rem;
+  min-width: 9rem;
+  padding: 0.55rem 1rem;
   border-radius: 999px;
   text-decoration: none;
+  font-size: 0.8rem;
   transition:
     transform 0.24s ease,
     box-shadow 0.24s ease;
@@ -255,62 +325,61 @@ onBeforeUnmount(() => {
 .contact-action--primary {
   background: linear-gradient(135deg, #f7bad6, #d46b9e);
   color: #fff;
-  box-shadow: 0 18px 34px rgba(212, 107, 158, 0.24);
 }
 
 .contact-action--secondary {
-  background: rgba(255, 255, 255, 0.68);
+  background: rgba(255, 255, 255, 0.85);
   color: var(--rose-accent-strong);
-  border: 1px solid var(--rose-border);
+  border: 1px solid var(--rose-border-strong);
+}
+
+.contact-action--tertiary {
+  background: transparent;
+  color: var(--rose-accent-strong);
+  border: 1px dashed var(--rose-border-strong);
 }
 
 .contact-scene__cards {
   display: grid;
-  gap: 1rem;
-  margin-top: 1.8rem;
+  gap: 0.35rem;
+  margin-top: 0.6rem;
 }
 
 .contact-card {
   display: grid;
-  gap: 0.35rem;
-  padding: 1.1rem 1.2rem;
+  gap: 0.1rem;
+  padding: 0.55rem 0.9rem;
   text-decoration: none;
-  border-radius: 24px;
+  border-radius: 12px;
   color: var(--rose-text);
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(255, 0, 170, 0.14);
-  box-shadow:
-    0 18px 34px rgba(227, 182, 206, 0.22),
-    0 0 0 1px rgba(255, 255, 255, 0.36),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(14px);
-  transition:
-    transform 0.24s ease,
-    box-shadow 0.24s ease;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--rose-border-strong);
+  transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .contact-card:hover {
-  transform: translateY(-4px);
-  box-shadow:
-    0 24px 40px rgba(227, 182, 206, 0.26),
-    inset 0 1px 0 rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(212, 107, 158, 0.12);
 }
 
 .contact-card__label {
-  font-size: 0.74rem;
-  letter-spacing: 0.16em;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--rose-accent);
 }
 
 .contact-card__value {
-  font-size: clamp(1rem, 2vw, 1.2rem);
+  font-size: clamp(0.78rem, 1.2vw, 0.88rem);
   font-weight: 500;
+  word-break: break-all;
 }
 
 .contact-card__meta {
   color: var(--rose-text-soft);
-  line-height: 1.55;
+  line-height: 1.3;
+  font-size: 0.7rem;
 }
 
 .contact-scene__portrait {
@@ -319,71 +388,68 @@ onBeforeUnmount(() => {
 }
 
 .portrait-shell {
-  width: min(100%, 26rem);
+  width: min(100%, 14rem);
   display: grid;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .portrait-frame {
   position: relative;
   aspect-ratio: 4 / 5;
-  border-radius: 32px;
-  padding: 1rem;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.74), rgba(255, 245, 250, 0.88)),
-    linear-gradient(135deg, rgba(212, 107, 158, 0.18), rgba(255, 255, 255, 0.3));
-  border: 1px solid var(--rose-border);
-  box-shadow:
-    0 24px 48px rgba(214, 123, 165, 0.2),
-    0 0 40px rgba(255, 0, 170, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  padding: 0.5rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(255, 245, 250, 0.94));
+  border: 1px solid var(--rose-border-strong);
 }
 
 .portrait-placeholder {
   position: relative;
   width: 100%;
   height: 100%;
-  border-radius: 26px;
+  border-radius: 16px;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  background:
-    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(247, 186, 214, 0.36) 32%, transparent 62%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 241, 247, 0.92));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 241, 247, 0.92));
+}
+
+.portrait-placeholder--filled {
+  background: none;
+}
+
+.portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 16px;
 }
 
 .portrait-placeholder__tag {
   position: relative;
   z-index: 1;
-  font-size: 0.82rem;
-  letter-spacing: 0.28em;
+  font-size: 0.65rem;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--rose-accent-strong);
 }
 
 .portrait-placeholder__glow {
-  position: absolute;
-  inset: auto 14% 8%;
-  height: 26%;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.68), transparent 70%);
-  filter: blur(26px);
+  display: none;
 }
 
 .portrait-caption {
   display: grid;
-  gap: 0.35rem;
-  padding: 1rem 1.15rem;
-  border-radius: 24px;
+  gap: 0.15rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.7);
-  border: 1px solid var(--rose-border);
+  border: 1px solid var(--rose-border-strong);
 }
 
 .portrait-caption span {
-  font-size: 0.74rem;
-  letter-spacing: 0.16em;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--rose-accent);
 }
@@ -391,7 +457,8 @@ onBeforeUnmount(() => {
 .portrait-caption a {
   color: var(--rose-accent-strong);
   text-decoration: none;
-  line-height: 1.55;
+  line-height: 1.4;
+  font-size: 0.75rem;
 }
 
 .portrait-caption a:hover {
@@ -399,9 +466,46 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 900px) {
+  .contact-scene {
+    padding: 1rem;
+    height: auto;
+    min-height: 100dvh;
+  }
+
   .contact-scene__inner {
     grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .contact-scene__portrait {
+    order: 1;
+    display: flex;
+    justify-content: center;
+  }
+
+  .portrait-shell {
+    width: 100%;
+    max-width: 18rem;
+  }
+
+  .portrait-frame {
+    padding: 0.45rem;
+    border-radius: 16px;
+  }
+
+  .portrait-placeholder {
+    border-radius: 12px;
+  }
+
+  .portrait-img {
+    border-radius: 12px;
+  }
+
+  .portrait-caption {
+    padding: 0.55rem 0.8rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid var(--rose-border-strong);
   }
 }
-
 </style>

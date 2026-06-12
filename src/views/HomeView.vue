@@ -59,14 +59,16 @@ import ProjectsSection from '@/components/home/ProjectsSection.vue'
 .dashboard__bridge--dark {
   display: block;
   width: 100%;
-  height: calc(100vh + 1px);
+  height: calc(200vh + 1px);
   margin-top: -1px;
   background: linear-gradient(
     to bottom,
     #06060b 0%,
-    rgba(6, 6, 11, 0.95) 30%,
-    rgba(6, 6, 11, 0.6) 55%,
-    rgba(255, 243, 249, 0.04) 85%,
+    rgba(6, 6, 11, 0.96) 15%,
+    rgba(6, 6, 11, 0.78) 30%,
+    rgba(6, 6, 11, 0.45) 50%,
+    rgba(255, 243, 249, 0.08) 72%,
+    rgba(255, 249, 252, 0.02) 88%,
     transparent 100%
   );
   pointer-events: none;

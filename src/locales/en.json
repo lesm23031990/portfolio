@@ -163,6 +163,7 @@
       "subtitle": "If you have an idea, redesign, or migration in mind, let us talk about scope, timing, and the best way to land it. I also offer AI-assisted integration and cybersecurity principles.",
       "primaryCta": "Email me",
       "secondaryCta": "View LinkedIn",
+      "tertiaryCta": "Download CV",
       "cards": {
         "email": {
           "label": "Email",
@@ -176,6 +177,11 @@
           "label": "Code",
           "value": "GitHub",
           "meta": "Repositories and the base to keep expanding this portfolio."
+        },
+        "cv": {
+          "label": "Resume",
+          "value": "Download CV",
+          "meta": "Professional career, education, and experience."
         }
       }
     },
@@ -183,7 +189,8 @@
       "email": "lorena23031990@gmail.com",
       "linkedin": "LinkedIn",
       "linkedinUrl": "https://www.linkedin.com/in/lorenaesalasm/",
-      "githubUrl": "https://github.com/lesm23031990"
+      "githubUrl": "https://github.com/lesm23031990",
+      "cvUrl": ""
     }
   },
   "chat": {

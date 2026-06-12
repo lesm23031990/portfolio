@@ -163,6 +163,7 @@
       "subtitle": "Si tienes una idea, un rediseño o una migracion en mente, conversemos sobre alcance, tiempos y la mejor forma de aterrizarlo. Tambien ofrezco integracion de IA asistida y principios de ciberseguridad.",
       "primaryCta": "Escribirme por correo",
       "secondaryCta": "Ver LinkedIn",
+      "tertiaryCta": "Descargar CV",
       "cards": {
         "email": {
           "label": "Correo",
@@ -176,6 +177,11 @@
           "label": "Codigo",
           "value": "GitHub",
           "meta": "Repositorios y base para seguir expandiendo este portfolio."
+        },
+        "cv": {
+          "label": "Curriculum",
+          "value": "Descargar CV",
+          "meta": "Trayectoria profesional, formacion y experiencia."
         }
       }
     },
@@ -183,7 +189,8 @@
       "email": "lorena23031990@gmail.com",
       "linkedin": "LinkedIn",
       "linkedinUrl": "https://www.linkedin.com/in/lorenaesalasm/",
-      "githubUrl": "https://github.com/lesm23031990"
+      "githubUrl": "https://github.com/lesm23031990",
+      "cvUrl": ""
     }
   },
   "chat": {
