@@ -63,8 +63,9 @@
             </select>
           </div>
           <div class="field-row field-row--wide">
-            <label>Imagen del proyecto</label>
-            <div class="image-upload-row">
+            <label>Imagen del proyecto (URL o subir archivo)</label>
+            <input v-model="proj.image" class="input-wide" placeholder="/images/projects/mi-proyecto.png" />
+            <div class="image-upload-row" style="margin-top:0.3rem">
               <input type="file" accept="image/*" @change="e => handleImageUpload(e, proj)" />
               <button v-if="proj.image" class="btn-remove-image" @click="proj.image = ''">Eliminar imagen</button>
             </div>

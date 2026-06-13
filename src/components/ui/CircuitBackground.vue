@@ -21,23 +21,23 @@
   <script setup>
   import { ref, onMounted, onUnmounted, computed } from 'vue';
   
-  const width = ref(typeof window !== 'undefined' ? window.innerWidth : 1920);
-  const height = ref(typeof window !== 'undefined' ? window.innerHeight : 1080);
-  
-  let resizeTimer = null;
-  const updateDimensions = () => {
-    if (resizeTimer) return;
-    resizeTimer = window.requestAnimationFrame(() => {
-      width.value = window.innerWidth;
-      height.value = window.innerHeight;
-      resizeTimer = null;
-    });
-  };
+const width = ref(typeof window !== 'undefined' ? window.innerWidth : 1920);
+const height = ref(typeof window !== 'undefined' ? window.innerHeight : 1080);
+
+let resizeTimer = null;
+const updateDimensions = () => {
+  if (resizeTimer) return;
+  resizeTimer = setTimeout(() => {
+    width.value = window.innerWidth;
+    height.value = window.innerHeight;
+    resizeTimer = null;
+  }, 150);
+};
   
   onMounted(() => window.addEventListener('resize', updateDimensions, { passive: true }));
   onUnmounted(() => {
     window.removeEventListener('resize', updateDimensions);
-    if (resizeTimer) window.cancelAnimationFrame(resizeTimer);
+    if (resizeTimer) clearTimeout(resizeTimer);
   });
   
   const points = computed(() => {
@@ -87,7 +87,6 @@
     mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 100%);
     -webkit-mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 100%);
     filter: drop-shadow(0 0 4px rgba(255, 0, 162, 0.5));
-    will-change: filter;
   }
   
   .line-anim {

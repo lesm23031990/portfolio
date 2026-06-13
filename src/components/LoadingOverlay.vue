@@ -86,15 +86,9 @@ watch(isCompleteComputed, (v) => {
 
 onMounted(() => {
   if (props.progress !== null) return
-  const start = Date.now()
-  const tick = () => {
-    const elapsed = Date.now() - start
-    const p = Math.min(100, (elapsed / props.duration) * 100)
-    internalProgress.value = p
-    emit('update:progress', p)
-    if (p < 100) requestAnimationFrame(tick)
-  }
-  requestAnimationFrame(tick)
+  setTimeout(() => {
+    internalProgress.value = 100
+  }, props.duration)
 })
 </script>
 

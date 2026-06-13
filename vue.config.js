@@ -22,11 +22,9 @@ module.exports = defineConfig({
             const contentPath = path.resolve(__dirname, 'src/content/content.json')
             const parsed = JSON.parse(body)
             fs.writeFileSync(contentPath, JSON.stringify(parsed, null, 2) + '\n', 'utf-8')
-            console.log('[content] content.json actualizado')
-            res.json({ ok: true })
+              res.json({ ok: true })
           } catch (e) {
-            console.error('[content] Error al guardar:', e)
-            res.status(500).json({ ok: false, error: e.message })
+              res.status(500).json({ ok: false, error: e.message })
           }
         })
       })

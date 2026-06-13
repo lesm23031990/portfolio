@@ -6,6 +6,7 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
+    "test": "vitest run",
     "sync-rules": "node -e \"const fs = require('fs'); fs.mkdirSync('.cursor/rules', { recursive: true }); fs.mkdirSync('.github', { recursive: true }); fs.copyFileSync('tech-stack.mdc', '.cursor/rules/tech-stack.mdc'); fs.copyFileSync('tech-stack.mdc', '.coderules'); fs.writeFileSync('.github/copilot-instructions.md', '# GitHub Copilot Instructions\\n@tech-stack.mdc'); console.log('✅ ¡Reglas sincronizadas en todo el ecosistema!');\""
   },
   "dependencies": {
@@ -21,14 +22,18 @@
     "@babel/core": "^7.12.16",
     "@babel/eslint-parser": "^7.12.16",
     "@tailwindcss/postcss": "^4.2.4",
+    "@vitejs/plugin-vue": "^6.0.7",
     "@vue/cli-plugin-babel": "~5.0.0",
     "@vue/cli-plugin-eslint": "~5.0.0",
     "@vue/cli-service": "~5.0.0",
+    "@vue/test-utils": "^2.4.11",
     "autoprefixer": "^10.5.0",
     "eslint": "^7.32.0",
     "eslint-plugin-vue": "^8.0.3",
+    "happy-dom": "^20.10.3",
     "postcss": "^8.5.13",
-    "tailwindcss": "^4.2.4"
+    "tailwindcss": "^4.2.4",
+    "vitest": "^4.1.8"
   },
   "eslintConfig": {
     "root": true,

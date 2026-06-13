@@ -7,21 +7,16 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { useStore } from 'vuex'
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
+import { useLoading } from "@/composables/useLoading";
 
 const route = useRoute()
-const store = useStore()
+const { loading, showLoading, hideLoading } = useLoading()
 
-store.dispatch('showLoading')
+showLoading()
 
-const loading = computed(() => store.state.loading)
 const useDefaultLayout = computed(() => route.meta.layout === 'default' || !route.meta.layout)
-
-function hideLoading() {
-  store.dispatch('hideLoading')
-}
 </script>
 
 <style></style>

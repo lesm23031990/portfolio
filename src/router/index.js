@@ -5,13 +5,7 @@ import HomeView from "@/views/HomeView.vue";
 import LoginView from "@/views/LoginView.vue";
 import AdminView from "@/views/AdminView.vue";
 
-const routes = [
-  {
-    path: "/",
-    name: "home",
-    component: HomeView,
-    meta: { layout: "default" }
-  },
+const adminRoutes = process.env.NODE_ENV === 'development' ? [
   {
     path: "/login",
     name: "login",
@@ -24,6 +18,16 @@ const routes = [
     component: AdminView,
     meta: { layout: "blank", requiresAuth: true }
   }
+] : []
+
+const routes = [
+  {
+    path: "/",
+    name: "home",
+    component: HomeView,
+    meta: { layout: "default" }
+  },
+  ...adminRoutes
 ];
 
 const router = createRouter({

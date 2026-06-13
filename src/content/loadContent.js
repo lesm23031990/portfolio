@@ -6,7 +6,7 @@ function isObject(val) {
   return val !== null && typeof val === 'object' && !Array.isArray(val)
 }
 
-function mergeArrayById(defaultArr, savedArr, idKey = 'id') {
+export function mergeArrayById(defaultArr, savedArr, idKey = 'id') {
   const map = new Map()
   for (const item of defaultArr) map.set(item[idKey], JSON.parse(JSON.stringify(item)))
   for (const item of savedArr) {
@@ -46,7 +46,7 @@ export function loadContent() {
       return merged
     }
   } catch (e) {
-    console.warn('[content] Failed to load saved content, using defaults')
+    // Failed to load saved content, using defaults
   }
   return JSON.parse(JSON.stringify(defaultContent))
 }
@@ -55,7 +55,7 @@ export function saveContent(data) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
   } catch (e) {
-    console.error('[content] Failed to save content', e)
+    // Failed to save content
   }
   try {
     fetch('/api/save-content', {
