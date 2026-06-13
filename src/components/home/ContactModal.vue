@@ -197,8 +197,9 @@ async function handleSubmit() {
     form.email = ''
     form.subject = ''
     form.message = ''
-  } catch {
-    feedback.value = { type: 'error', text: t('contactForm.error') }
+  } catch (err) {
+    const msg = err?.message || err?.text || t('contactForm.error')
+    feedback.value = { type: 'error', text: msg }
   } finally {
     sending.value = false
   }
