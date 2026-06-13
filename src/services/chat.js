@@ -63,6 +63,10 @@ function localFallback(input) {
     return 'Lorena tiene 8+ años de experiencia como desarrolladora Frontend/Fullstack. Ha trabajado con startups y empresas tecnológicas, desarrollando aplicaciones web complejas como contribuidora individual.'
   }
 
+  if (normalized.includes('tarifa') || normalized.includes('precio') || normalized.includes('costo') || normalized.includes('pago') || normalized.includes('rate') || normalized.includes('hour')) {
+    return 'Su tarifa está entre 20-25 USD/hora, negociable según el alcance y tipo de proyecto.'
+  }
+
   if (normalized.includes('explic') || normalized.includes('concepto') || normalized.includes('no técnico') || normalized.includes('cliente') || normalized.includes('analog')) {
     return 'Lorena usa analogías del día a día para explicar tecnología. Por ejemplo: "una API es como un mesero — tú le pides, él va a la cocina y te trae lo que pediste". Evita jargon técnico, se adapta al nivel de la persona y confirma que entendió antes de continuar.'
   }
