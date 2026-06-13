@@ -2,13 +2,10 @@
   <div class="admin-contact">
     <div class="section">
       <h3 class="section-title">Foto de perfil</h3>
-      <p class="section-hint">Sube una foto para la sección de contacto. Se recomienda formato 4:5.</p>
-      <div class="photo-upload-row">
-        <button class="btn-upload" @click="triggerPhotoInput">Subir foto</button>
-        <input ref="photoInputRef" type="file" accept="image/*" @change="handlePhotoUpload" hidden />
-        <button v-if="photo" class="btn-remove" @click="removePhoto">Eliminar foto</button>
-      </div>
-      <img v-if="photo" :src="photo" class="photo-preview" alt="Profile preview" />
+      <p class="section-hint">URL de la foto (puedes subirla a Cloudinary/ImgBB gratis o usar /images/profile.jpg).</p>
+      <label class="field-label">URL de la foto</label>
+      <input v-model="photo" class="input-wide" placeholder="/images/profile.jpg" />
+      <img v-if="photo" :src="photo" class="photo-preview" alt="Profile preview" style="margin-top:0.5rem" />
     </div>
 
     <div class="section">
@@ -65,7 +62,6 @@ import { reloadMessages } from '@/i18n'
 
 const { content, save } = useContent()
 
-const photoInputRef = ref(null)
 const cvInputRefEs = ref(null)
 const cvInputRefEn = ref(null)
 const photo = ref('')
@@ -93,46 +89,9 @@ function loadData() {
   scheduleUrl.value = content.es?.home?.contact?.scheduleUrl || content.en?.home?.contact?.scheduleUrl || ''
 }
 
-function triggerPhotoInput() {
-  photoInputRef.value?.click()
-}
-
 function triggerCvInput(locale) {
   if (locale === 'es') cvInputRefEs.value?.click()
   else cvInputRefEn.value?.click()
-}
-
-function handlePhotoUpload(event) {
-  const file = event.target.files?.[0]
-  if (!file) return
-  if (file.size > 5 * 1024 * 1024) {
-    error.value = 'La imagen no debe superar 5MB'
-    return
-  }
-  error.value = ''
-  const reader = new FileReader()
-  reader.onload = () => {
-    const img = new Image()
-    img.onload = () => {
-      const maxDim = 800
-      let { width, height } = img
-      if (width > maxDim || height > maxDim) {
-        if (width > height) { height = Math.round(height * maxDim / width); width = maxDim }
-        else { width = Math.round(width * maxDim / height); height = maxDim }
-      }
-      const canvas = document.createElement('canvas')
-      canvas.width = width; canvas.height = height
-      const ctx = canvas.getContext('2d')
-      ctx.drawImage(img, 0, 0, width, height)
-      photo.value = canvas.toDataURL('image/jpeg', 0.8)
-    }
-    img.src = reader.result
-  }
-  reader.readAsDataURL(file)
-}
-
-function removePhoto() {
-  photo.value = ''
 }
 
 function handleCvUpload(event, locale) {

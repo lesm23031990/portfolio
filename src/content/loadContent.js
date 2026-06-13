@@ -6,7 +6,7 @@ function isObject(val) {
   return val !== null && typeof val === 'object' && !Array.isArray(val)
 }
 
-function mergeArrayById(defaultArr, savedArr, idKey = 'id') {
+export function mergeArrayById(defaultArr, savedArr, idKey = 'id') {
   const map = new Map()
   for (const item of defaultArr) map.set(item[idKey], JSON.parse(JSON.stringify(item)))
   for (const item of savedArr) {
