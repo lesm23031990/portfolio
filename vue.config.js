@@ -1,6 +1,7 @@
 const { defineConfig } = require('@vue/cli-service')
 const path = require('path')
 const fs = require('fs')
+const { callGemini } = require('./api/gemini')
 
 module.exports = defineConfig({
   transpileDependencies: true,
@@ -28,6 +29,29 @@ module.exports = defineConfig({
           }
         })
       })
+
+      devServer.app.post('/api/chat', async (req, res) => {
+        let body = ''
+        req.on('data', chunk => { body += chunk })
+        req.on('end', async () => {
+          try {
+            const { message, history } = JSON.parse(body)
+            if (!message) {
+              return res.status(400).json({ error: 'message is required' })
+            }
+            const apiKey = process.env.GEMINI_API_KEY
+            if (!apiKey) {
+              return res.status(500).json({ error: 'GEMINI_API_KEY not set in .env' })
+            }
+            const reply = await callGemini(apiKey, message, history)
+            res.json({ reply })
+          } catch (err) {
+            console.error('Chat dev error:', err)
+            res.status(500).json({ error: 'Internal server error' })
+          }
+        })
+      })
+
       return middlewares
     }
   }

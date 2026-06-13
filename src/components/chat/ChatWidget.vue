@@ -45,7 +45,7 @@
             </button>
           </div>
 
-          <div class="chat-panel__messages">
+          <div ref="messagesContainer" class="chat-panel__messages">
             <article
               v-for="message in chatMessages"
               :key="message.id"
@@ -55,6 +55,14 @@
               <span class="chat-message__role">{{ message.role === 'user' ? '$ user' : '$ assistant' }}</span>
               <p>{{ message.content }}</p>
             </article>
+            <div v-if="isLoading" class="chat-message chat-message--assistant">
+              <span class="chat-message__role">$ assistant</span>
+              <p class="chat-panel__typing">
+                <span class="chat-panel__dot--typing"></span>
+                <span class="chat-panel__dot--typing"></span>
+                <span class="chat-panel__dot--typing"></span>
+              </p>
+            </div>
           </div>
 
           <form class="chat-panel__form" @submit.prevent="sendMessage">
@@ -68,7 +76,7 @@
                 rows="3"
                 :placeholder="t('chat.inputPlaceholder')"
               ></textarea>
-              <button type="submit" class="chat-panel__send">{{ t('chat.send') }}</button>
+              <button type="submit" class="chat-panel__send" :disabled="isLoading">{{ t('chat.send') }}</button>
             </div>
           </form>
 
@@ -80,13 +88,16 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { sendChatMessage } from '@/services/chat'
 
 const { t } = useI18n({ useScope: 'global' })
 
 const isOpen = ref(false)
 const draftMessage = ref('')
+const isLoading = ref(false)
+const messagesContainer = ref(null)
 const chatMessages = ref([
   {
     id: 'assistant-init',
@@ -96,13 +107,21 @@ const chatMessages = ref([
 ])
 
 const suggestions = computed(() => [
-  { id: 'projects', label: t('chat.suggestions.projects'), reply: t('chat.replies.projects') },
-  { id: 'stack', label: t('chat.suggestions.stack'), reply: t('chat.replies.stack') },
-  { id: 'contact', label: t('chat.suggestions.contact'), reply: t('chat.replies.contact') }
+  { id: 'projects', label: t('chat.suggestions.projects'), query: t('chat.replies.projects') },
+  { id: 'stack', label: t('chat.suggestions.stack'), query: t('chat.replies.stack') },
+  { id: 'contact', label: t('chat.suggestions.contact'), query: t('chat.replies.contact') }
 ])
 
 function toggleChat() {
   isOpen.value = !isOpen.value
+}
+
+function scrollToBottom() {
+  nextTick(() => {
+    if (messagesContainer.value) {
+      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+    }
+  })
 }
 
 function pushAssistantReply(content) {
@@ -111,21 +130,34 @@ function pushAssistantReply(content) {
     role: 'assistant',
     content
   })
+  scrollToBottom()
 }
 
-function useSuggestion(suggestion) {
+function getHistory() {
+  return chatMessages.value.slice(-10).map(m => ({
+    role: m.role === 'assistant' ? 'assistant' : 'user',
+    content: m.content
+  }))
+}
+
+async function useSuggestion(suggestion) {
   chatMessages.value.push({
     id: `user-${Date.now()}`,
     role: 'user',
     content: suggestion.label
   })
-  pushAssistantReply(suggestion.reply)
+  scrollToBottom()
+  isLoading.value = true
+  const history = getHistory()
+  const reply = await sendChatMessage(suggestion.query, history)
+  isLoading.value = false
+  pushAssistantReply(reply)
 }
 
-function sendMessage() {
+async function sendMessage() {
   const message = draftMessage.value.trim()
 
-  if (!message) return
+  if (!message || isLoading.value) return
 
   chatMessages.value.push({
     id: `user-${Date.now()}`,
@@ -134,26 +166,12 @@ function sendMessage() {
   })
 
   draftMessage.value = ''
-
-  // UI-only phase. Replace this reply mapper with a backend endpoint later.
-  const normalized = message.toLowerCase()
-
-  if (normalized.includes('stack') || normalized.includes('tecnolog')) {
-    pushAssistantReply(t('chat.replies.stack'))
-    return
-  }
-
-  if (normalized.includes('contact') || normalized.includes('correo') || normalized.includes('email')) {
-    pushAssistantReply(t('chat.replies.contact'))
-    return
-  }
-
-  if (normalized.includes('proyecto') || normalized.includes('repo')) {
-    pushAssistantReply(t('chat.replies.projects'))
-    return
-  }
-
-  pushAssistantReply(t('chat.replies.default'))
+  scrollToBottom()
+  isLoading.value = true
+  const history = getHistory()
+  const reply = await sendChatMessage(message, history)
+  isLoading.value = false
+  pushAssistantReply(reply)
 }
 </script>
 
@@ -405,6 +423,39 @@ function sendMessage() {
   color: rgba(255, 255, 255, 0.62);
   font-size: 0.82rem;
   line-height: 1.45;
+}
+
+.chat-panel__typing {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+  margin: 0.3rem 0 0;
+}
+
+.chat-panel__dot--typing {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: #7ad6ff;
+  animation: typing-bounce 1.4s ease-in-out infinite;
+}
+
+.chat-panel__dot--typing:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.chat-panel__dot--typing:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typing-bounce {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-4px); }
+}
+
+.chat-panel__send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 @media (max-width: 640px) {
