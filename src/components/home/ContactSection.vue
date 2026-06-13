@@ -18,9 +18,9 @@
         <p ref="subRef" class="contact-scene__sub">{{ t('home.contactPanel.subtitle') }}</p>
 
         <div ref="actionsRef" class="contact-scene__actions">
-          <a class="contact-action contact-action--primary" :href="contactEmailHref">
+          <button class="contact-action contact-action--primary" type="button" @click="showModal = true">
             {{ t('home.contactPanel.primaryCta') }}
-          </a>
+          </button>
           <a
             class="contact-action contact-action--secondary"
             :href="contactLinkedin"
@@ -29,22 +29,41 @@
           >
             {{ t('home.contactPanel.secondaryCta') }}
           </a>
-          <a
-            v-if="contactCvUrl"
-            class="contact-action contact-action--tertiary"
-            :href="contactCvUrl"
-            download="CV-Lorena-Salas.pdf"
-          >
-            {{ t('home.contactPanel.tertiaryCta') }}
-          </a>
+          <div class="contact-action contact-action--tertiary contact-dropdown">
+            <button ref="cvTriggerRef" type="button" class="contact-dropdown__trigger" @click="toggleCvDropdown">
+              {{ t('home.contactPanel.tertiaryCta') }}
+              <span class="contact-dropdown__arrow">&#9662;</span>
+            </button>
+
+            <div v-if="cvDropdownOpen" class="contact-dropdown__menu" @click.self="cvDropdownOpen = false">
+              <a
+                v-if="contactCvUrlEs"
+                class="contact-dropdown__item"
+                :href="contactCvUrlEs"
+                download="CV-Lorena-Salas-ES.pdf"
+                @click="cvDropdownOpen = false"
+              >
+                {{ t('home.contactPanel.tertiaryCtaEs') }}
+              </a>
+              <a
+                v-if="contactCvUrlEn"
+                class="contact-dropdown__item"
+                :href="contactCvUrlEn"
+                download="CV-Lorena-Salas-EN.pdf"
+                @click="cvDropdownOpen = false"
+              >
+                {{ t('home.contactPanel.tertiaryCtaEn') }}
+              </a>
+            </div>
+          </div>
         </div>
 
         <div ref="cardsRef" class="contact-scene__cards">
-          <a class="contact-card" :href="contactEmailHref">
+          <button class="contact-card contact-card--btn" type="button" @click="showModal = true">
             <span class="contact-card__label">{{ t('home.contactPanel.cards.email.label') }}</span>
             <strong class="contact-card__value">{{ contactEmail }}</strong>
             <span class="contact-card__meta">{{ t('home.contactPanel.cards.email.meta') }}</span>
-          </a>
+          </button>
 
           <a
             class="contact-card"
@@ -58,13 +77,23 @@
           </a>
 
           <a
-            v-if="contactCvUrl"
+            v-if="contactCvUrlEs"
             class="contact-card"
-            :href="contactCvUrl"
-            download="CV-Lorena-Salas.pdf"
+            :href="contactCvUrlEs"
+            download="CV-Lorena-Salas-ES.pdf"
           >
             <span class="contact-card__label">{{ t('home.contactPanel.cards.cv.label') }}</span>
-            <strong class="contact-card__value">{{ t('home.contactPanel.cards.cv.value') }}</strong>
+            <strong class="contact-card__value">{{ t('home.contactPanel.cards.cv.valueEs') }}</strong>
+            <span class="contact-card__meta">{{ t('home.contactPanel.cards.cv.meta') }}</span>
+          </a>
+          <a
+            v-if="contactCvUrlEn"
+            class="contact-card"
+            :href="contactCvUrlEn"
+            download="CV-Lorena-Salas-EN.pdf"
+          >
+            <span class="contact-card__label">{{ t('home.contactPanel.cards.cv.label') }}</span>
+            <strong class="contact-card__value">{{ t('home.contactPanel.cards.cv.valueEn') }}</strong>
             <span class="contact-card__meta">{{ t('home.contactPanel.cards.cv.meta') }}</span>
           </a>
         </div>
@@ -95,6 +124,8 @@
       </div>
     </div>
   </section>
+
+<ContactModal v-if="showModal" @close="showModal = false" />
 </template>
 
 <script setup>
@@ -104,10 +135,15 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import CircuitBackground from '@/components/ui/CircuitBackground.vue'
 import CircuitBackgroundMobile from '@/components/ui/CircuitBackgroundMobile.vue'
+import ContactModal from './ContactModal.vue'
 
 gsap.registerPlugin(ScrollTrigger)
 
 const { t, locale, messages } = useI18n({ useScope: 'global' })
+
+const showModal = ref(false)
+const cvDropdownOpen = ref(false)
+const cvTriggerRef = ref(null)
 
 const sectionRef = ref(null)
 const eyebrowRef = ref(null)
@@ -128,6 +164,17 @@ function updateWidth() {
   isDesktop.value = windowWidth.value >= 768
 }
 
+function toggleCvDropdown() {
+  cvDropdownOpen.value = !cvDropdownOpen.value
+}
+
+function handleClickOutside(e) {
+  if (cvDropdownOpen.value) {
+    const dropdown = e.target.closest('.contact-dropdown')
+    if (!dropdown) cvDropdownOpen.value = false
+  }
+}
+
 function onWidthResize() {
   if (widthTimer) return
   widthTimer = window.requestAnimationFrame(() => {
@@ -143,8 +190,14 @@ const contactEmail = computed(() => {
 const contactLinkedin = computed(() => messages.value?.[locale.value]?.home?.contact?.linkedinUrl || '#')
 const contactGithub = computed(() => messages.value?.[locale.value]?.home?.contact?.githubUrl || '#')
 const contactPhoto = computed(() => messages.value?.[locale.value]?.home?.contact?.photo || '')
-const contactCvUrl = computed(() => messages.value?.[locale.value]?.home?.contact?.cvUrl || '')
-const contactEmailHref = computed(() => `mailto:${contactEmail.value}`)
+const contactCvUrlEs = computed(() => {
+  const raw = messages.value?.es?.home?.contact?.cvUrl
+  return typeof raw === 'string' ? raw : ''
+})
+const contactCvUrlEn = computed(() => {
+  const raw = messages.value?.en?.home?.contact?.cvUrl
+  return typeof raw === 'string' ? raw : ''
+})
 
 onMounted(() => {
   const section = sectionRef.value
@@ -197,6 +250,7 @@ onMounted(() => {
   gsap.fromTo('.portrait-frame', { rotateZ: -1.5 }, { rotateZ: 1.5, duration: 4, ease: 'sine.inOut', yoyo: true, repeat: -1, delay: 1.5 })
 
   window.addEventListener('resize', onWidthResize, { passive: true })
+  document.addEventListener('click', handleClickOutside, { passive: true })
 })
 
 onBeforeUnmount(() => {
@@ -206,6 +260,7 @@ onBeforeUnmount(() => {
     gsapCtx.value = null
   }
   window.removeEventListener('resize', onWidthResize)
+  document.removeEventListener('click', handleClickOutside)
   if (widthTimer) window.cancelAnimationFrame(widthTimer)
 })
 </script>
@@ -219,7 +274,6 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   padding: 1rem 1.25rem;
-  overflow: hidden;
   background: linear-gradient(180deg, transparent 0%, #fff5fa 20%, #fff9fc 50%, #fff3f9 100%);
 }
 
@@ -239,6 +293,7 @@ onBeforeUnmount(() => {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  overflow: hidden;
 }
 
 .contact-scene__circuit {
@@ -355,6 +410,11 @@ onBeforeUnmount(() => {
   background: rgba(255, 255, 255, 0.7);
   border: 1px solid var(--rose-border-strong);
   transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  font-family: inherit;
+  font-size: inherit;
+  text-align: inherit;
+  width: 100%;
+  cursor: pointer;
 }
 
 .contact-card:hover {
@@ -507,5 +567,70 @@ onBeforeUnmount(() => {
     background: rgba(255, 255, 255, 0.7);
     border: 1px solid var(--rose-border-strong);
   }
+}
+
+.contact-dropdown {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 9rem;
+}
+
+.contact-dropdown__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.55rem 1rem;
+  border: 1px dashed var(--rose-border-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--rose-accent-strong);
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.24s ease, box-shadow 0.24s ease;
+}
+
+.contact-dropdown__trigger:hover {
+  transform: translateY(-2px);
+}
+
+.contact-dropdown__arrow {
+  font-size: 0.6rem;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.contact-dropdown__menu {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  margin-bottom: 0.35rem;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid var(--rose-border-strong);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px var(--rose-shadow);
+}
+
+.contact-dropdown__item {
+  display: block;
+  padding: 0.6rem 1rem;
+  color: var(--rose-accent-strong);
+  text-decoration: none;
+  font-size: 0.8rem;
+  transition: background 0.2s ease;
+}
+
+.contact-dropdown__item:hover {
+  background: rgba(212, 107, 158, 0.08);
+}
+
+.contact-dropdown__item:not(:last-child) {
+  border-bottom: 1px solid var(--rose-border);
 }
 </style>

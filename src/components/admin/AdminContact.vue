@@ -30,15 +30,27 @@
     </div>
 
     <div class="section">
-      <h3 class="section-title">CV / Curriculum</h3>
-      <p class="section-hint">Sube tu CV en PDF o ingresa una URL externa.</p>
+      <h3 class="section-title">CV Español</h3>
+      <p class="section-hint">Sube el CV en español en PDF o ingresa una URL externa.</p>
       <div class="photo-upload-row">
-        <button class="btn-upload" @click="triggerCvInput">Subir PDF</button>
-        <input ref="cvInputRef" type="file" accept=".pdf" @change="handleCvUpload" hidden />
-        <button v-if="cvUrl" class="btn-remove" @click="removeCv">Eliminar CV</button>
+        <button class="btn-upload" @click="triggerCvInput('es')">Subir PDF</button>
+        <input ref="cvInputRefEs" type="file" accept=".pdf" @change="(e) => handleCvUpload(e, 'es')" hidden />
+        <button v-if="cvUrlEs" class="btn-remove" @click="removeCv('es')">Eliminar CV</button>
       </div>
       <label class="field-label" style="margin-top:0.6rem">O URL externa del PDF</label>
-      <input v-model="cvUrl" class="input-wide" placeholder="https://.../cv.pdf" />
+      <input v-model="cvUrlEs" class="input-wide" placeholder="https://.../cv-es.pdf" />
+    </div>
+
+    <div class="section">
+      <h3 class="section-title">CV English</h3>
+      <p class="section-hint">Upload your CV in English as PDF or enter an external URL.</p>
+      <div class="photo-upload-row">
+        <button class="btn-upload" @click="triggerCvInput('en')">Upload PDF</button>
+        <input ref="cvInputRefEn" type="file" accept=".pdf" @change="(e) => handleCvUpload(e, 'en')" hidden />
+        <button v-if="cvUrlEn" class="btn-remove" @click="removeCv('en')">Remove CV</button>
+      </div>
+      <label class="field-label" style="margin-top:0.6rem">Or external PDF URL</label>
+      <input v-model="cvUrlEn" class="input-wide" placeholder="https://.../cv-en.pdf" />
     </div>
   </div>
 </template>
@@ -51,13 +63,15 @@ import { reloadMessages } from '@/i18n'
 const { content, save } = useContent()
 
 const photoInputRef = ref(null)
-const cvInputRef = ref(null)
+const cvInputRefEs = ref(null)
+const cvInputRefEn = ref(null)
 const photo = ref('')
 const email = ref('')
 const linkedinUrl = ref('')
 const linkedin = ref('')
 const githubUrl = ref('')
-const cvUrl = ref('')
+const cvUrlEs = ref('')
+const cvUrlEn = ref('')
 const error = ref('')
 
 onMounted(() => {
@@ -65,21 +79,22 @@ onMounted(() => {
 })
 
 function loadData() {
-  const contact = content.es?.home?.contact || content.en?.home?.contact || content.home?.contact || {}
-  photo.value = contact.photo || ''
-  email.value = contact.email || ''
-  linkedinUrl.value = contact.linkedinUrl || ''
-  linkedin.value = contact.linkedin || ''
-  githubUrl.value = contact.githubUrl || ''
-  cvUrl.value = contact.cvUrl || ''
+  photo.value = content.es?.home?.contact?.photo || content.en?.home?.contact?.photo || ''
+  email.value = content.es?.home?.contact?.email || content.en?.home?.contact?.email || ''
+  linkedinUrl.value = content.es?.home?.contact?.linkedinUrl || content.en?.home?.contact?.linkedinUrl || ''
+  linkedin.value = content.es?.home?.contact?.linkedin || content.en?.home?.contact?.linkedin || ''
+  githubUrl.value = content.es?.home?.contact?.githubUrl || content.en?.home?.contact?.githubUrl || ''
+  cvUrlEs.value = content.es?.home?.contact?.cvUrl || ''
+  cvUrlEn.value = content.en?.home?.contact?.cvUrl || ''
 }
 
 function triggerPhotoInput() {
   photoInputRef.value?.click()
 }
 
-function triggerCvInput() {
-  cvInputRef.value?.click()
+function triggerCvInput(locale) {
+  if (locale === 'es') cvInputRefEs.value?.click()
+  else cvInputRefEn.value?.click()
 }
 
 function handlePhotoUpload(event) {
@@ -115,25 +130,29 @@ function removePhoto() {
   photo.value = ''
 }
 
-function handleCvUpload(event) {
+function handleCvUpload(event, locale) {
   const file = event.target.files?.[0]
   if (!file) return
   if (file.type !== 'application/pdf') {
-    error.value = 'Solo se permiten archivos PDF'
+    error.value = locale === 'es' ? 'Solo se permiten archivos PDF' : 'Only PDF files allowed'
     return
   }
   if (file.size > 10 * 1024 * 1024) {
-    error.value = 'El PDF no debe superar 10MB'
+    error.value = locale === 'es' ? 'El PDF no debe superar 10MB' : 'PDF must not exceed 10MB'
     return
   }
   error.value = ''
   const reader = new FileReader()
-  reader.onload = () => { cvUrl.value = reader.result }
+  reader.onload = () => {
+    if (locale === 'es') cvUrlEs.value = reader.result
+    else cvUrlEn.value = reader.result
+  }
   reader.readAsDataURL(file)
 }
 
-function removeCv() {
-  cvUrl.value = ''
+function removeCv(locale) {
+  if (locale === 'es') cvUrlEs.value = ''
+  else cvUrlEn.value = ''
 }
 
 function handleSave() {
@@ -142,21 +161,27 @@ function handleSave() {
     error.value = 'Al menos un medio de contacto debe estar configurado'
     return
   }
-  const contactData = {
+  const full = JSON.parse(JSON.stringify(content))
+  full.es = full.es || {}
+  full.es.home = full.es.home || {}
+  full.es.home.contact = {
     email: email.value.trim(),
     linkedin: linkedin.value.trim() || 'LinkedIn',
     linkedinUrl: linkedinUrl.value.trim(),
     githubUrl: githubUrl.value.trim(),
-    cvUrl: cvUrl.value.trim(),
+    cvUrl: cvUrlEs.value.trim(),
     photo: photo.value
   }
-  const full = JSON.parse(JSON.stringify(content))
-  full.es = full.es || {}
-  full.es.home = full.es.home || {}
-  full.es.home.contact = { ...contactData }
   full.en = full.en || {}
   full.en.home = full.en.home || {}
-  full.en.home.contact = { ...contactData }
+  full.en.home.contact = {
+    email: email.value.trim(),
+    linkedin: linkedin.value.trim() || 'LinkedIn',
+    linkedinUrl: linkedinUrl.value.trim(),
+    githubUrl: githubUrl.value.trim(),
+    cvUrl: cvUrlEn.value.trim(),
+    photo: photo.value
+  }
   save(full)
   reloadMessages()
 }
