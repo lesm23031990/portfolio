@@ -64,7 +64,7 @@ function localFallback(input) {
   }
 
   if (normalized.includes('tarifa') || normalized.includes('precio') || normalized.includes('costo') || normalized.includes('pago') || normalized.includes('rate') || normalized.includes('hour')) {
-    return 'Su tarifa está entre 20-25 USD/hora, negociable según el alcance y tipo de proyecto.'
+    return 'Su tarifa está entre 10-20 USD/hora, negociable según el alcance y tipo de proyecto.'
   }
 
   if (normalized.includes('explic') || normalized.includes('concepto') || normalized.includes('no técnico') || normalized.includes('cliente') || normalized.includes('analog')) {
