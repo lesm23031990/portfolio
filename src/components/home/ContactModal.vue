@@ -84,11 +84,11 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { sendContactForm } from '@/services/email'
 
-defineEmits(['close'])
+const emit = defineEmits(['close'])
 
 const { t, locale, messages } = useI18n({ useScope: 'global' })
 
@@ -113,6 +113,36 @@ const errors = reactive({
 
 const sending = ref(false)
 const feedback = ref(null)
+
+onMounted(() => {
+  nextTick(() => document.getElementById('cf-name')?.focus())
+  document.addEventListener('keydown', onKeyDown)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', onKeyDown)
+})
+
+function onKeyDown(e) {
+  if (e.key === 'Escape') emit('close')
+  if (e.key === 'Tab') trapFocus(e)
+}
+
+function trapFocus(e) {
+  const modal = document.querySelector('.contact-modal')
+  if (!modal) return
+  const focusable = modal.querySelectorAll('button, input, textarea, select, [tabindex]:not([tabindex="-1"])')
+  if (!focusable.length) return
+  const first = focusable[0]
+  const last = focusable[focusable.length - 1]
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault()
+    last.focus()
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault()
+    first.focus()
+  }
+}
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 

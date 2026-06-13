@@ -1,8 +1,8 @@
 import emailjs from '@emailjs/browser'
 
-const PUBLIC_KEY = 'zhXghdrSAnB4K3zeZ'
-const SERVICE_ID = 'service_dd8avek'
-const TEMPLATE_ID = 'template_ncrl9uv'
+const PUBLIC_KEY = process.env.VUE_APP_EMAILJS_PUBLIC_KEY
+const SERVICE_ID = process.env.VUE_APP_EMAILJS_SERVICE_ID
+const TEMPLATE_ID = process.env.VUE_APP_EMAILJS_TEMPLATE_ID
 
 emailjs.init(PUBLIC_KEY)
 

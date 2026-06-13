@@ -126,11 +126,12 @@ let parallaxMetrics = null
 let trailQuickTos = []
 let tiltTarget = { x: 0, y: 0 }
 let tiltCurrent = { x: 0, y: 0 }
-let tiltRaf = null
+let tiltActive = false
 let parallaxY = 0
 let metricsTiltTarget = { x: 0, y: 0 }
 let metricsTiltCurrent = { x: 0, y: 0 }
-let metricsTiltRaf = null
+let metricsTiltActive = false
+let unifiedRafId = null
 let sectionObserver = null
 let typewriterGen = 0
 
@@ -214,44 +215,51 @@ watch(profileText, () => {
   restartTypewriter()
 })
 
+function requestUnifiedRaf() {
+  if (!unifiedRafId) unifiedRafId = requestAnimationFrame(tick)
+}
+
+function tick() {
+  unifiedRafId = null
+  let stillNeedsUpdate = false
+
+  if (tiltActive) {
+    tiltCurrent.x += (tiltTarget.x - tiltCurrent.x) * 0.12
+    tiltCurrent.y += (tiltTarget.y - tiltCurrent.y) * 0.12
+    if (heroCardRef.value) {
+      heroCardRef.value.style.transform = `translateY(${parallaxY}px) perspective(600px) rotateX(${tiltCurrent.y}deg) rotateY(${tiltCurrent.x}deg)`
+    }
+    tiltActive = Math.abs(tiltCurrent.x - tiltTarget.x) > 0.01 || Math.abs(tiltCurrent.y - tiltTarget.y) > 0.01
+    if (tiltActive) stillNeedsUpdate = true
+  }
+
+  if (metricsTiltActive) {
+    metricsTiltCurrent.x += (metricsTiltTarget.x - metricsTiltCurrent.x) * 0.12
+    metricsTiltCurrent.y += (metricsTiltTarget.y - metricsTiltCurrent.y) * 0.12
+    if (metricsRef.value) {
+      metricsRef.value.style.transform = `perspective(900px) rotateX(${metricsTiltCurrent.y}deg) rotateY(${metricsTiltCurrent.x}deg)`
+    }
+    metricsTiltActive = Math.abs(metricsTiltCurrent.x - metricsTiltTarget.x) > 0.01 || Math.abs(metricsTiltCurrent.y - metricsTiltTarget.y) > 0.01
+    if (metricsTiltActive) stillNeedsUpdate = true
+  }
+
+  if (stillNeedsUpdate) unifiedRafId = requestAnimationFrame(tick)
+}
+
 function handleMetricsTilt(event) {
   if (!metricsRef.value) return
   const rect = metricsRef.value.getBoundingClientRect()
   metricsTiltTarget.x = gsap.utils.clamp(-1, 1, ((event.clientX - rect.left) / rect.width - 0.5) * 2) * 8
   metricsTiltTarget.y = gsap.utils.clamp(-1, 1, ((event.clientY - rect.top) / rect.height - 0.5) * 2) * 8
-  if (!metricsTiltRaf) metricsTiltRaf = requestAnimationFrame(metricsTiltLoop)
-}
-
-function metricsTiltLoop() {
-  metricsTiltCurrent.x += (metricsTiltTarget.x - metricsTiltCurrent.x) * 0.12
-  metricsTiltCurrent.y += (metricsTiltTarget.y - metricsTiltCurrent.y) * 0.12
-  if (metricsRef.value) {
-    metricsRef.value.style.transform = `perspective(900px) rotateX(${metricsTiltCurrent.y}deg) rotateY(${metricsTiltCurrent.x}deg)`
-  }
-  if (Math.abs(metricsTiltCurrent.x - metricsTiltTarget.x) > 0.01 || Math.abs(metricsTiltCurrent.y - metricsTiltTarget.y) > 0.01) {
-    metricsTiltRaf = requestAnimationFrame(metricsTiltLoop)
-  } else {
-    metricsTiltRaf = null
-  }
+  metricsTiltActive = true
+  requestUnifiedRaf()
 }
 
 function resetMetricsTilt() {
   metricsTiltTarget.x = 0
   metricsTiltTarget.y = 0
-  if (!metricsTiltRaf) metricsTiltRaf = requestAnimationFrame(metricsTiltLoop)
-}
-
-function tiltLoop() {
-  tiltCurrent.x += (tiltTarget.x - tiltCurrent.x) * 0.12
-  tiltCurrent.y += (tiltTarget.y - tiltCurrent.y) * 0.12
-  if (heroCardRef.value) {
-    heroCardRef.value.style.transform = `translateY(${parallaxY}px) perspective(600px) rotateX(${tiltCurrent.y}deg) rotateY(${tiltCurrent.x}deg)`
-  }
-  if (Math.abs(tiltCurrent.x - tiltTarget.x) > 0.01 || Math.abs(tiltCurrent.y - tiltTarget.y) > 0.01) {
-    tiltRaf = requestAnimationFrame(tiltLoop)
-  } else {
-    tiltRaf = null
-  }
+  metricsTiltActive = true
+  requestUnifiedRaf()
 }
 
 function handleHeroCardTilt(event) {
@@ -261,13 +269,15 @@ function handleHeroCardTilt(event) {
   const cy = gsap.utils.clamp(-1, 1, ((event.clientY - rect.top) / rect.height - 0.5) * 2)
   tiltTarget.x = cx * 16
   tiltTarget.y = cy * 16
-  if (!tiltRaf) tiltRaf = requestAnimationFrame(tiltLoop)
+  tiltActive = true
+  requestUnifiedRaf()
 }
 
 function resetHeroCardTilt() {
   tiltTarget.x = 0
   tiltTarget.y = 0
-  if (!tiltRaf) tiltRaf = requestAnimationFrame(tiltLoop)
+  tiltActive = true
+  requestUnifiedRaf()
 }
 
 
@@ -339,7 +349,8 @@ function initParallax() {
     const y = window.scrollY || document.documentElement.scrollTop
     scrollY.value = y
     parallaxY = y * -0.045
-    if (!tiltRaf) tiltRaf = requestAnimationFrame(tiltLoop)
+    tiltActive = true
+    requestUnifiedRaf()
     parallaxMetrics(y * -0.03)
   }
 
@@ -398,8 +409,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('portfolio:overlay-finished', handleOverlayFinished)
 
   cancelTypewriter()
-  if (tiltRaf) cancelAnimationFrame(tiltRaf)
-  if (metricsTiltRaf) cancelAnimationFrame(metricsTiltRaf)
+  if (unifiedRafId) cancelAnimationFrame(unifiedRafId)
   if (metricsRef.value) {
     metricsRef.value.removeEventListener('pointermove', handleMetricsTilt)
     metricsRef.value.removeEventListener('pointerleave', resetMetricsTilt)

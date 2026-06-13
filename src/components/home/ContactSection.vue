@@ -56,6 +56,14 @@
               </a>
             </div>
           </div>
+          <a
+            class="contact-action contact-action--schedule"
+            :href="contactScheduleUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {{ t('home.contactPanel.scheduleCta') }}
+          </a>
         </div>
 
         <div ref="cardsRef" class="contact-scene__cards">
@@ -189,6 +197,7 @@ const contactEmail = computed(() => {
 })
 const contactLinkedin = computed(() => messages.value?.[locale.value]?.home?.contact?.linkedinUrl || '#')
 const contactGithub = computed(() => messages.value?.[locale.value]?.home?.contact?.githubUrl || '#')
+const contactScheduleUrl = computed(() => messages.value?.[locale.value]?.home?.contact?.scheduleUrl || 'https://calendly.com/lorena-dev-231990/30min')
 const contactPhoto = computed(() => messages.value?.[locale.value]?.home?.contact?.photo || '')
 const contactCvUrlEs = computed(() => {
   const raw = messages.value?.es?.home?.contact?.cvUrl
@@ -392,6 +401,11 @@ onBeforeUnmount(() => {
   background: transparent;
   color: var(--rose-accent-strong);
   border: 1px dashed var(--rose-border-strong);
+}
+
+.contact-action--schedule {
+  background: linear-gradient(135deg, #7ad6ff, #d46b9e);
+  color: #fff;
 }
 
 .contact-scene__cards {

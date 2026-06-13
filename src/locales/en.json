@@ -164,6 +164,7 @@
       "primaryCta": "Email me",
       "secondaryCta": "View LinkedIn",
       "tertiaryCta": "Download CV",
+      "scheduleCta": "Schedule a call",
       "cards": {
         "email": {
           "label": "Email",
@@ -190,7 +191,8 @@
       "linkedin": "LinkedIn",
       "linkedinUrl": "https://www.linkedin.com/in/lorenaesalasm/",
       "githubUrl": "https://github.com/lesm23031990",
-      "cvUrl": ""
+      "cvUrl": "",
+      "scheduleUrl": "https://calendly.com/lorena-dev-231990/30min"
     }
   },
   "chat": {

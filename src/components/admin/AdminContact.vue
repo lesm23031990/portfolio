@@ -26,6 +26,9 @@
       <label class="field-label" style="margin-top:0.6rem">GitHub URL</label>
       <input v-model="githubUrl" class="input-wide" placeholder="https://github.com/..." />
 
+      <label class="field-label" style="margin-top:0.6rem">Calendly / Agendar reunión</label>
+      <input v-model="scheduleUrl" class="input-wide" placeholder="https://calendly.com/tuusuario/30min" />
+
       <span v-if="error" class="error-msg" style="margin-top:0.5rem">{{ error }}</span>
     </div>
 
@@ -72,6 +75,7 @@ const linkedin = ref('')
 const githubUrl = ref('')
 const cvUrlEs = ref('')
 const cvUrlEn = ref('')
+const scheduleUrl = ref('')
 const error = ref('')
 
 onMounted(() => {
@@ -86,6 +90,7 @@ function loadData() {
   githubUrl.value = content.es?.home?.contact?.githubUrl || content.en?.home?.contact?.githubUrl || ''
   cvUrlEs.value = content.es?.home?.contact?.cvUrl || ''
   cvUrlEn.value = content.en?.home?.contact?.cvUrl || ''
+  scheduleUrl.value = content.es?.home?.contact?.scheduleUrl || content.en?.home?.contact?.scheduleUrl || ''
 }
 
 function triggerPhotoInput() {
@@ -170,6 +175,7 @@ function handleSave() {
     linkedinUrl: linkedinUrl.value.trim(),
     githubUrl: githubUrl.value.trim(),
     cvUrl: cvUrlEs.value.trim(),
+    scheduleUrl: scheduleUrl.value.trim(),
     photo: photo.value
   }
   full.en = full.en || {}
@@ -180,6 +186,7 @@ function handleSave() {
     linkedinUrl: linkedinUrl.value.trim(),
     githubUrl: githubUrl.value.trim(),
     cvUrl: cvUrlEn.value.trim(),
+    scheduleUrl: scheduleUrl.value.trim(),
     photo: photo.value
   }
   save(full)
