@@ -8,8 +8,23 @@
         :aria-label="t('chat.launcherLabel')"
         @click="toggleChat"
       >
-        <span class="chat-widget__launcher-core"></span>
+        <span class="chat-widget__launcher-core">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="5" y="7" width="14" height="10" rx="3" stroke="currentColor" stroke-width="1.5"/>
+            <circle cx="10" cy="12" r="1.2" fill="currentColor"/>
+            <circle cx="14" cy="12" r="1.2" fill="currentColor"/>
+            <rect x="8" y="3" width="2" height="3" rx="0.5" fill="currentColor"/>
+            <rect x="14" y="3" width="2" height="3" rx="0.5" fill="currentColor"/>
+            <rect x="11" y="17" width="2" height="2" rx="0.5" fill="currentColor"/>
+            <line x1="4" y1="16" x2="5" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="20" y1="16" x2="19" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </span>
         <span class="chat-widget__launcher-text">{{ t('chat.launcherShort') }}</span>
+        <span v-if="!dismissBubble" class="chat-widget__bubble">
+          {{ t('chat.bubble') }}
+          <button type="button" class="chat-widget__bubble-close" @click.stop="dismissBubble = true">×</button>
+        </span>
       </button>
 
       <div v-if="isOpen" class="chat-modal" @click.self="toggleChat">
@@ -75,12 +90,12 @@
                 class="chat-panel__input"
                 rows="3"
                 :placeholder="t('chat.inputPlaceholder')"
+                @keydown.enter.exact.prevent="sendMessage"
               ></textarea>
               <button type="submit" class="chat-panel__send" :disabled="isLoading">{{ t('chat.send') }}</button>
             </div>
           </form>
 
-          <p class="chat-panel__note">{{ t('chat.note') }}</p>
         </section>
       </div>
     </div>
@@ -95,6 +110,7 @@ import { sendChatMessage } from '@/services/chat'
 const { t } = useI18n({ useScope: 'global' })
 
 const isOpen = ref(false)
+const dismissBubble = ref(false)
 const draftMessage = ref('')
 const isLoading = ref(false)
 const messagesContainer = ref(null)
@@ -210,40 +226,122 @@ async function sendMessage() {
 }
 
 .chat-widget__launcher {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.7rem;
-  padding: 0.8rem 1rem;
+  padding: 0.75rem 1.2rem 0.75rem 1rem;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(10, 13, 20, 0.9);
+  border: 1.5px solid rgba(255, 51, 212, 0.4);
+  background: linear-gradient(135deg, rgba(10, 13, 20, 0.95), rgba(20, 10, 30, 0.95));
   color: #f5f7fb;
-  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 8px 32px rgba(255, 51, 212, 0.2), 0 0 60px rgba(122, 214, 255, 0.08);
   cursor: pointer;
+  transition: all 0.3s ease;
+  animation: launcher-float 3s ease-in-out infinite;
+}
+
+.chat-widget__launcher:hover {
+  border-color: rgba(255, 51, 212, 0.7);
+  box-shadow: 0 8px 40px rgba(255, 51, 212, 0.35), 0 0 80px rgba(122, 214, 255, 0.15);
+  transform: translateY(-2px) scale(1.03);
+}
+
+.chat-widget__launcher:active {
+  transform: scale(0.97);
+}
+
+.chat-widget__bubble {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(255, 51, 212, 0.5);
+  border-radius: 14px;
+  padding: 0.65rem 0.3rem 0.65rem 1.1rem;
+  font-size: 0.82rem;
+  color: #111;
+  white-space: nowrap;
+  font-weight: 500;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  z-index: 1;
+}
+
+.chat-widget__bubble-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: none;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 999px;
+  color: #555;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.chat-widget__bubble-close:hover {
+  background: rgba(255, 51, 212, 0.15);
+  color: #ff33d4;
+}
+
+.chat-widget__bubble::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 1.5rem;
+  border: 7px solid transparent;
+  border-top-color: rgba(255, 255, 255, 0.92);
+  filter: drop-shadow(0 1px 0 rgba(255, 51, 212, 0.3));
+}
+
+
+@keyframes launcher-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
 }
 
 .chat-widget__launcher-core {
-  width: 0.9rem;
-  height: 0.9rem;
+  width: 1.1rem;
+  height: 1.1rem;
   border-radius: 999px;
   background: linear-gradient(135deg, #ff33d4, #7ad6ff);
-  box-shadow: 0 0 18px rgba(255, 51, 212, 0.45);
+  box-shadow: 0 0 24px rgba(255, 51, 212, 0.6);
+  animation: core-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes core-pulse {
+  0%, 100% { box-shadow: 0 0 24px rgba(255, 51, 212, 0.6); transform: scale(1); }
+  50% { box-shadow: 0 0 48px rgba(255, 51, 212, 0.9), 0 0 80px rgba(122, 214, 255, 0.3); transform: scale(1.15); }
 }
 
 .chat-widget__launcher-text {
-  font-size: 0.84rem;
-  letter-spacing: 0.16em;
+  font-size: 0.9rem;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
+  background: linear-gradient(90deg, #ff33d4, #7ad6ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 600;
 }
 
 .chat-panel {
-  width: min(42rem, calc(100vw - 1.5rem));
-  max-height: min(42rem, calc(100vh - 3rem));
+  width: min(40rem, calc(100vw - 1.5rem));
+  max-height: min(48rem, calc(100vh - 3rem));
   display: grid;
-  grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
-  gap: 0.9rem;
-  padding: 1rem;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  gap: 0.6rem;
+  padding: 0.85rem;
   border-radius: 24px;
+  font-size: 0.83rem;
   background:
     linear-gradient(180deg, rgba(9, 13, 20, 0.98), rgba(5, 8, 14, 0.98)),
     rgba(7, 10, 16, 0.96);
@@ -318,16 +416,17 @@ async function sendMessage() {
 .chat-panel__suggestions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.35rem;
 }
 
 .chat-panel__suggestion {
-  padding: 0.55rem 0.85rem;
-  border-radius: 14px;
+  padding: 0.35rem 0.65rem;
+  border-radius: 10px;
   border: 1px solid rgba(122, 214, 255, 0.14);
   background: rgba(122, 214, 255, 0.06);
   color: inherit;
   cursor: pointer;
+  font-size: 0.78rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
@@ -366,7 +465,8 @@ async function sendMessage() {
 
 .chat-message--user {
   background: rgba(255, 51, 212, 0.12);
-  justify-self: end;
+  justify-self: start;
+  border-left: 3px solid #ff33d4;
 }
 
 .chat-panel__form {
@@ -418,13 +518,6 @@ async function sendMessage() {
   cursor: pointer;
 }
 
-.chat-panel__note {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.62);
-  font-size: 0.82rem;
-  line-height: 1.45;
-}
-
 .chat-panel__typing {
   display: flex;
   gap: 0.35rem;
@@ -469,8 +562,36 @@ async function sendMessage() {
     max-height: calc(100vh - 2rem);
   }
 
-  .chat-widget__launcher-text {
-    display: none;
+  .chat-widget__launcher {
+    width: 3.5rem;
+    height: 3.5rem;
+    padding: 0;
+    justify-content: center;
+    border-radius: 999px;
+    border: 2px solid rgba(255, 51, 212, 0.6);
+    background: linear-gradient(135deg, rgba(10, 13, 20, 0.98), rgba(20, 10, 30, 0.98));
+    box-shadow: 0 0 30px rgba(255, 51, 212, 0.4), 0 0 60px rgba(122, 214, 255, 0.15);
+    animation: launcher-pulse 2s ease-in-out infinite;
+  }
+
+  .chat-widget__launcher-core {
+    width: 1.4rem;
+    height: 1.4rem;
+    box-shadow: 0 0 30px rgba(255, 51, 212, 0.7);
+  }
+
+  @keyframes launcher-pulse {
+    0%, 100% { box-shadow: 0 0 30px rgba(255, 51, 212, 0.4), 0 0 60px rgba(122, 214, 255, 0.15); }
+    50% { box-shadow: 0 0 50px rgba(255, 51, 212, 0.7), 0 0 100px rgba(122, 214, 255, 0.3); }
+  }
+
+  .chat-widget__launcher-text,
+  .chat-widget__bubble {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
   }
 
   .chat-panel__composer {

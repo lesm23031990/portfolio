@@ -40,42 +40,49 @@
             <p v-if="errors.email" class="contact-modal__error">{{ errors.email }}</p>
           </div>
 
-          <div class="contact-modal__field">
-            <label class="contact-modal__label" for="cf-subject">{{ t('contactForm.subjectLabel') }}</label>
-            <input
-              id="cf-subject"
-              v-model.trim="form.subject"
-              class="contact-modal__input"
-              :class="{ 'contact-modal__input--error': errors.subject }"
-              :placeholder="t('contactForm.subjectPlaceholder')"
-              type="text"
-            />
-            <p v-if="errors.subject" class="contact-modal__error">{{ errors.subject }}</p>
-          </div>
+          <template v-if="!schedule">
+            <div class="contact-modal__field">
+              <label class="contact-modal__label" for="cf-subject">{{ t('contactForm.subjectLabel') }}</label>
+              <input
+                id="cf-subject"
+                v-model.trim="form.subject"
+                class="contact-modal__input"
+                :class="{ 'contact-modal__input--error': errors.subject }"
+                :placeholder="t('contactForm.subjectPlaceholder')"
+                type="text"
+              />
+              <p v-if="errors.subject" class="contact-modal__error">{{ errors.subject }}</p>
+            </div>
 
-          <div class="contact-modal__field">
-            <label class="contact-modal__label" for="cf-message">{{ t('contactForm.messageLabel') }}</label>
-            <textarea
-              id="cf-message"
-              v-model.trim="form.message"
-              class="contact-modal__textarea"
-              :class="{ 'contact-modal__input--error': errors.message }"
-              :placeholder="t('contactForm.messagePlaceholder')"
-              rows="5"
-            ></textarea>
-            <p v-if="errors.message" class="contact-modal__error">{{ errors.message }}</p>
-          </div>
+            <div class="contact-modal__field">
+              <label class="contact-modal__label" for="cf-message">{{ t('contactForm.messageLabel') }}</label>
+              <textarea
+                id="cf-message"
+                v-model.trim="form.message"
+                class="contact-modal__textarea"
+                :class="{ 'contact-modal__input--error': errors.message }"
+                :placeholder="t('contactForm.messagePlaceholder')"
+                rows="5"
+              ></textarea>
+              <p v-if="errors.message" class="contact-modal__error">{{ errors.message }}</p>
+            </div>
+          </template>
 
           <button
             type="submit"
             class="contact-modal__submit"
             :disabled="sending"
           >
-            {{ sending ? t('contactForm.sending') : t('contactForm.send') }}
+            {{ sending ? t('contactForm.sending') : (schedule ? t('contactForm.scheduleSend') : t('contactForm.send')) }}
           </button>
 
           <p v-if="feedback" class="contact-modal__feedback" :class="feedback.type">
-            {{ feedback.text }}
+            <template v-if="feedback.link">
+              {{ feedback.text }} <a :href="feedback.link" target="_blank" rel="noopener noreferrer" class="contact-modal__link">{{ feedback.link }}</a>
+            </template>
+            <template v-else>
+              {{ feedback.text }}
+            </template>
           </p>
         </form>
       </div>
@@ -88,6 +95,10 @@ import { reactive, ref, computed, onMounted, onBeforeUnmount, nextTick } from 'v
 import { useI18n } from 'vue-i18n'
 import { sendContactForm } from '@/services/email'
 
+const props = defineProps({
+  schedule: { type: Boolean, default: false }
+})
+
 const emit = defineEmits(['close'])
 
 const { t, locale, messages } = useI18n({ useScope: 'global' })
@@ -96,6 +107,8 @@ const contactEmail = computed(() => {
   const raw = messages.value?.[locale.value]?.home?.contact?.email
   return typeof raw === 'string' ? raw : ''
 })
+
+const contactScheduleUrl = computed(() => messages.value?.[locale.value]?.home?.contact?.scheduleUrl || 'https://calendly.com/lorena-dev-231990/30min')
 
 const form = reactive({
   name: '',
@@ -164,16 +177,18 @@ function validate() {
     errors.email = t('contactForm.validation.emailInvalid')
     valid = false
   }
-  if (!form.subject) {
-    errors.subject = t('contactForm.validation.subjectRequired')
-    valid = false
-  }
-  if (!form.message) {
-    errors.message = t('contactForm.validation.messageRequired')
-    valid = false
-  } else if (form.message.length < 10) {
-    errors.message = t('contactForm.validation.messageMin')
-    valid = false
+  if (!props.schedule) {
+    if (!form.subject) {
+      errors.subject = t('contactForm.validation.subjectRequired')
+      valid = false
+    }
+    if (!form.message) {
+      errors.message = t('contactForm.validation.messageRequired')
+      valid = false
+    } else if (form.message.length < 10) {
+      errors.message = t('contactForm.validation.messageMin')
+      valid = false
+    }
   }
 
   return valid
@@ -186,13 +201,22 @@ async function handleSubmit() {
   feedback.value = null
 
   try {
+    const subject = props.schedule ? 'Quiero agendar una videollamada' : form.subject
+    const message = props.schedule
+      ? `El usuario ${form.name} (${form.email}) solicita agendar una videollamada.`
+      : form.message
+
     await sendContactForm({
       from_name: form.name,
       from_email: form.email,
-      subject: form.subject,
-      message: form.message
+      subject,
+      message,
+      schedule: props.schedule,
+      contactEmail: contactEmail.value,
     })
-    feedback.value = { type: 'success', text: t('contactForm.success') }
+    feedback.value = props.schedule
+      ? { type: 'success', text: `${t('contactForm.success')} ${t('contactForm.scheduleSuccess')}:`, link: contactScheduleUrl.value }
+      : { type: 'success', text: t('contactForm.success') }
     form.name = ''
     form.email = ''
     form.subject = ''
@@ -342,6 +366,12 @@ async function handleSubmit() {
   text-align: center;
   padding: 0.6rem;
   border-radius: 10px;
+}
+
+.contact-modal__link {
+  color: var(--rose-accent-strong);
+  word-break: break-all;
+  font-size: 0.75rem;
 }
 
 .contact-modal__feedback.success {

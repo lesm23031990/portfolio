@@ -56,14 +56,9 @@
               </a>
             </div>
           </div>
-          <a
-            class="contact-action contact-action--schedule"
-            :href="contactScheduleUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <button class="contact-action contact-action--schedule" type="button" @click="openScheduleModal">
             {{ t('home.contactPanel.scheduleCta') }}
-          </a>
+          </button>
         </div>
 
         <div ref="cardsRef" class="contact-scene__cards">
@@ -133,7 +128,7 @@
     </div>
   </section>
 
-<ContactModal v-if="showModal" @close="showModal = false" />
+<ContactModal v-if="showModal" :schedule="scheduleMode" @close="showModal = false; scheduleMode = false" />
 </template>
 
 <script setup>
@@ -150,6 +145,7 @@ gsap.registerPlugin(ScrollTrigger)
 const { t, locale, messages } = useI18n({ useScope: 'global' })
 
 const showModal = ref(false)
+const scheduleMode = ref(false)
 const cvDropdownOpen = ref(false)
 const cvTriggerRef = ref(null)
 
@@ -170,6 +166,11 @@ let widthTimer = null
 function updateWidth() {
   windowWidth.value = window.innerWidth
   isDesktop.value = windowWidth.value >= 768
+}
+
+function openScheduleModal() {
+  scheduleMode.value = true
+  showModal.value = true
 }
 
 function toggleCvDropdown() {
@@ -197,7 +198,6 @@ const contactEmail = computed(() => {
 })
 const contactLinkedin = computed(() => messages.value?.[locale.value]?.home?.contact?.linkedinUrl || '#')
 const contactGithub = computed(() => messages.value?.[locale.value]?.home?.contact?.githubUrl || '#')
-const contactScheduleUrl = computed(() => messages.value?.[locale.value]?.home?.contact?.scheduleUrl || 'https://calendly.com/lorena-dev-231990/30min')
 const contactPhoto = computed(() => messages.value?.[locale.value]?.home?.contact?.photo || '')
 const contactCvUrlEs = computed(() => {
   const raw = messages.value?.es?.home?.contact?.cvUrl

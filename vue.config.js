@@ -1,7 +1,7 @@
 const { defineConfig } = require('@vue/cli-service')
 const path = require('path')
 const fs = require('fs')
-const { callGemini } = require('./api/gemini')
+const { callGroq } = require('./api/groq')
 
 module.exports = defineConfig({
   transpileDependencies: true,
@@ -39,11 +39,11 @@ module.exports = defineConfig({
             if (!message) {
               return res.status(400).json({ error: 'message is required' })
             }
-            const apiKey = process.env.GEMINI_API_KEY
+            const apiKey = process.env.GROQ_API_KEY
             if (!apiKey) {
-              return res.status(500).json({ error: 'GEMINI_API_KEY not set in .env' })
+              return res.status(500).json({ error: 'GROQ_API_KEY not set in .env' })
             }
-            const reply = await callGemini(apiKey, message, history)
+            const reply = await callGroq(apiKey, message, history)
             res.json({ reply })
           } catch (err) {
             console.error('Chat dev error:', err)
