@@ -22,13 +22,6 @@ Este es mi portfolio profesional desarrollado como una Single Page Application (
 - **Internacionalización:** Preparado para mercados globales con soporte nativo de idiomas.
 - **Seguridad:** Manejo responsable de variables de entorno y protección de datos.
 
-## 📂 Portafolio de Proyectos (En desarrollo)
-*Actualmente construyendo soluciones Full Stack con componentes de IA:*
-
-1. **NutriTrack AI:** Plataforma Full Stack para la gestión de planes nutricionales. Implementará análisis predictivo para ajustar dietas basadas en el progreso histórico del paciente.
-2. **LottoLogic:** Sistema integral de sorteos y rifas automatizadas. Enfocado en la transparencia algorítmica y la gestión masiva de participantes en tiempo real.
-3. **SmartRate AI:** Aplicación financiera de conversión multimoneda (USD/COP/VES). Utiliza lógica inteligente para analizar tasas de cambio en tiempo real y recomendar la modalidad de pago más eficiente para el usuario.
-
 ## 🚀 Instalación Local
 
 ```bash
