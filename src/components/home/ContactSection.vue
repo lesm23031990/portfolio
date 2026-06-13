@@ -128,7 +128,7 @@
     </div>
   </section>
 
-<ContactModal v-if="showModal" :schedule="scheduleMode" @close="showModal = false; scheduleMode = false" />
+<ContactModal v-if="showModal" :schedule="scheduleMode" :message="scheduleMessage" @close="showModal = false; scheduleMode = false; scheduleMessage = ''" />
 </template>
 
 <script setup>
@@ -146,6 +146,7 @@ const { t, locale, messages } = useI18n({ useScope: 'global' })
 
 const showModal = ref(false)
 const scheduleMode = ref(false)
+const scheduleMessage = ref('')
 const cvDropdownOpen = ref(false)
 const cvTriggerRef = ref(null)
 
@@ -209,6 +210,12 @@ const contactCvUrlEn = computed(() => {
 })
 
 onMounted(() => {
+  window.addEventListener('open-schedule-modal', (e) => {
+    scheduleMessage.value = e.detail?.message || ''
+    scheduleMode.value = true
+    showModal.value = true
+  })
+
   const section = sectionRef.value
   const eyebrow = eyebrowRef.value
   const title = titleRef.value
@@ -263,6 +270,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('open-schedule-modal', () => {})
   if (gsapCtx.value) {
     gsapCtx.value.scrollTrigger?.kill()
     gsapCtx.value.kill()

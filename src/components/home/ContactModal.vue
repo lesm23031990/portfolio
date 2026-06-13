@@ -96,7 +96,8 @@ import { useI18n } from 'vue-i18n'
 import { sendContactForm } from '@/services/email'
 
 const props = defineProps({
-  schedule: { type: Boolean, default: false }
+  schedule: { type: Boolean, default: false },
+  message: { type: String, default: '' }
 })
 
 const emit = defineEmits(['close'])
@@ -202,8 +203,9 @@ async function handleSubmit() {
 
   try {
     const subject = props.schedule ? 'Quiero agendar una videollamada' : form.subject
+    const details = props.message ? `\n\nDetalles del proyecto:\n${props.message}` : ''
     const message = props.schedule
-      ? `El usuario ${form.name} (${form.email}) solicita agendar una videollamada.`
+      ? `El usuario ${form.name} (${form.email}) solicita agendar una videollamada.${details}`
       : form.message
 
     await sendContactForm({

@@ -68,7 +68,15 @@
               :class="message.role === 'user' ? 'chat-message--user' : 'chat-message--assistant'"
             >
               <span class="chat-message__role">{{ message.role === 'user' ? '$ user' : '$ assistant' }}</span>
-              <p>{{ message.content }}</p>
+              <p v-html="linkify(message.content)"></p>
+              <button
+                v-if="message.content.includes('Agendar') || message.content.includes('videollamada')"
+                class="chat-message__schedule-btn"
+                type="button"
+                @click="openScheduleModal(message.content)"
+              >
+                📅 Agendar videollamada
+              </button>
             </article>
             <div v-if="isLoading" class="chat-message chat-message--assistant">
               <span class="chat-message__role">$ assistant</span>
@@ -138,6 +146,18 @@ function scrollToBottom() {
       messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
     }
   })
+}
+
+function linkify(text) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g
+  return text.replace(urlRegex, (url) => {
+    const href = url.replace(/[.,!?;:)]+$/, '')
+    return `<a href="${href}" target="_blank" rel="noopener" class="chat-message__link">${href}</a>`
+  })
+}
+
+function openScheduleModal(content) {
+  window.dispatchEvent(new CustomEvent('open-schedule-modal', { detail: { message: content } }))
 }
 
 function pushAssistantReply(content) {
@@ -456,6 +476,18 @@ async function sendMessage() {
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.5);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.chat-message__schedule-btn {
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #7ad6ff, #d46b9e);
+  color: #fff;
+  font-size: 0.72rem;
+  cursor: pointer;
+  font-family: inherit;
 }
 
 .chat-message--assistant {
