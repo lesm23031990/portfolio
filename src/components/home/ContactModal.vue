@@ -214,6 +214,9 @@ async function handleSubmit() {
       schedule: props.schedule,
       contactEmail: contactEmail.value,
     })
+    if (props.schedule) {
+      window.open(contactScheduleUrl.value, '_blank', 'noopener')
+    }
     feedback.value = props.schedule
       ? { type: 'success', text: `${t('contactForm.success')} ${t('contactForm.scheduleSuccess')}:`, link: contactScheduleUrl.value }
       : { type: 'success', text: t('contactForm.success') }

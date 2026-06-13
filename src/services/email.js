@@ -26,13 +26,14 @@ export function sendContactForm({ from_name, from_email, subject, message, sched
     to_email: contactEmail,
   })
 
-  if (schedule || !AUTO_REPLY_TEMPLATE_ID) {
+  if (schedule) {
     return notification
   }
 
   const autoReply = emailjs.send(SERVICE_ID, AUTO_REPLY_TEMPLATE_ID, {
-    from_name: 'Lorena Salas',
-    from_email: contactEmail,
+    from_name: from_name,
+    from_email: from_email,
+    subject: subject,
     reply_to: from_email,
     to_email: from_email,
   })
