@@ -42,15 +42,20 @@ const ContactSection = defineAsyncComponent(() => import('@/components/home/Cont
 .dashboard__bridge {
   display: block;
   width: 100%;
-  height: calc(50vh + 1px);
+  height: calc(80vh + 1px);
   margin-top: -1px;
   background: linear-gradient(
     to bottom,
     transparent 0%,
-    rgba(255, 243, 249, 0.04) 8%,
-    rgba(20, 10, 24, 0.15) 16%,
-    rgba(6, 6, 11, 0.5) 30%,
-    rgba(6, 6, 11, 0.85) 44%,
+    rgba(255, 243, 249, 0.03) 6%,
+    rgba(255, 243, 249, 0.06) 12%,
+    rgba(20, 10, 24, 0.08) 20%,
+    rgba(20, 10, 24, 0.18) 28%,
+    rgba(6, 6, 11, 0.35) 38%,
+    rgba(6, 6, 11, 0.55) 48%,
+    rgba(6, 6, 11, 0.72) 58%,
+    rgba(6, 6, 11, 0.85) 68%,
+    rgba(6, 6, 11, 0.94) 80%,
     #06060b 100%
   );
   pointer-events: none;
@@ -61,16 +66,19 @@ const ContactSection = defineAsyncComponent(() => import('@/components/home/Cont
 .dashboard__bridge--dark {
   display: block;
   width: 100%;
-  height: calc(50vh + 1px);
+  height: calc(80vh + 1px);
   margin-top: -1px;
   background: linear-gradient(
     to bottom,
     #06060b 0%,
-    rgba(6, 6, 11, 0.96) 8%,
-    rgba(6, 6, 11, 0.78) 16%,
-    rgba(6, 6, 11, 0.45) 28%,
-    rgba(255, 243, 249, 0.08) 40%,
-    rgba(255, 249, 252, 0.02) 50%,
+    rgba(6, 6, 11, 0.97) 10%,
+    rgba(6, 6, 11, 0.88) 20%,
+    rgba(6, 6, 11, 0.72) 30%,
+    rgba(6, 6, 11, 0.50) 40%,
+    rgba(6, 6, 11, 0.30) 50%,
+    rgba(255, 243, 249, 0.12) 62%,
+    rgba(255, 249, 252, 0.06) 74%,
+    rgba(255, 249, 252, 0.02) 86%,
     transparent 100%
   );
   pointer-events: none;
