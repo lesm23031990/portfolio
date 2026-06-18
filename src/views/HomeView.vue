@@ -10,10 +10,12 @@
 </template>
 
 <script setup>
-import ContactSection from '@/components/home/ContactSection.vue'
+import { defineAsyncComponent } from 'vue'
 import HeroSection from '@/components/home/HeroSection.vue'
 import HomeBackground from '@/components/home/HomeBackground.vue'
-import ProjectsSection from '@/components/home/ProjectsSection.vue'
+
+const ProjectsSection = defineAsyncComponent(() => import('@/components/home/ProjectsSection.vue'))
+const ContactSection = defineAsyncComponent(() => import('@/components/home/ContactSection.vue'))
 </script>
 
 <style scoped>
@@ -40,15 +42,15 @@ import ProjectsSection from '@/components/home/ProjectsSection.vue'
 .dashboard__bridge {
   display: block;
   width: 100%;
-  height: calc(100vh + 1px);
+  height: calc(50vh + 1px);
   margin-top: -1px;
   background: linear-gradient(
     to bottom,
     transparent 0%,
-    rgba(255, 243, 249, 0.04) 15%,
-    rgba(20, 10, 24, 0.15) 30%,
-    rgba(6, 6, 11, 0.5) 55%,
-    rgba(6, 6, 11, 0.85) 78%,
+    rgba(255, 243, 249, 0.04) 8%,
+    rgba(20, 10, 24, 0.15) 16%,
+    rgba(6, 6, 11, 0.5) 30%,
+    rgba(6, 6, 11, 0.85) 44%,
     #06060b 100%
   );
   pointer-events: none;
@@ -59,16 +61,16 @@ import ProjectsSection from '@/components/home/ProjectsSection.vue'
 .dashboard__bridge--dark {
   display: block;
   width: 100%;
-  height: calc(200vh + 1px);
+  height: calc(50vh + 1px);
   margin-top: -1px;
   background: linear-gradient(
     to bottom,
     #06060b 0%,
-    rgba(6, 6, 11, 0.96) 15%,
-    rgba(6, 6, 11, 0.78) 30%,
-    rgba(6, 6, 11, 0.45) 50%,
-    rgba(255, 243, 249, 0.08) 72%,
-    rgba(255, 249, 252, 0.02) 88%,
+    rgba(6, 6, 11, 0.96) 8%,
+    rgba(6, 6, 11, 0.78) 16%,
+    rgba(6, 6, 11, 0.45) 28%,
+    rgba(255, 243, 249, 0.08) 40%,
+    rgba(255, 249, 252, 0.02) 50%,
     transparent 100%
   );
   pointer-events: none;

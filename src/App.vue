@@ -5,11 +5,12 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
-import DefaultLayout from "@/layouts/DefaultLayout.vue";
-import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import { useLoading } from "@/composables/useLoading";
+
+const DefaultLayout = defineAsyncComponent(() => import("@/layouts/DefaultLayout.vue"))
+const LoadingOverlay = defineAsyncComponent(() => import("@/components/LoadingOverlay.vue"))
 
 const route = useRoute()
 const { loading, showLoading, hideLoading } = useLoading()

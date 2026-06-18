@@ -135,8 +135,12 @@ const isCurrentlyTyping = ref(false)
 const titleDelayId = ref(null)
 const gsapContext = ref(null)
 const resizeFrameId = ref(null)
-let hasTriggeredEntry = false
+const initObserver = ref(null)
 let typewriterGen = 0
+let typewriterReady = false
+let typewriterStarted = false
+let visibleObserver = null
+let entryAnimationRan = false
 const cardFloatAnimations = []
 
 function startCardFloat(cardElements) {
@@ -336,14 +340,37 @@ function scheduleRefresh() {
 
 watch(isVisible, (visibleNow) => {
   if (visibleNow) {
+    if (typewriterStarted) return
+    runEntryAnimation()
+    typewriterStarted = true
     typeTitle(true)
   } else {
     cancelTypewriter()
+    typewriterStarted = false
     hasTypedTitle.value = false
   }
 })
 
+function runEntryAnimation() {
+  if (entryAnimationRan) return
+  entryAnimationRan = true
+  const t = terminalRef.value
+  const vw = viewportWrapperRef.value
+  const v = viewportRef.value
+  if (!t || !vw || !v) return
+  if (prefersReducedMotion.value) {
+    gsap.set(t, { autoAlpha: 1, y: 0 })
+    gsap.set(vw, { autoAlpha: 1, y: 0 })
+    gsap.set(v, { scale: 1 })
+    return
+  }
+  gsap.to(t, { autoAlpha: 1, y: 0, duration: 0.5, ease: 'power2.out' })
+  gsap.to(vw, { autoAlpha: 1, y: 0, duration: 0.45, ease: 'power2.out' }, '-=0.2')
+  gsap.to(v, { scale: 1, duration: 0.5, ease: 'power2.out' }, '-=0.3')
+}
+
 watch(projectsTitle, () => {
+  if (!typewriterReady) return
   cancelTypewriter()
   hasTypedTitle.value = false
   if (isVisible.value) {
@@ -354,6 +381,8 @@ watch(projectsTitle, () => {
   typedProjectsSubtitle.value = ''
 })
 
+let gsapInitialized = false
+
 onMounted(async () => {
   if (window.matchMedia) {
     prefersReducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -362,41 +391,46 @@ onMounted(async () => {
   await nextTick()
 
   const section = sectionRef.value
-  const sectionInner = sectionInnerRef.value
-  const terminalSlot = terminalSlotRef.value
-  const terminal = terminalRef.value
-  const viewportWrapper = viewportWrapperRef.value
-  const viewport = viewportRef.value
-  const frame = frameRef.value
-  const track = trackRef.value
-  const projectsPane = projectsPaneRef.value
-  const stackPane = stackPaneRef.value
-  const portal = portalRef.value
-  const grid = gridRef.value
-  const cards = cardRefs.value.filter(Boolean)
-  const decorative = decorativeRef.value
+  if (!section) return
 
-  if (!section || !sectionInner || !terminalSlot || !terminal || !viewportWrapper || !viewport || !frame || !exitOverlayRef.value || !track || !projectsPane || !stackPane || !portal || !grid || !cards.length || !decorative) {
-    return
-  }
+  const deferredInit = async () => {
+    if (gsapInitialized) return
+    gsapInitialized = true
 
-  if (gsapContext.value) {
-    gsapContext.value.revert()
-    gsapContext.value = null
-  }
+    const sectionInner = sectionInnerRef.value
+    const terminalSlot = terminalSlotRef.value
+    const terminal = terminalRef.value
+    const viewportWrapper = viewportWrapperRef.value
+    const viewport = viewportRef.value
+    const frame = frameRef.value
+    const track = trackRef.value
+    const projectsPane = projectsPaneRef.value
+    const stackPane = stackPaneRef.value
+    const portal = portalRef.value
+    const grid = gridRef.value
+    const cards = cardRefs.value.filter(Boolean)
+    const decorative = decorativeRef.value
 
-  ScrollTrigger.getAll().forEach((trigger) => {
-    const ownsTrigger = trigger.vars.trigger instanceof Element && section.contains(trigger.vars.trigger)
-    const ownsPin = trigger.pin instanceof Element && section.contains(trigger.pin)
-    if (trigger.vars.trigger === section || trigger.pin === section || ownsTrigger || ownsPin) trigger.kill()
-  })
+    if (!sectionInner || !terminalSlot || !terminal || !viewportWrapper || !viewport || !frame || !exitOverlayRef.value || !track || !projectsPane || !stackPane || !portal || !grid || !cards.length || !decorative) {
+      gsapInitialized = false
+      return
+    }
+
+    if (gsapContext.value) {
+      gsapContext.value.revert()
+      gsapContext.value = null
+    }
+
+    ScrollTrigger.getAll().forEach((trigger) => {
+      const ownsTrigger = trigger.vars.trigger instanceof Element && section.contains(trigger.vars.trigger)
+      const ownsPin = trigger.pin instanceof Element && section.contains(trigger.pin)
+      if (trigger.vars.trigger === section || trigger.pin === section || ownsTrigger || ownsPin) trigger.kill()
+    })
 
   const paneGap = Math.round(Math.min(Math.max(window.innerWidth * 0.85, 300), 1800))
   const baseGridGap = Math.round(Math.min(Math.max(window.innerWidth * 0.018, 16), 28))
   const portalGrid = portal.querySelector('.portal-grid')
   const portalLight = portal.querySelector('.portal-light')
-  const terminalHeader = section.querySelector('.dash-terminal__header')
-  const terminalBody = section.querySelector('.dash-terminal__body')
   let cardBaseWidth, cardBaseHeight
 
   function alignDecorativeText() {
@@ -441,24 +475,25 @@ onMounted(async () => {
   }
 
   updateLayoutMetrics()
-  
-  // Entry reveal animation
-  gsap.set(sectionInner, { autoAlpha: 0.1, y: 132 })
-  gsap.set(terminalSlot, { height: terminalSlot.offsetHeight, autoAlpha: 1 })
-  gsap.set(viewport, { width: '92%', height: getViewportHeight(0.5), borderRadius: '34px' })
-  gsap.set(frame, { '--frame-progress': 0, opacity: 1 })
-  gsap.set(track, { x: 0 })
-  gsap.set(grid, { scale: 0.45, yPercent: 12, gap: `${baseGridGap}px`, transformOrigin: 'center center' })
-  gsap.set(stackPane, { autoAlpha: 0.12, xPercent: 12, scale: 0.96, transformOrigin: 'center center' })
-  gsap.set(terminal, { autoAlpha: 1, y: 0 })
-  gsap.set(decorative, { autoAlpha: 0 })
-  gsap.set(exitOverlayRef.value, { autoAlpha: 0 })
-  gsap.set(frame, { filter: 'blur(0px)' })
-  gsap.set(stackPane.querySelectorAll('.tcs__left, .tcs__center, .tcs__right'), { autoAlpha: 0, y: 28 })
-  gsap.set(stackPane.querySelector('.tcs-laptop__accent'), { scaleX: 4, opacity: 0, filter: 'blur(14px)', transformOrigin: 'center center' })
 
   const accentEl = stackPane.querySelector('.tcs-laptop__accent')
   const stackEls = stackPane.querySelectorAll('.tcs__left, .tcs__center, .tcs__right')
+
+  // ── Initial state: elements hidden for entry animation ──
+  gsap.set(sectionInner, { autoAlpha: 1, y: 0 })
+  gsap.set(terminalSlot, { height: terminalSlot.offsetHeight, autoAlpha: 1 })
+  gsap.set(terminal, { autoAlpha: 0, y: -18 })
+  gsap.set(viewportWrapper, { autoAlpha: 0, y: 12 })
+  gsap.set(viewport, { width: '92%', height: getViewportHeight(0.5), borderRadius: '34px', scale: 0.97 })
+  gsap.set(frame, { '--frame-progress': 0, opacity: 1 })
+  gsap.set(track, { x: 0 })
+  gsap.set(grid, { scale: 1, yPercent: 0, gap: `${baseGridGap}px`, transformOrigin: 'center center' })
+  gsap.set(stackPane, { autoAlpha: 1, xPercent: 0, scale: 1 })
+  gsap.set(decorative, { autoAlpha: 1 })
+  gsap.set(exitOverlayRef.value, { autoAlpha: 0 })
+  gsap.set(frame, { filter: 'blur(0px)' })
+  gsap.set(stackEls, { autoAlpha: 1, y: 0 })
+  gsap.set(accentEl, { scaleX: 1, opacity: 0.5, filter: 'blur(0px)' })
 
   gsapContext.value = gsap.context(() => {
     gsap.timeline({
@@ -478,41 +513,28 @@ onMounted(async () => {
         }
       }
     })
-      .to(sectionInner, { autoAlpha: 1, y: 0, duration: 0.72, ease: 'expo.out' })
-      .to(viewport, { height: () => getViewportHeight(0.78), duration: 1.18 }, 0.02)
-      .to(grid, { scale: () => getCardFitScale(0.78, 0.84, 0.76), yPercent: -4, duration: 1.18 }, 0.02)
-      .to(frame, { '--frame-progress': 1, duration: 0.8, ease: 'none' }, 1.06)
-      .to(terminal, { autoAlpha: 0, y: -26, duration: 0.3 }, 1.3)
-      .to(terminalSlot, { height: 0, padding: 0, autoAlpha: 0, duration: 0.48 }, 1.26)
-      .to(viewport, { width: '100%', height: '100%', borderRadius: 0, duration: 1.02 }, 1.84)
-      .to(section, { 
+      .to(viewport, { height: () => getViewportHeight(0.78), duration: 1.18 }, 0)
+      .to(frame, { '--frame-progress': 1, duration: 0.8, ease: 'none' }, 0)
+      .to(terminal, { autoAlpha: 0, y: -26, duration: 0.3 }, 0.8)
+      .to(terminalSlot, { height: 0, padding: 0, autoAlpha: 0, duration: 0.48 }, 0.76)
+      .to(viewport, { width: '100%', height: '100%', borderRadius: 0, duration: 1.02 }, 1.34)
+      .to(section, {
         '--projects-inner-top-padding': '0px',
         '--projects-inner-side-padding': '0px',
-        duration: 1.02 
-      }, 1.84)
-      .to(sectionInner, { gap: 0, duration: 1.02 }, 1.84)
-      .to(grid, { scale: () => getCardFitScale(1, 0.8, 0.72), yPercent: -6, duration: 1.02 }, 1.84)
-      .to(frame, { opacity: 0, duration: 0.34 }, 2.04)
-      .to(grid, { scale: () => getCardFitScale(1, 0.88, 0.72), gap: `${Math.round(baseGridGap * 1.4)}px`, duration: 0.48, ease: 'expo.out' }, 2.18)
-      .call(startCardFloat, [cards], 2.4)
-      .to(track, { x: () => getTrackShift(), duration: 3.6, ease: 'none' }, 2.64)
-      .to(decorative, { autoAlpha: 1, duration: 1.2, ease: 'power2.out' }, 2.64)
-      .to(portalGrid, { opacity: 0.6, y: -100, duration: 1.8, ease: 'power2.inOut' }, 2.64)
-      .to(portalLight, { opacity: 1, scaleY: 1.5, duration: 1.8, ease: 'power2.inOut' }, 2.64)
-      .to(portalGrid, { opacity: 0, y: -200, duration: 1.8, ease: 'power2.inOut' }, 4.44)
-      .to(portalLight, { opacity: 0, scaleY: 0, duration: 1.8, ease: 'power2.inOut' }, 4.44)
-      .to(stackPane, { autoAlpha: 1, xPercent: 0, scale: 1, duration: 1.88, ease: 'expo.out' }, 4.36)
-      // ── Stack elements staggered entrance ──
-      .to(stackEls,
-        { opacity: 1, y: 0, visibility: 'visible', duration: 0.5, stagger: 0.12, ease: 'power2.out' },
-        5.5)
-      // ── Neon accent sharpens once elements are fully visible ──
-      .fromTo(accentEl,
-        { scaleX: 4, opacity: 0, filter: 'blur(14px)' },
-        { scaleX: 1, opacity: 0.7, filter: 'blur(0px)', duration: 1.6, ease: 'power2.out' },
-        5.6)
+        duration: 1.02
+      }, 1.34)
+      .to(sectionInner, { gap: 0, duration: 1.02 }, 1.34)
+      .to(grid, { scale: () => getCardFitScale(1, 0.8, 0.72), yPercent: -6, duration: 1.02 }, 1.34)
+      .to(frame, { opacity: 0, duration: 0.34 }, 1.54)
+      .to(grid, { scale: () => getCardFitScale(1, 0.88, 0.72), gap: `${Math.round(baseGridGap * 1.4)}px`, duration: 0.48, ease: 'expo.out' }, 1.68)
+      .call(startCardFloat, [cards], 1.9)
+      .to(track, { x: () => getTrackShift(), duration: 3.6, ease: 'none' }, 2.14)
+      .to(portalGrid, { opacity: 0.6, y: -100, duration: 1.8, ease: 'power2.inOut' }, 2.14)
+      .to(portalLight, { opacity: 1, scaleY: 1.5, duration: 1.8, ease: 'power2.inOut' }, 2.14)
+      .to(portalGrid, { opacity: 0, y: -200, duration: 1.8, ease: 'power2.inOut' }, 3.94)
+      .to(portalLight, { opacity: 0, scaleY: 0, duration: 1.8, ease: 'power2.inOut' }, 3.94)
       // ── Exit: inverse entry — window shrinks, neon border appears then blurs ──
-      .to(frame, { opacity: 1, '--frame-progress': 1, filter: 'blur(0px)', duration: 0.35, ease: 'power2.out' }, 7.3)
+      .to(frame, { opacity: 1, '--frame-progress': 1, filter: 'blur(0px)', duration: 0.35, ease: 'power2.out' }, 5.8)
       .to(viewport, {
         scale: 0.86,
         borderRadius: '28px',
@@ -520,71 +542,55 @@ onMounted(async () => {
         paddingBottom: '2.5rem',
         duration: 0.8,
         ease: 'power2.inOut'
-      }, 7.5)
-      .to(exitOverlayRef.value, { autoAlpha: 0.3, duration: 0.6, ease: 'power2.out' }, 7.5)
+      }, 6.0)
+      .to(exitOverlayRef.value, { autoAlpha: 0.3, duration: 0.6, ease: 'power2.out' }, 6.0)
       .to(frame, {
         opacity: 0.3,
         '--frame-progress': 0.3,
         filter: 'blur(5px)',
         duration: 1.2,
         ease: 'power1.in'
-      }, 8.0)
-      .to(exitOverlayRef.value, { autoAlpha: 0.65, duration: 0.8, ease: 'power2.out' }, 8.6)
-      .to(frame, { opacity: 0, filter: 'blur(14px)', duration: 0.6 }, 9.6)
-      .to(sectionInner, { autoAlpha: 0, duration: 0.7, ease: 'power2.in' }, 10.2)
+      }, 6.5)
+      .to(exitOverlayRef.value, { autoAlpha: 0.65, duration: 0.8, ease: 'power2.out' }, 7.1)
+      .to(frame, { opacity: 0, filter: 'blur(14px)', duration: 0.6 }, 7.9)
+      .to(sectionInner, { autoAlpha: 0, duration: 0.7, ease: 'power2.in' }, 8.5)
   }, section)
-
-  // ScrollTrigger: animate elements in and start typewriter when section enters viewport
-  ScrollTrigger.create({
-    trigger: section,
-    start: 'top bottom-=80',
-    onEnter: () => {
-      if (hasTriggeredEntry) return
-      hasTriggeredEntry = true
-
-      if (prefersReducedMotion.value) {
-        gsap.set([
-          terminalHeader,
-          terminalBody,
-          viewportWrapper,
-          decorative,
-          ...cards
-        ], { autoAlpha: 1, x: 0, y: 0, scale: 1 })
-        return
-      }
-
-      gsap.timeline({ defaults: { ease: 'power2.out' } })
-        .fromTo(
-          terminalHeader,
-          { autoAlpha: 0, x: -18 },
-          { autoAlpha: 1, x: 0, duration: 0.4 }
-        )
-        .fromTo(
-          terminalBody,
-          { autoAlpha: 0, x: 18 },
-          { autoAlpha: 1, x: 0, duration: 0.4 },
-          0.08
-        )
-        .fromTo(
-          viewportWrapper,
-          { autoAlpha: 0, scale: 0.92 },
-          { autoAlpha: 1, scale: 1, duration: 0.55 },
-          0.16
-        )
-        .fromTo(
-          cards,
-          { autoAlpha: 0 },
-          { autoAlpha: 1, duration: 0.4, stagger: 0.07 },
-          0.2
-        )
-    },
-    once: true
-  })
 
   section.addEventListener('pointermove', handleDepthPointerMove)
   section.addEventListener('pointerleave', resetDepthPointer)
   window.addEventListener('resize', scheduleRefresh)
   ScrollTrigger.refresh()
+
+  typewriterReady = true
+  if (isVisible.value) {
+    runEntryAnimation()
+    typewriterStarted = true
+    typeTitle(true)
+  }
+  }
+
+  const observer = new IntersectionObserver(([entry]) => {
+    if (entry.isIntersecting) {
+      observer.disconnect()
+      deferredInit()
+    }
+  }, { rootMargin: '0px 0px 600px 0px' })
+
+  if (window.location.hash === '#proyectos') {
+    observer.disconnect()
+    deferredInit()
+  } else {
+    observer.observe(section)
+    initObserver.value = observer
+  }
+
+  visibleObserver = new IntersectionObserver(([entry]) => {
+    if (entry.isIntersecting) {
+      isVisible.value = true
+      visibleObserver.disconnect()
+    }
+  }, { threshold: 0, rootMargin: '0px' })
+  visibleObserver.observe(section)
 })
 
 onBeforeUnmount(() => {
@@ -595,6 +601,8 @@ onBeforeUnmount(() => {
   if (gsapContext.value) gsapContext.value.revert()
   if (resizeFrameId.value) window.cancelAnimationFrame(resizeFrameId.value)
   if (pointermoveRAF) window.cancelAnimationFrame(pointermoveRAF)
+  if (initObserver.value) initObserver.value.disconnect()
+  if (visibleObserver) visibleObserver.disconnect()
   if (sectionRef.value) {
     sectionRef.value.removeEventListener('pointermove', handleDepthPointerMove)
     sectionRef.value.removeEventListener('pointerleave', resetDepthPointer)

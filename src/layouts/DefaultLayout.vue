@@ -27,11 +27,12 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
-import ChatWidget from '@/components/chat/ChatWidget.vue'
+
+const ChatWidget = defineAsyncComponent(() => import('@/components/chat/ChatWidget.vue'))
 
 const route = useRoute()
 const isDashboard = computed(() => route.name === 'home')

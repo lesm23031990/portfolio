@@ -21,6 +21,7 @@
               class="group relative flex h-full items-center justify-center border-b-[3px] border-transparent px-3 py-2 text-[0.84rem] font-light uppercase tracking-[0.22em] transition duration-300 after:absolute after:left-1/2 after:top-full after:h-[3px] after:w-0 after:-translate-x-1/2 after:bg-gradient-to-r after:from-rose-400 after:via-fuchsia-500 after:to-pink-500 after:transition-all after:duration-300 hover:-translate-y-0.5 hover:text-rose-500 hover:after:w-full active:translate-y-0 active:scale-95 md:py-5 md:text-[0.96rem] lg:text-[1.03rem]"
               :class="navItemClasses(item)"
               :aria-current="activeSection === item.sectionId ? 'page' : undefined"
+              @click.prevent="handleNavClick(item)"
             >
               {{ item.label }}
             </a>
@@ -96,7 +97,7 @@
                 class="rounded-2xl border px-4 py-3 text-left text-[0.92rem] font-light uppercase tracking-[0.2em] transition"
                 :class="mobileNavItemClasses(item)"
                 :aria-current="activeSection === item.sectionId ? 'page' : undefined"
-                @click="handleNavSelection"
+                @click.prevent="handleNavClick(item)"
               >
                 {{ item.label }}
               </a>
@@ -196,9 +197,34 @@ function toggleMobileMenu() {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
 }
 
-function handleNavSelection() {
+function scrollToSection(sectionId) {
+  const el = document.getElementById(sectionId)
+  if (el) {
+    const header = document.querySelector('header.sticky')
+    const headerH = header ? Math.ceil(header.getBoundingClientRect().height) : 88
+    const top = el.getBoundingClientRect().top + window.scrollY - headerH
+    window.scrollTo({ top, behavior: 'smooth' })
+    return
+  }
+  const observer = new MutationObserver(() => {
+    const target = document.getElementById(sectionId)
+    if (target) {
+      const header = document.querySelector('header.sticky')
+      const headerH = header ? Math.ceil(header.getBoundingClientRect().height) : 88
+      const top = target.getBoundingClientRect().top + window.scrollY - headerH
+      window.scrollTo({ top, behavior: 'instant' })
+      observer.disconnect()
+    }
+  })
+  observer.observe(document.body, { childList: true, subtree: true })
+  setTimeout(() => { observer.disconnect() }, 6000)
+}
+
+function handleNavClick(item) {
   closeMobileMenu()
   syncHeader()
+  history.replaceState(null, '', `#${item.sectionId}`)
+  scrollToSection(item.sectionId)
 }
 
 function resolveActiveSection() {

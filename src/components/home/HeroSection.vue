@@ -66,8 +66,8 @@
         <h2 class="dash-hero-card__title">{{ t('home.hero.title') }}</h2>
         <p class="dash-hero-card__lead">{{ t('home.hero.lead') }}</p>
         <div class="dash-hero-card__actions">
-          <a class="dash-btn dash-btn--primary" href="#proyectos">{{ t('home.hero.ctaProjects') }}</a>
-          <a class="dash-btn dash-btn--ghost" href="#contacto">{{ t('home.hero.ctaContact') }}</a>
+          <a class="dash-btn dash-btn--primary" href="#proyectos" @click.prevent="scrollToSection('proyectos')">{{ t('home.hero.ctaProjects') }}</a>
+          <a class="dash-btn dash-btn--ghost" href="#contacto" @click.prevent="scrollToSection('contacto')">{{ t('home.hero.ctaContact') }}</a>
         </div>
       </div>
 
@@ -194,6 +194,30 @@ function startTypewriter() {
 function cancelTypewriter() {
   typewriterGen++
   isCurrentlyTyping.value = false
+}
+
+function scrollToSection(sectionId) {
+  history.replaceState(null, '', `#${sectionId}`)
+  const el = document.getElementById(sectionId)
+  if (el) {
+    const header = document.querySelector('header.sticky')
+    const headerH = header ? Math.ceil(header.getBoundingClientRect().height) : 88
+    const top = el.getBoundingClientRect().top + window.scrollY - headerH
+    window.scrollTo({ top, behavior: 'smooth' })
+    return
+  }
+  const observer = new MutationObserver(() => {
+    const target = document.getElementById(sectionId)
+    if (target) {
+      const header = document.querySelector('header.sticky')
+      const headerH = header ? Math.ceil(header.getBoundingClientRect().height) : 88
+      const top = target.getBoundingClientRect().top + window.scrollY - headerH
+      window.scrollTo({ top, behavior: 'instant' })
+      observer.disconnect()
+    }
+  })
+  observer.observe(document.body, { childList: true, subtree: true })
+  setTimeout(() => { observer.disconnect() }, 6000)
 }
 
 function restartTypewriter() {
@@ -402,7 +426,7 @@ onMounted(() => {
     if (!hasTypedProfile.value && !isCurrentlyTyping.value) {
       restartTypewriter()
     }
-  }, 2000)
+  }, 1500)
 })
 
 onBeforeUnmount(() => {

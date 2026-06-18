@@ -49,7 +49,7 @@
 import { computed, ref, watch, onMounted } from 'vue'
 
 const props = defineProps({
-  duration: { type: Number, default: 3500 },
+  duration: { type: Number, default: 800 },
   progress: { type: Number, default: null }
 })
 
@@ -78,7 +78,7 @@ watch(isCompleteComputed, (v) => {
         window.dispatchEvent(new CustomEvent('portfolio:overlay-finished'))
       }
       emit('finished')
-    }, 800)
+    }, 300)
   } else if (!v && isComplete.value) {
     isComplete.value = false
   }
