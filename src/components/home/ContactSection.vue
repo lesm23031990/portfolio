@@ -132,13 +132,14 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import CircuitBackground from '@/components/ui/CircuitBackground.vue'
-import CircuitBackgroundMobile from '@/components/ui/CircuitBackgroundMobile.vue'
-import ContactModal from './ContactModal.vue'
+
+const CircuitBackground = defineAsyncComponent(() => import('@/components/ui/CircuitBackground.vue'))
+const CircuitBackgroundMobile = defineAsyncComponent(() => import('@/components/ui/CircuitBackgroundMobile.vue'))
+const ContactModal = defineAsyncComponent(() => import('./ContactModal.vue'))
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -263,8 +264,6 @@ onMounted(() => {
     .to(cards.children, { autoAlpha: 1, y: 0, duration: 0.45, stagger: 0.1, ease: 'power3.out' }, '-=0.15')
     .to(portrait, { autoAlpha: 1, x: 0, scale: 1, duration: 0.8, ease: 'power2.out' }, '-=0.35')
 
-  gsap.fromTo('.portrait-frame', { rotateZ: -1.5 }, { rotateZ: 1.5, duration: 4, ease: 'sine.inOut', yoyo: true, repeat: -1, delay: 1.5 })
-
   window.addEventListener('resize', onWidthResize, { passive: true })
   document.addEventListener('click', handleClickOutside, { passive: true })
 })
@@ -325,7 +324,7 @@ onBeforeUnmount(() => {
 .contact-scene__glow {
   position: absolute;
   border-radius: 999px;
-  filter: blur(70px);
+  filter: blur(24px);
   opacity: 0.25;
 }
 
@@ -482,6 +481,12 @@ onBeforeUnmount(() => {
   padding: 0.5rem;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(255, 245, 250, 0.94));
   border: 1px solid var(--rose-border-strong);
+  animation: portrait-float 4s ease-in-out 1.5s infinite alternate;
+}
+
+@keyframes portrait-float {
+  from { rotate: -1.5deg; }
+  to   { rotate: 1.5deg; }
 }
 
 .portrait-placeholder {

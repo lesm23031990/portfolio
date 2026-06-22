@@ -21,6 +21,7 @@
               class="group relative flex h-full items-center justify-center border-b-[3px] border-transparent px-3 py-2 text-[0.84rem] font-light uppercase tracking-[0.22em] transition duration-300 after:absolute after:left-1/2 after:top-full after:h-[3px] after:w-0 after:-translate-x-1/2 after:bg-gradient-to-r after:from-rose-400 after:via-fuchsia-500 after:to-pink-500 after:transition-all after:duration-300 hover:-translate-y-0.5 hover:text-rose-500 hover:after:w-full active:translate-y-0 active:scale-95 md:py-5 md:text-[0.96rem] lg:text-[1.03rem]"
               :class="navItemClasses(item)"
               :aria-current="activeSection === item.sectionId ? 'page' : undefined"
+              @click.prevent="handleNavClick(item)"
             >
               {{ item.label }}
             </a>
@@ -96,7 +97,7 @@
                 class="rounded-2xl border px-4 py-3 text-left text-[0.92rem] font-light uppercase tracking-[0.2em] transition"
                 :class="mobileNavItemClasses(item)"
                 :aria-current="activeSection === item.sectionId ? 'page' : undefined"
-                @click="handleNavSelection"
+                @click.prevent="handleNavClick(item)"
               >
                 {{ item.label }}
               </a>
@@ -133,6 +134,7 @@ import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
 import { setLocale } from '@/i18n'
+import { useScrollY } from '@/composables/useScrollY'
 
 const route = useRoute()
 const { locale, t } = useI18n()
@@ -161,19 +163,17 @@ const languageOptions = computed(() => [
 
 const isHomeRoute = computed(() => route.name === 'home')
 
-let frameId = null
-
 function navItemClasses(item) {
   const isActive = isHomeRoute.value && activeSection.value === item.sectionId
   return isActive
     ? [
-        'bg-gradient-to-r from-rose-500 via-fuchsia-500 to-pink-500 bg-clip-text text-transparent drop-shadow-[0_10px_22px_rgba(214,123,165,0.34)] -translate-y-0.5 hover:-translate-y-1 hover:tracking-[0.26em] hover:drop-shadow-[0_14px_30px_rgba(214,123,165,0.42)] after:h-[5px] after:w-full hover:after:scale-x-110',
+        'bg-gradient-to-r from-rose-500 via-fuchsia-500 to-pink-500 bg-clip-text text-transparent drop-shadow-[0_10px_22px_rgba(214,123,165,0.34)] -translate-y-0.5 hover:-translate-y-1 hover:drop-shadow-[0_14px_30px_rgba(214,123,165,0.42)] after:h-[5px] after:w-full hover:after:scale-x-110',
         item.home
-          ? 'text-[1.02rem] font-normal tracking-[0.34em] lg:text-[1.14rem]'
-          : 'text-[0.98rem] font-normal tracking-[0.26em] lg:text-[1.08rem]'
+          ? 'text-rose-500/90'
+          : ''
       ]
     : [
-        'text-rose-400/85 hover:tracking-[0.22em]',
+        'text-rose-400/85',
         item.home
           ? 'text-rose-500/90'
           : ''
@@ -196,85 +196,188 @@ function toggleMobileMenu() {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
 }
 
-function handleNavSelection() {
-  closeMobileMenu()
-  syncHeader()
+function scrollToSection(sectionId) {
+  if (sectionId === 'stack') {
+    scrollToStack()
+    return
+  }
+  const el = document.getElementById(sectionId)
+  if (!el) {
+    const observer = new MutationObserver(() => {
+      const target = document.getElementById(sectionId)
+      if (target) {
+        scrollToElement(target)
+        observer.disconnect()
+      }
+    })
+    observer.observe(document.body, { childList: true, subtree: true })
+    setTimeout(() => { observer.disconnect() }, 6000)
+    return
+  }
+  scrollToElement(el)
 }
 
-function resolveActiveSection() {
-  if (!isHomeRoute.value) {
-    activeSection.value = ''
+function scrollToElement(el) {
+  const header = document.querySelector('header.sticky')
+  const headerH = header ? Math.ceil(header.getBoundingClientRect().height) : 88
+  const spacer = el.closest('.pin-spacer')
+  if (spacer) {
+    const target = spacer.offsetTop - headerH
+    window.scrollTo({ top: target, behavior: 'smooth' })
+  } else {
+    const top = el.getBoundingClientRect().top + window.scrollY - headerH
+    window.scrollTo({ top, behavior: 'smooth' })
+  }
+}
+
+function scrollToStack() {
+  const projectsSection = document.getElementById('proyectos')
+  if (projectsSection) {
+    doScrollToStack(projectsSection)
+    return
+  }
+  const observer = new MutationObserver(() => {
+    const section = document.getElementById('proyectos')
+    if (section) {
+      doScrollToStack(section)
+      observer.disconnect()
+    }
+  })
+  observer.observe(document.body, { childList: true, subtree: true })
+  setTimeout(() => { observer.disconnect() }, 6000)
+}
+
+function doScrollToStack(section) {
+  const spacer = section.closest('.pin-spacer')
+  if (spacer) {
+    const scrollRange = spacer.offsetHeight - section.offsetHeight
+    const target = spacer.offsetTop + scrollRange * 0.64
+    window.scrollTo({ top: target, behavior: 'smooth' })
+  } else {
+    const header = document.querySelector('header.sticky')
+    const headerH = header ? Math.ceil(header.getBoundingClientRect().height) : 88
+    const sectionTop = section.getBoundingClientRect().top + window.scrollY - headerH
+    window.scrollTo({ top: sectionTop + 4000, behavior: 'smooth' })
+  }
+}
+
+const { scrollY } = useScrollY()
+
+const sectionIds = ['inicio', 'proyectos', 'stack', 'contacto']
+let sectionBounds = []
+let boundsReady = false
+
+function calcSectionBounds() {
+  sectionBounds = sectionIds.map(id => {
+    const el = document.getElementById(id)
+    if (!el) return null
+
+    if (id === 'stack') {
+      const proyEl = document.getElementById('proyectos')
+      if (!proyEl) return null
+      const spacer = proyEl.closest('.pin-spacer')
+      if (!spacer) return null
+      const scrollRange = spacer.offsetHeight - proyEl.offsetHeight
+      const stackStart = spacer.offsetTop + scrollRange * 0.64
+      return { id, top: stackStart, bottom: spacer.offsetTop + spacer.offsetHeight }
+    }
+
+    if (id === 'proyectos') {
+      const spacer = el.closest('.pin-spacer')
+      if (spacer) {
+        const scrollRange = spacer.offsetHeight - el.offsetHeight
+        const proyEnd = spacer.offsetTop + scrollRange * 0.64
+        return { id, top: spacer.offsetTop, bottom: proyEnd }
+      }
+      const top = el.offsetTop
+      return { id, top, bottom: top + el.offsetHeight }
+    }
+
+    const spacer = el.closest('.pin-spacer')
+    if (spacer) {
+      const top = spacer.offsetTop
+      return { id, top, bottom: top + spacer.offsetHeight }
+    }
+    const top = el.offsetTop
+    return { id, top, bottom: top + el.offsetHeight }
+  }).filter(Boolean)
+
+  const allSections = sectionBounds.length === sectionIds.length
+  const proyectosReady = document.getElementById('proyectos')?.closest('.pin-spacer')
+  boundsReady = allSections && !!proyectosReady
+}
+
+let navClickPending = null
+let navClickTimer = null
+
+function handleNavClick(item) {
+  closeMobileMenu()
+  activeSection.value = item.sectionId
+  navClickPending = item.sectionId
+  if (navClickTimer) clearTimeout(navClickTimer)
+  navClickTimer = setTimeout(() => { navClickPending = null }, 1200)
+  history.replaceState(null, '', `#${item.sectionId}`)
+  scrollToSection(item.sectionId)
+}
+
+watch(scrollY, () => {
+  if (!isHomeRoute.value) return
+  if (!boundsReady) calcSectionBounds()
+  if (!sectionBounds.length) return
+
+  const mid = scrollY.value + window.innerHeight / 2
+
+  if (navClickPending) {
+    const target = sectionBounds.find(s => s.id === navClickPending)
+    if (!target) return
+    if (mid >= target.top && mid < target.bottom) {
+      navClickPending = null
+    }
     return
   }
 
-  const sectionIds = ['inicio', 'proyectos', 'stack', 'contacto']
-  const viewportThreshold = window.innerHeight * 0.3
-  let currentSection = 'inicio'
-
-  sectionIds.forEach((id) => {
-    const section = document.getElementById(id)
-    if (!section) return
-
-    const rect = section.getBoundingClientRect()
-    if (rect.top - viewportThreshold <= 0) {
-      if (id === 'stack' && rect.left >= window.innerWidth) return
-      currentSection = id
+  let found = sectionBounds[0]?.id || 'inicio'
+  for (const s of sectionBounds) {
+    if (mid >= s.top && mid < s.bottom) {
+      found = s.id
+      break
     }
-  })
-
-  activeSection.value = currentSection
-}
-
-function onScroll() {
-  if (frameId) return
-
-  frameId = window.requestAnimationFrame(() => {
-    resolveActiveSection()
-    frameId = null
-  })
-}
+  }
+  if (found !== activeSection.value) {
+    activeSection.value = found
+  }
+})
 
 function onResize() {
-  resolveActiveSection()
-
-  if (window.innerWidth >= 768) {
-    closeMobileMenu()
-  }
+  closeMobileMenu()
+  boundsReady = false
 }
 
 function onHashChange() {
-  resolveActiveSection()
   closeMobileMenu()
 }
 
-function syncHeader() {
-  window.requestAnimationFrame(resolveActiveSection)
-  window.setTimeout(resolveActiveSection, 180)
-}
+watch(() => route.fullPath, () => {
+  closeMobileMenu()
+  boundsReady = false
+})
 
-watch(
-  () => route.fullPath,
-  () => {
-    closeMobileMenu()
-    syncHeader()
+watch(isHomeRoute, (val) => {
+  if (!val) {
+    activeSection.value = ''
+    boundsReady = false
   }
-)
+})
 
 onMounted(() => {
-  syncHeader()
-  window.addEventListener('scroll', onScroll, { passive: true })
   window.addEventListener('resize', onResize)
   window.addEventListener('hashchange', onHashChange)
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('scroll', onScroll)
   window.removeEventListener('resize', onResize)
   window.removeEventListener('hashchange', onHashChange)
-
-  if (frameId) {
-    window.cancelAnimationFrame(frameId)
-  }
+  if (navClickTimer) clearTimeout(navClickTimer)
 })
 </script>
 

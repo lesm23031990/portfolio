@@ -10,10 +10,12 @@
 </template>
 
 <script setup>
-import ContactSection from '@/components/home/ContactSection.vue'
+import { defineAsyncComponent } from 'vue'
 import HeroSection from '@/components/home/HeroSection.vue'
 import HomeBackground from '@/components/home/HomeBackground.vue'
-import ProjectsSection from '@/components/home/ProjectsSection.vue'
+
+const ProjectsSection = defineAsyncComponent(() => import('@/components/home/ProjectsSection.vue'))
+const ContactSection = defineAsyncComponent(() => import('@/components/home/ContactSection.vue'))
 </script>
 
 <style scoped>
@@ -40,15 +42,20 @@ import ProjectsSection from '@/components/home/ProjectsSection.vue'
 .dashboard__bridge {
   display: block;
   width: 100%;
-  height: calc(100vh + 1px);
+  height: calc(80vh + 1px);
   margin-top: -1px;
   background: linear-gradient(
     to bottom,
     transparent 0%,
-    rgba(255, 243, 249, 0.04) 15%,
-    rgba(20, 10, 24, 0.15) 30%,
-    rgba(6, 6, 11, 0.5) 55%,
-    rgba(6, 6, 11, 0.85) 78%,
+    rgba(255, 243, 249, 0.03) 6%,
+    rgba(255, 243, 249, 0.06) 12%,
+    rgba(20, 10, 24, 0.08) 20%,
+    rgba(20, 10, 24, 0.18) 28%,
+    rgba(6, 6, 11, 0.35) 38%,
+    rgba(6, 6, 11, 0.55) 48%,
+    rgba(6, 6, 11, 0.72) 58%,
+    rgba(6, 6, 11, 0.85) 68%,
+    rgba(6, 6, 11, 0.94) 80%,
     #06060b 100%
   );
   pointer-events: none;
@@ -59,16 +66,19 @@ import ProjectsSection from '@/components/home/ProjectsSection.vue'
 .dashboard__bridge--dark {
   display: block;
   width: 100%;
-  height: calc(200vh + 1px);
+  height: calc(80vh + 1px);
   margin-top: -1px;
   background: linear-gradient(
     to bottom,
     #06060b 0%,
-    rgba(6, 6, 11, 0.96) 15%,
-    rgba(6, 6, 11, 0.78) 30%,
-    rgba(6, 6, 11, 0.45) 50%,
-    rgba(255, 243, 249, 0.08) 72%,
-    rgba(255, 249, 252, 0.02) 88%,
+    rgba(6, 6, 11, 0.97) 10%,
+    rgba(6, 6, 11, 0.88) 20%,
+    rgba(6, 6, 11, 0.72) 30%,
+    rgba(6, 6, 11, 0.50) 40%,
+    rgba(6, 6, 11, 0.30) 50%,
+    rgba(255, 243, 249, 0.12) 62%,
+    rgba(255, 249, 252, 0.06) 74%,
+    rgba(255, 249, 252, 0.02) 86%,
     transparent 100%
   );
   pointer-events: none;

@@ -4,7 +4,7 @@ const fs = require('fs')
 const { callGroq } = require('./api/groq')
 
 module.exports = defineConfig({
-  transpileDependencies: true,
+  transpileDependencies: ['@emailjs/browser'],
   chainWebpack (config) {
     config.resolve.alias.set('/images', path.resolve(__dirname, 'src/assets/images'))
 
@@ -12,6 +12,35 @@ module.exports = defineConfig({
       args[0]['__VUE_PROD_HYDRATION_MISMATCH_DETAILS__'] = JSON.stringify(false)
       return args
     })
+
+    if (process.env.NODE_ENV === 'production') {
+      config.optimization.splitChunks({
+        chunks: 'all',
+        minSize: 20000,
+        maxSize: 244000,
+        cacheGroups: {
+          vue: {
+            test: /[\\/]node_modules[\\/](vue|vue-router|vue-i18n)[\\/]/,
+            name: 'vendor-vue',
+            chunks: 'all',
+            priority: 20
+          },
+          gsap: {
+            test: /[\\/]node_modules[\\/]gsap[\\/]/,
+            name: 'vendor-gsap',
+            chunks: 'all',
+            priority: 10
+          },
+          vendors: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendor-other',
+            chunks: 'all',
+            priority: 1,
+            minChunks: 2
+          }
+        }
+      })
+    }
   },
   devServer: {
     setupMiddlewares(middlewares, devServer) {

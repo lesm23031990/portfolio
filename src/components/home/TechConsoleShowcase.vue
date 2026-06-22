@@ -257,7 +257,10 @@ onBeforeUnmount(() => {
   z-index: 1;
   width: 100%;
   min-height: 100%;
-  padding: calc(88px + 2rem) 1.25rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
   overflow: hidden;
 }
 
@@ -802,8 +805,8 @@ onBeforeUnmount(() => {
   padding: 18px 22px 14px;
   border-radius: 22px;
   background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   border: 1px solid rgba(255, 255, 255, 0.07);
   box-shadow:
     0 12px 40px rgba(0, 0, 0, 0.15),
@@ -968,7 +971,7 @@ onBeforeUnmount(() => {
 
 @media (max-width: 480px) {
   .tcs {
-    padding: calc(88px + 1rem) 0.5rem 1rem;
+    padding: 1rem 0.5rem;
     overflow-x: hidden;
   }
 

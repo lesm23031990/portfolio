@@ -1,21 +1,17 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { isAuthenticated } from "@/content/auth";
 
-import HomeView from "@/views/HomeView.vue";
-import LoginView from "@/views/LoginView.vue";
-import AdminView from "@/views/AdminView.vue";
-
 const adminRoutes = process.env.NODE_ENV === 'development' ? [
   {
     path: "/login",
     name: "login",
-    component: LoginView,
+    component: () => import("@/views/LoginView.vue"),
     meta: { layout: "blank" }
   },
   {
     path: "/admin",
     name: "admin",
-    component: AdminView,
+    component: () => import("@/views/AdminView.vue"),
     meta: { layout: "blank", requiresAuth: true }
   }
 ] : []
@@ -24,7 +20,7 @@ const routes = [
   {
     path: "/",
     name: "home",
-    component: HomeView,
+    component: () => import("@/views/HomeView.vue"),
     meta: { layout: "default" }
   },
   ...adminRoutes

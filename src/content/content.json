@@ -56,7 +56,7 @@
       "sections": {
         "projects": {
           "title": "Proyectos destacados",
-          "subtitle": "Explora una escena interactiva: hover para revelar el preview y click para abrir el repositorio."
+          "subtitle": "Hover para previsualizar, click para abrir el repositorio."
         },
         "stack": {
           "title": "Stack y herramientas",
@@ -362,7 +362,7 @@
       "sections": {
         "projects": {
           "title": "Featured projects",
-          "subtitle": "Explore an interactive scene: hover to reveal the preview and click to open the repository."
+          "subtitle": "Hover to preview, click to open the repository."
         },
         "stack": {
           "title": "Stack and tools",
@@ -711,7 +711,7 @@
       },
       "previewTag": "Hover to reveal",
       "theme": "portfolio",
-      "image": "/images/projects/portfolio.png"
+      "image": "/images/projects/portfolio-960w.webp"
     },
     {
       "id": "automation",

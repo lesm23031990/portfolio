@@ -66,8 +66,8 @@
         <h2 class="dash-hero-card__title">{{ t('home.hero.title') }}</h2>
         <p class="dash-hero-card__lead">{{ t('home.hero.lead') }}</p>
         <div class="dash-hero-card__actions">
-          <a class="dash-btn dash-btn--primary" href="#proyectos">{{ t('home.hero.ctaProjects') }}</a>
-          <a class="dash-btn dash-btn--ghost" href="#contacto">{{ t('home.hero.ctaContact') }}</a>
+          <a class="dash-btn dash-btn--primary" href="#proyectos" @click.prevent="scrollToSection('proyectos')">{{ t('home.hero.ctaProjects') }}</a>
+          <a class="dash-btn dash-btn--ghost" href="#contacto" @click.prevent="scrollToSection('contacto')">{{ t('home.hero.ctaContact') }}</a>
         </div>
       </div>
 
@@ -86,9 +86,10 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import gsap from 'gsap'
+import { useScrollY } from '@/composables/useScrollY'
 
 const { t } = useI18n({ useScope: 'global' })
 
@@ -98,6 +99,7 @@ const metricsRef = ref(null)
 const terminalRef = ref(null)
 const trailRef = ref(null)
 const contentRef = ref(null)
+const { scrollY } = useScrollY()
 
 const prefersReducedMotion = ref(false)
 const typedProfileText = ref('')
@@ -106,7 +108,6 @@ const hasTypedProfile = ref(false)
 const isVisible = ref(true)
 const isTerminalHovered = ref(false)
 const isCurrentlyTyping = ref(false)
-const scrollY = shallowRef(0)
 
 const trailCount = 5
 const trailDots = {}
@@ -196,6 +197,72 @@ function cancelTypewriter() {
   isCurrentlyTyping.value = false
 }
 
+function scrollToSection(sectionId) {
+  history.replaceState(null, '', `#${sectionId}`)
+  if (sectionId === 'stack') {
+    scrollToStack()
+    return
+  }
+  const el = document.getElementById(sectionId)
+  if (!el) {
+    const observer = new MutationObserver(() => {
+      const target = document.getElementById(sectionId)
+      if (target) {
+        scrollToElement(target)
+        observer.disconnect()
+      }
+    })
+    observer.observe(document.body, { childList: true, subtree: true })
+    setTimeout(() => { observer.disconnect() }, 6000)
+    return
+  }
+  scrollToElement(el)
+}
+
+function scrollToElement(el) {
+  const header = document.querySelector('header.sticky')
+  const headerH = header ? Math.ceil(header.getBoundingClientRect().height) : 88
+  const spacer = el.closest('.pin-spacer')
+  if (spacer) {
+    const target = spacer.offsetTop - headerH
+    window.scrollTo({ top: target, behavior: 'smooth' })
+  } else {
+    const top = el.getBoundingClientRect().top + window.scrollY - headerH
+    window.scrollTo({ top, behavior: 'smooth' })
+  }
+}
+
+function scrollToStack() {
+  const projectsSection = document.getElementById('proyectos')
+  if (projectsSection) {
+    doScrollToStack(projectsSection)
+    return
+  }
+  const observer = new MutationObserver(() => {
+    const section = document.getElementById('proyectos')
+    if (section) {
+      doScrollToStack(section)
+      observer.disconnect()
+    }
+  })
+  observer.observe(document.body, { childList: true, subtree: true })
+  setTimeout(() => { observer.disconnect() }, 6000)
+}
+
+function doScrollToStack(section) {
+  const spacer = section.closest('.pin-spacer')
+  if (spacer) {
+    const scrollRange = spacer.offsetHeight - section.offsetHeight
+    const target = spacer.offsetTop + scrollRange * 0.64
+    window.scrollTo({ top: target, behavior: 'smooth' })
+  } else {
+    const header = document.querySelector('header.sticky')
+    const headerH = header ? Math.ceil(header.getBoundingClientRect().height) : 88
+    const sectionTop = section.getBoundingClientRect().top + window.scrollY - headerH
+    window.scrollTo({ top: sectionTop + 4000, behavior: 'smooth' })
+  }
+}
+
 function restartTypewriter() {
   cancelTypewriter()
   if (isVisible.value) startTypewriter()
@@ -213,6 +280,12 @@ function handleOverlayFinished() {
 watch(profileText, () => {
   hasTypedProfile.value = false
   restartTypewriter()
+})
+
+watch(isVisible, (v) => {
+  if (trailStaggeredTimeline) {
+    v ? trailStaggeredTimeline.resume() : trailStaggeredTimeline.pause()
+  }
 })
 
 function requestUnifiedRaf() {
@@ -289,6 +362,10 @@ function handleTerminalClick() {
   startTypewriter()
 }
 
+let trailStaggeredTimeline = null
+let trailPointerRafId = null
+let trailOnMoveFn = null
+
 function initNeonTrail() {
   if (prefersReducedMotion.value || !trailRef.value) return
 
@@ -302,8 +379,8 @@ function initNeonTrail() {
     y: gsap.quickTo(dot, 'y', { duration: 0.5, ease: 'power2.out' })
   }))
 
-  const staggeredTimeline = gsap.timeline({ repeat: -1, yoyo: true })
-  staggeredTimeline.to(dots, {
+  trailStaggeredTimeline = gsap.timeline({ repeat: -1, yoyo: true })
+  trailStaggeredTimeline.to(dots, {
     opacity: 0.6,
     scale: 1,
     duration: 0.6,
@@ -311,29 +388,31 @@ function initNeonTrail() {
     ease: 'power2.out'
   })
 
-  const mouse = { x: -100, y: -100 }
-  let rafId = null
+  if (!isVisible.value) trailStaggeredTimeline.pause()
 
-  function onMove(e) {
+  const mouse = { x: -100, y: -100 }
+
+  trailOnMoveFn = (e) => {
+    if (!isVisible.value) return
     mouse.x = e.clientX
     mouse.y = e.clientY
-    if (!rafId) {
-      rafId = window.requestAnimationFrame(() => {
+    if (!trailPointerRafId) {
+      trailPointerRafId = window.requestAnimationFrame(() => {
         trailQuickTos.forEach((qt, i) => {
           const inertia = 1 + i * 0.12
           qt.x(mouse.x + (i % 2 === 0 ? -10 : 10) * inertia)
           qt.y(mouse.y + (i % 2 === 0 ? -8 : 8) * inertia + i * 4)
         })
-        rafId = null
+        trailPointerRafId = null
       })
     }
   }
 
-  window.addEventListener('pointermove', onMove, { passive: true })
+  window.addEventListener('pointermove', trailOnMoveFn, { passive: true })
 
   ctx.add(() => {
-    window.removeEventListener('pointermove', onMove)
-    if (rafId) window.cancelAnimationFrame(rafId)
+    window.removeEventListener('pointermove', trailOnMoveFn)
+    if (trailPointerRafId) window.cancelAnimationFrame(trailPointerRafId)
   })
 }
 
@@ -345,17 +424,12 @@ function initParallax() {
     ease: 'power1.out'
   })
 
-  function onScroll() {
-    const y = window.scrollY || document.documentElement.scrollTop
-    scrollY.value = y
+  watch(scrollY, (y) => {
     parallaxY = y * -0.045
     tiltActive = true
     requestUnifiedRaf()
     parallaxMetrics(y * -0.03)
-  }
-
-  window.addEventListener('scroll', onScroll, { passive: true })
-  ctx.add(() => window.removeEventListener('scroll', onScroll))
+  }, { immediate: true })
 }
 
 onMounted(() => {
@@ -402,7 +476,7 @@ onMounted(() => {
     if (!hasTypedProfile.value && !isCurrentlyTyping.value) {
       restartTypewriter()
     }
-  }, 2000)
+  }, 1500)
 })
 
 onBeforeUnmount(() => {

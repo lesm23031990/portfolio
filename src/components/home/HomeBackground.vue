@@ -11,14 +11,13 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
+import { defineAsyncComponent, onMounted, ref } from 'vue'
+import { useScrollY } from '@/composables/useScrollY'
 
-import CircuitBackground from '@/components/ui/CircuitBackground.vue'
-import CircuitBackgroundMobile from '@/components/ui/CircuitBackgroundMobile.vue'
+const CircuitBackground = defineAsyncComponent(() => import('@/components/ui/CircuitBackground.vue'))
+const CircuitBackgroundMobile = defineAsyncComponent(() => import('@/components/ui/CircuitBackgroundMobile.vue'))
 
-const scrollY = shallowRef(0)
-const rafId = ref(null)
-const prefersReducedMotion = ref(false)
+const { scrollY } = useScrollY()
 
 const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1920)
 const isDesktop = ref(windowWidth.value >= 768)
@@ -28,66 +27,26 @@ function updateWidth() {
   isDesktop.value = windowWidth.value >= 768
 }
 
-let widthTimer = null
 function onWidthResize() {
-  if (widthTimer) return
-  widthTimer = window.requestAnimationFrame(() => {
-    updateWidth()
-    widthTimer = null
-  })
-}
-
-function onScroll() {
-  if (rafId.value) return
-
-  rafId.value = window.requestAnimationFrame(() => {
-    const newY = window.scrollY || document.documentElement.scrollTop
-    if (Math.abs(newY - scrollY.value) > 8) {
-      scrollY.value = newY
-    }
-    rafId.value = null
-  })
+  window.requestAnimationFrame(updateWidth)
 }
 
 function layerStyle(speedY, rotate = 0) {
-  if (prefersReducedMotion.value) return {}
-
   const y = scrollY.value
   const rotation = rotate ? y * rotate : 0
-
   return {
     transform: `translate3d(0, ${y * speedY}px, 0) rotate(${rotation}deg)`
   }
 }
 
 function layerGridStyle(speedY) {
-  if (prefersReducedMotion.value) return {}
-
   return {
     '--grid-scroll-y': `${scrollY.value * speedY}px`
   }
 }
 
 onMounted(() => {
-  if (window.matchMedia) {
-    prefersReducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  }
-
-  onScroll()
-  window.addEventListener('scroll', onScroll, { passive: true })
   window.addEventListener('resize', onWidthResize, { passive: true })
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('scroll', onScroll)
-  window.removeEventListener('resize', onWidthResize)
-
-  if (rafId.value) {
-    window.cancelAnimationFrame(rafId.value)
-  }
-  if (widthTimer) {
-    window.cancelAnimationFrame(widthTimer)
-  }
 })
 </script>
 
@@ -131,7 +90,7 @@ onBeforeUnmount(() => {
 .dashboard__orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(40px);
+  filter: blur(12px);
   opacity: 0.55;
   will-change: transform;
 }
