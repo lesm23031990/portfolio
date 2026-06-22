@@ -6,7 +6,9 @@
 </template>
 
 <script setup>
-import TechConsoleShowcase from './TechConsoleShowcase.vue'
+import { defineAsyncComponent } from 'vue'
+
+const TechConsoleShowcase = defineAsyncComponent(() => import('./TechConsoleShowcase.vue'))
 </script>
 
 <style scoped>
@@ -14,6 +16,9 @@ import TechConsoleShowcase from './TechConsoleShowcase.vue'
   position: relative;
   width: 100%;
   min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
 }
 

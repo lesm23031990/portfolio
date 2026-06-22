@@ -57,15 +57,16 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { defineAsyncComponent, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { logout, getSessionUser } from '@/content/auth'
 import { useContent } from '@/content/useContent'
-import AdminTranslations from '@/components/admin/AdminTranslations.vue'
-import AdminProjects from '@/components/admin/AdminProjects.vue'
-import AdminStack from '@/components/admin/AdminStack.vue'
-import AdminContact from '@/components/admin/AdminContact.vue'
-import AdminConfig from '@/components/admin/AdminConfig.vue'
+
+const AdminTranslations = defineAsyncComponent(() => import('@/components/admin/AdminTranslations.vue'))
+const AdminProjects = defineAsyncComponent(() => import('@/components/admin/AdminProjects.vue'))
+const AdminStack = defineAsyncComponent(() => import('@/components/admin/AdminStack.vue'))
+const AdminContact = defineAsyncComponent(() => import('@/components/admin/AdminContact.vue'))
+const AdminConfig = defineAsyncComponent(() => import('@/components/admin/AdminConfig.vue'))
 
 const router = useRouter()
 const activeTab = ref('translations')

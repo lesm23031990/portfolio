@@ -87,7 +87,7 @@
               <div class="portal-light"></div>
             </div>
 
-            <div ref="stackPaneRef" class="projects-stage__pane projects-stage__pane--stack">
+            <div ref="stackPaneRef" id="stack" class="projects-stage__pane projects-stage__pane--stack">
               <StackSection />
             </div>
           </div>
@@ -340,14 +340,14 @@ function scheduleRefresh() {
 
 watch(isVisible, (visibleNow) => {
   if (visibleNow) {
+    cardFloatAnimations.forEach(a => a.resume())
     if (typewriterStarted) return
     runEntryAnimation()
     typewriterStarted = true
     typeTitle(true)
   } else {
+    cardFloatAnimations.forEach(a => a.pause())
     cancelTypewriter()
-    typewriterStarted = false
-    hasTypedTitle.value = false
   }
 })
 
@@ -433,24 +433,21 @@ onMounted(async () => {
   const portalLight = portal.querySelector('.portal-light')
   let cardBaseWidth, cardBaseHeight
 
+  // Cached layout values — refreshed on resize, NOT on every scroll frame
+  let cachedViewportHeight78 = ''
+  let cachedCardFitScale1 = 1
+  let cachedCardFitScale2 = 1
+  let cachedTrackShift = 0
+
   function alignDecorativeText() {
     const totalCardWidths = cards.reduce((sum, c) => sum + c.offsetWidth, 0)
     const expandedGap = Math.round(baseGridGap * 1.4)
     const totalGaps = (cards.length - 1) * expandedGap
-    const finalScale = getCardFitScale(1, 0.88, 0.72)
+    const finalScale = cachedCardFitScale2
     const gridVisualWidth = (totalCardWidths + totalGaps) * finalScale
     const panePadLeft = parseFloat(getComputedStyle(projectsPane).paddingLeft) || 0
     const decoMargin = Math.round(panePadLeft + gridVisualWidth - projectsPane.offsetWidth + 200)
     section.style.setProperty('--decorative-left', `${decoMargin}px`)
-  }
-
-  const updateLayoutMetrics = () => {
-    const sectionWidth = Math.round(section.getBoundingClientRect().width || window.innerWidth)
-    section.style.setProperty('--projects-header-offset', `${getHeaderOffset()}px`)
-    section.style.setProperty('--projects-pane-gap', `${paneGap}px`)
-    section.style.setProperty('--projects-inner-side-padding', '1.5rem')
-    section.style.setProperty('--viewport-width', `${sectionWidth}px`)
-    alignDecorativeText()
   }
 
   const getViewportHeight = (ratio) => {
@@ -474,10 +471,24 @@ onMounted(async () => {
     return Math.min(availableWidth / cardBaseWidth, availableHeight / cardBaseHeight)
   }
 
-  updateLayoutMetrics()
+  function refreshLayoutCache() {
+    cachedViewportHeight78 = getViewportHeight(0.78)
+    cachedCardFitScale1 = getCardFitScale(1, 0.8, 0.72)
+    cachedCardFitScale2 = getCardFitScale(1, 0.88, 0.72)
+    cachedTrackShift = getTrackShift()
+  }
 
-  const accentEl = stackPane.querySelector('.tcs-laptop__accent')
-  const stackEls = stackPane.querySelectorAll('.tcs__left, .tcs__center, .tcs__right')
+  function updateLayoutMetrics() {
+    const sectionWidth = Math.round(section.getBoundingClientRect().width || window.innerWidth)
+    section.style.setProperty('--projects-header-offset', `${getHeaderOffset()}px`)
+    section.style.setProperty('--projects-pane-gap', `${paneGap}px`)
+    section.style.setProperty('--projects-inner-side-padding', '1.5rem')
+    section.style.setProperty('--viewport-width', `${sectionWidth}px`)
+    alignDecorativeText()
+    refreshLayoutCache()
+  }
+
+  updateLayoutMetrics()
 
   // ── Initial state: elements hidden for entry animation ──
   gsap.set(sectionInner, { autoAlpha: 1, y: 0 })
@@ -492,8 +503,11 @@ onMounted(async () => {
   gsap.set(decorative, { autoAlpha: 1 })
   gsap.set(exitOverlayRef.value, { autoAlpha: 0 })
   gsap.set(frame, { filter: 'blur(0px)' })
-  gsap.set(stackEls, { autoAlpha: 1, y: 0 })
-  gsap.set(accentEl, { scaleX: 1, opacity: 0.5, filter: 'blur(0px)' })
+
+  const accentEl = stackPane.querySelector('.tcs-laptop__accent')
+  const stackEls = stackPane.querySelectorAll('.tcs__left, .tcs__center, .tcs__right')
+  if (stackEls.length) gsap.set(stackEls, { autoAlpha: 1, y: 0 })
+  if (accentEl) gsap.set(accentEl, { scaleX: 1, opacity: 0.5, filter: 'blur(0px)' })
 
   gsapContext.value = gsap.context(() => {
     gsap.timeline({
@@ -513,7 +527,7 @@ onMounted(async () => {
         }
       }
     })
-      .to(viewport, { height: () => getViewportHeight(0.78), duration: 1.18 }, 0)
+      .to(viewport, { height: cachedViewportHeight78, duration: 1.18 }, 0)
       .to(frame, { '--frame-progress': 1, duration: 0.8, ease: 'none' }, 0)
       .to(terminal, { autoAlpha: 0, y: -26, duration: 0.3 }, 0.8)
       .to(terminalSlot, { height: 0, padding: 0, autoAlpha: 0, duration: 0.48 }, 0.76)
@@ -524,11 +538,11 @@ onMounted(async () => {
         duration: 1.02
       }, 1.34)
       .to(sectionInner, { gap: 0, duration: 1.02 }, 1.34)
-      .to(grid, { scale: () => getCardFitScale(1, 0.8, 0.72), yPercent: -6, duration: 1.02 }, 1.34)
+      .to(grid, { scale: cachedCardFitScale1, yPercent: -6, duration: 1.02 }, 1.34)
       .to(frame, { opacity: 0, duration: 0.34 }, 1.54)
-      .to(grid, { scale: () => getCardFitScale(1, 0.88, 0.72), gap: `${Math.round(baseGridGap * 1.4)}px`, duration: 0.48, ease: 'expo.out' }, 1.68)
+      .to(grid, { scale: cachedCardFitScale2, gap: `${Math.round(baseGridGap * 1.4)}px`, duration: 0.48, ease: 'expo.out' }, 1.68)
       .call(startCardFloat, [cards], 1.9)
-      .to(track, { x: () => getTrackShift(), duration: 3.6, ease: 'none' }, 2.14)
+      .to(track, { x: cachedTrackShift, duration: 3.6, ease: 'none' }, 2.14)
       .to(portalGrid, { opacity: 0.6, y: -100, duration: 1.8, ease: 'power2.inOut' }, 2.14)
       .to(portalLight, { opacity: 1, scaleY: 1.5, duration: 1.8, ease: 'power2.inOut' }, 2.14)
       .to(portalGrid, { opacity: 0, y: -200, duration: 1.8, ease: 'power2.inOut' }, 3.94)
@@ -779,7 +793,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   border-radius: 34px;
   transform-origin: center center;
-  will-change: transform, height, width, border-radius;
+  will-change: transform;
   background:
     linear-gradient(180deg, rgba(8, 10, 16, 0.96), rgba(5, 7, 12, 0.92));
   box-shadow:
@@ -912,7 +926,7 @@ onBeforeUnmount(() => {
   width: max-content;
   transform: scale(0.45);
   transform-origin: center center;
-  will-change: transform, gap;
+  will-change: transform;
 }
 
 .project-card-link {
