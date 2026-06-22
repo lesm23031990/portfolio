@@ -864,6 +864,10 @@ onBeforeUnmount(() => {
 
 /* ── Responsive ── */
 @media (max-width: 860px) {
+  .tcs {
+    overflow: hidden;
+  }
+
   .tcs__inner {
     flex-direction: column;
     align-items: center;
