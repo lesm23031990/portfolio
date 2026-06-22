@@ -19,7 +19,6 @@ const TechConsoleShowcase = defineAsyncComponent(() => import('./TechConsoleShow
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
 }
 
 .stack-stage__grid {

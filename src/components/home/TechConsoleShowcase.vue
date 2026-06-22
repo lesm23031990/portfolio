@@ -261,7 +261,6 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   padding: 2rem 1.25rem;
-  overflow: hidden;
 }
 
 .tcs__inner {
@@ -876,12 +875,14 @@ onBeforeUnmount(() => {
     flex: none;
     width: 70%;
     padding-top: 0;
+    align-items: center;
   }
 
   .tcs__center {
     flex: none;
     width: 95%;
     margin: 0 auto;
+    align-items: center;
   }
 
   .tcs-laptop {
@@ -921,6 +922,16 @@ onBeforeUnmount(() => {
   .tcs-ide__code {
     font-size: 0.68rem;
     padding: 8px 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  .tcs__left {
+    width: 100%;
+  }
+
+  .tcs__center {
+    width: 100%;
   }
 }
 
@@ -972,11 +983,6 @@ onBeforeUnmount(() => {
 @media (max-width: 480px) {
   .tcs {
     padding: 1rem 0.5rem;
-    overflow-x: hidden;
-  }
-
-  .tcs__left {
-    width: 80%;
   }
 
   .tcs-ide__body {
@@ -993,11 +999,6 @@ onBeforeUnmount(() => {
   .tcs-ide__num {
     font-size: 0.45rem;
     min-width: 1.3em;
-  }
-
-  .tcs__center {
-    width: 100%;
-    margin-left: 0;
   }
 
   .tcs-laptop {
