@@ -865,7 +865,7 @@ onBeforeUnmount(() => {
 /* ── Responsive ── */
 @media (max-width: 860px) {
   .tcs {
-    overflow: hidden;
+    padding: 1.5rem 0.75rem;
   }
 
   .tcs__inner {
@@ -877,15 +877,14 @@ onBeforeUnmount(() => {
 
   .tcs__left {
     flex: none;
-    width: 70%;
+    width: 100%;
     padding-top: 0;
     align-items: center;
   }
 
   .tcs__center {
     flex: none;
-    width: 95%;
-    margin: 0 auto;
+    width: 100%;
     align-items: center;
   }
 
@@ -926,16 +925,6 @@ onBeforeUnmount(() => {
   .tcs-ide__code {
     font-size: 0.68rem;
     padding: 8px 10px;
-  }
-}
-
-@media (max-width: 600px) {
-  .tcs__left {
-    width: 100%;
-  }
-
-  .tcs__center {
-    width: 100%;
   }
 }
 
