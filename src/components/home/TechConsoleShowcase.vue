@@ -885,6 +885,7 @@ onBeforeUnmount(() => {
   .tcs__center {
     flex: none;
     width: 100%;
+    margin-left: 0;
     align-items: center;
   }
 

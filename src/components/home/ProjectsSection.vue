@@ -1134,12 +1134,16 @@ onBeforeUnmount(() => {
   .project-card { width: min(42vw, 320px); height: min(54vh, 460px); }
 }
 
+@media (max-width: 860px) {
+  .projects-stage__viewport { width: 100%; }
+}
+
 @media (max-width: 700px) {
   .projects-stage {
     --projects-overlap: clamp(3rem, 8vh, 4.5rem);
   }
 
-  .projects-stage__viewport { width: 100%; border-radius: 24px; }
+  .projects-stage__viewport { border-radius: 24px; }
   .projects-grid { gap: 1rem; }
   .project-card { width: min(58vw, 240px); min-width: 12rem; height: min(46vh, 360px); border-radius: 22px; }
   .project-card__summary { display: none; }
