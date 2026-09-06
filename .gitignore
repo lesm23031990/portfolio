@@ -26,3 +26,6 @@ pnpm-debug.log*
 
 # capturas locales para LinkedIn (no versionar)
 /captures-linkedin
+
+# CV personal con datos privados (no versionar)
+/cv
