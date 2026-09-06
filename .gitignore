@@ -29,3 +29,7 @@ pnpm-debug.log*
 
 # CV personal con datos privados (no versionar)
 /cv
+cv-es.txt
+PROGRESO-LINKEDIN.md
+public/banner.html
+public/banner.png
