@@ -23,3 +23,6 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# capturas locales para LinkedIn (no versionar)
+/captures-linkedin

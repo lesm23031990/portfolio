@@ -22,6 +22,23 @@ Este es mi portfolio profesional desarrollado como una Single Page Application (
 - **Internacionalización:** Preparado para mercados globales con soporte nativo de idiomas.
 - **Seguridad:** Manejo responsable de variables de entorno y protección de datos.
 
+## 📸 Screenshots
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/1_landing_page.png" alt="Landing page - Hero" /></td>
+    <td><img src="docs/screenshots/2_landing_page.png" alt="Landing page - Sobre mí" /></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/3_landing_page.png" alt="Landing page - Stack tecnológico" /></td>
+    <td><img src="docs/screenshots/4_landing_page.png" alt="Landing page - Proyectos" /></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/5_landing_page.png" alt="Landing page - Contacto" /></td>
+    <td></td>
+  </tr>
+</table>
+
 ## 🚀 Instalación Local
 
 ```bash
