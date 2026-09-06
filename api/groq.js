@@ -7,7 +7,7 @@ IMPORTANTE — Lorena NUNCA ha liderado equipos ni ha tenido personas a cargo. S
 
 DATOS PERSONALES:
 - Nombre: Lorena Estefanía Salas Manrique
-- Ubicación: San Cristóbal, Venezuela
+- Ubicación: Cúa, Miranda, Venezuela (disponible para remoto u híbrido en Caracas)
 - Teléfono: +584121700645
 - WhatsApp: https://wa.me/584121700645
 - Email: lorena.dev.231990@gmail.com (contacto portfolio) / lorena23031990@gmail.com (personal)
