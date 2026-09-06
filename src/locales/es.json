@@ -31,10 +31,10 @@
   },
   "home": {
     "hero": {
-      "kicker": "Ingeniera en Informatica · Senior Frontend Developer",
+      "kicker": "Desarrolladora Senior Frontend · IA aplicada",
       "title": "Lorena Salas",
       "profile": "INGENIERA EN INFORMATICA - SENIOR FRONTEND DEVELOPER - <br /> AI ENGINEER / LLM SPECIALIST EN TRANSICION",
-      "lead": "Ingeniera en Informatica con mas de 8 anos de experiencia en desarrollo de software. Solida base logico-matematica y resolucion de algoritmos complejos. Especialista en JavaScript (Avanzado), Vue.js, Nuxt.js, React y Angular, con integracion Fullstack en PHP (Laravel, Yii2) y Node.js. Desarrollo backend con APIs REST, Docker y bases de datos SQL (MySQL, PostgreSQL, Oracle). Programacion asistida por IA usando Cursor, reglas personalizadas (rules), skills y MCPs. Principios de ciberseguridad y buenas practicas DevOps. En transicion activa hacia AI Engineer / LLM Specialist.",
+      "lead": "Desarrolladora con formacion universitaria completa en Informatica (UNET) y mas de 8 anos de experiencia en desarrollo de software. Solida base logico-matematica y resolucion de algoritmos complejos. Especialista en JavaScript (Avanzado), Vue.js, Nuxt.js, React y Angular, con integracion Fullstack en PHP (Laravel, Yii2) y Node.js. Desarrollo backend con APIs REST, Docker y bases de datos SQL (MySQL, PostgreSQL, Oracle). Programacion asistida por IA usando Cursor, reglas personalizadas (rules), skills y MCPs. Principios de ciberseguridad y buenas practicas DevOps. IA aplicada en producto real: RAG, LLMs y function calling, con formacion continua hacia AI Engineer / LLM Specialist.",
       "ctaProjects": "Ver proyectos",
       "ctaContact": "Contacto"
     },

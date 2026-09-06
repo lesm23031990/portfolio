@@ -32,10 +32,10 @@
     },
     "home": {
       "hero": {
-        "kicker": "Ingeniera en Informatica · Senior Frontend Developer",
+        "kicker": "Desarrolladora Senior Frontend · IA aplicada",
         "title": "Lorena Salas",
-        "profile": "INGENIERA EN INFORMATICA - SENIOR FRONTEND DEVELOPER - <br /> AI ENGINEER / LLM SPECIALIST EN TRANSICION",
-        "lead": "Ingeniera en Informatica con 8+ anos fullstack/frontend. JS Avanzado, Vue, Nuxt, React, Angular, Redux, Vuex, Three.js y Canvas. UI con SASS, BEM, Tailwind, Bootstrap. Backend con PHP (Laravel), Node.js, REST APIs, Docker. Bases de datos SQL. Programacion asistida por IA (Cursor, CodeRabbit). En transicion activa a AI Engineer: Python, LangChain, RAG, OpenAI y AWS SageMaker.",
+        "profile": "DESARROLLADORA SENIOR FRONTEND - FULLSTACK - <br /> IA APLICADA (RAG, LLMs, AGENTES)",
+        "lead": "Desarrolladora con formacion universitaria completa en Informatica (UNET) y 8+ anos fullstack/frontend. JS Avanzado, Vue, Nuxt, React, Angular, Redux, Vuex, Three.js y Canvas. UI con SASS, BEM, Tailwind, Bootstrap. Backend con PHP (Laravel), Node.js, REST APIs, Docker. Bases de datos SQL. Programacion asistida por IA (Cursor, CodeRabbit). IA aplicada en producto real: Python, LangChain, RAG y OpenRouter, con formacion continua hacia AI Engineer.",
         "ctaProjects": "Ver proyectos",
         "ctaContact": "Contacto"
       },
@@ -338,10 +338,10 @@
     },
     "home": {
       "hero": {
-        "kicker": "Computer Engineer · Senior Frontend Developer",
+        "kicker": "Senior Frontend Developer · Applied AI",
         "title": "Lorena Salas",
-        "profile": "COMPUTER ENGINEER - SENIOR FRONTEND DEVELOPER - <br /> AI ENGINEER / LLM SPECIALIST IN TRANSITION",
-        "lead": "Computer Engineer with 8+ years fullstack/frontend. Advanced JavaScript, Vue, Nuxt, React, Angular, Redux, Vuex, Three.js and Canvas. UI with SASS, BEM, Tailwind, Bootstrap. Backend with PHP (Laravel), Node.js, REST APIs, Docker. SQL databases. AI-assisted programming (Cursor, CodeRabbit). Actively transitioning to AI Engineer: Python, LangChain, RAG, OpenAI and AWS SageMaker.",
+        "profile": "SENIOR FRONTEND DEVELOPER - FULLSTACK - <br /> APPLIED AI (RAG, LLMs, AGENTS)",
+        "lead": "Developer with a completed university curriculum in Computer Engineering (UNET) and 8+ years fullstack/frontend. Advanced JavaScript, Vue, Nuxt, React, Angular, Redux, Vuex, Three.js and Canvas. UI with SASS, BEM, Tailwind, Bootstrap. Backend with PHP (Laravel), Node.js, REST APIs, Docker. SQL databases. AI-assisted programming (Cursor, CodeRabbit). Applied AI in real products: Python, LangChain, RAG and OpenRouter, with continuous training toward AI Engineer.",
         "ctaProjects": "View projects",
         "ctaContact": "Contact"
       },

@@ -20,7 +20,7 @@ DATOS PERSONALES:
 - Tarifa: 10-20 USD/hora (negociable según alcance y proyecto)
 
 PERFIL PROFESIONAL:
-Ingeniera en Informática con más de 8 años desarrollando aplicaciones web (Vue.js, React, Node.js, PHP/Laravel). Siempre ha trabajado como contribuidora individual dentro de equipos de desarrollo — NUNCA ha liderado equipos. Especialista en automatización y optimización con sólida base lógico-matemática. Actualmente enfocada en AI Integration y Prompt Engineering. Es referente técnica en sus proyectos.
+Desarrolladora con formación universitaria completa en Informática (UNET, título en trámite) y más de 8 años desarrollando aplicaciones web (Vue.js, React, Node.js, PHP/Laravel). Siempre ha trabajado como contribuidora individual dentro de equipos de desarrollo — NUNCA ha liderado equipos. Especialista en automatización y optimización con sólida base lógico-matemática. Actualmente enfocada en AI Integration y Prompt Engineering, con integraciones de IA reales en producto (RAG, LLMs, function calling). Es referente técnica en sus proyectos.
 
 STACK TÉCNICO COMPROBADO (experiencia laboral):
 - Frontend: JavaScript Avanzado, Vue 2/3, Nuxt.js, React.js, AngularJS, Redux, Vuex/Pinia, Three.js, Canvas, Vuetify

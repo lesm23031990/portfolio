@@ -31,10 +31,10 @@
   },
   "home": {
     "hero": {
-      "kicker": "Computer Engineer · Senior Frontend Developer",
+      "kicker": "Senior Frontend Developer · Applied AI",
       "title": "Lorena Salas",
       "profile": "COMPUTER ENGINEER - SENIOR FRONTEND DEVELOPER - <br /> AI ENGINEER / LLM SPECIALIST IN TRANSITION",
-      "lead": "Computer Engineer with over 8 years of experience in software development. Strong logical-mathematical foundation and complex algorithm resolution. Specialist in Advanced JavaScript, Vue.js, Nuxt.js, React, and Angular, with Fullstack integration in PHP (Laravel, Yii2) and Node.js. Backend development with REST APIs, Docker and SQL databases (MySQL, PostgreSQL, Oracle). AI-assisted programming using Cursor, custom rules, skills and MCPs. Cybersecurity principles and DevOps best practices. Actively transitioning to AI Engineer / LLM Specialist.",
+      "lead": "Developer with a completed university curriculum in Computer Engineering (UNET) and over 8 years of experience in software development. Strong logical-mathematical foundation and complex algorithm resolution. Specialist in Advanced JavaScript, Vue.js, Nuxt.js, React, and Angular, with Fullstack integration in PHP (Laravel, Yii2) and Node.js. Backend development with REST APIs, Docker and SQL databases (MySQL, PostgreSQL, Oracle). AI-assisted programming using Cursor, custom rules, skills and MCPs. Cybersecurity principles and DevOps best practices. Applied AI in real products: RAG, LLMs and function calling, with continuous training toward AI Engineer / LLM Specialist.",
       "ctaProjects": "View projects",
       "ctaContact": "Contact"
     },
