@@ -7,6 +7,7 @@
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
     "test": "vitest run",
+    "og:image": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/generate-og-image.ps1",
     "sync-rules": "node -e \"const fs = require('fs'); fs.mkdirSync('.cursor/rules', { recursive: true }); fs.mkdirSync('.github', { recursive: true }); fs.copyFileSync('tech-stack.mdc', '.cursor/rules/tech-stack.mdc'); fs.copyFileSync('tech-stack.mdc', '.coderules'); fs.writeFileSync('.github/copilot-instructions.md', '# GitHub Copilot Instructions\\n@tech-stack.mdc'); console.log('✅ ¡Reglas sincronizadas en todo el ecosistema!');\""
   },
   "dependencies": {
